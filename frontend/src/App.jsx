@@ -3,6 +3,10 @@ import Login from "./pages/Login";
 import AdminPedidos from "./pages/AdminPedidos";
 import ProtectedRoute from "./auth/ProtectedRoute";
 
+function Placeholder({ title }) {
+  return <h2 style={{ fontFamily: "sans-serif", margin: 20 }}>{title}</h2>;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -14,6 +18,24 @@ export default function App() {
           element={
             <ProtectedRoute role="ADMIN">
               <AdminPedidos />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/cliente"
+          element={
+            <ProtectedRoute role="CLIENTE">
+              <Placeholder title="Cliente - próximamente" />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/domiciliario"
+          element={
+            <ProtectedRoute role="DOMICILIARIO">
+              <Placeholder title="Domiciliario - próximamente" />
             </ProtectedRoute>
           }
         />
