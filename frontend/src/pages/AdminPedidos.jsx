@@ -10,7 +10,11 @@ export default function AdminPedidos() {
     // Realtime: cuando llega uno nuevo, lo metemos arriba
     useAdminPedidosRealtime({
         token,
-        onPedido: (pedido) => setPedidos((prev) => [pedido, ...prev]),
+        onPedido: (pedido) =>
+            setPedidos((prev) => {
+                if (prev.some((p) => p.id === pedido.id)) return prev; // evita duplicados
+                return [pedido, ...prev];
+            }),
     });
 
     // Cargar lista inicial (AJUSTA endpoint a tu backend real)
@@ -19,7 +23,13 @@ export default function AdminPedidos() {
             const res = await authFetch("/api/admin/pedidos");
             if (res.ok) {
                 const data = await res.json();
-                setPedidos(data);
+
+                setPedidos((prev) => {
+                    const map = new Map(prev.map((p) => [p.id, p]));
+                    data.forEach((p) => map.set(p.id, p));
+                    // ordena: más nuevos arriba
+                    return Array.from(map.values()).sort((a, b) => b.id - a.id);
+                });
             }
         })();
     }, []);
