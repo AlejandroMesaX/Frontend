@@ -1,51 +1,29 @@
-import { useEffect } from "react";
-import { Client } from "@stomp/stompjs";
+import { useEffect, useRef } from "react";
+import { createStompClient } from "./stompCliente";
 
 export function useAdminPedidosRealtime({ token, onPedido }) {
+    const ref = useRef(null);
 
     useEffect(() => {
         if (!token) return;
+        if (ref.current) return;
 
-        const client = new Client({
-            brokerURL: `ws://localhost:8080/ws?token=${token}`,
-            connectHeaders: {
-                Authorization: `Bearer ${token}`,
+        const client = createStompClient({
+            token,
+            onConnect: () => {
+                client.subscribe("/topic/admin/pedidos", (msg) => {
+                    try { onPedido?.(JSON.parse(msg.body)); } catch { }
+                });
             },
-            reconnectDelay: 3000,
-            debug: (s) => console.log("[STOMP]", s),
+            onError: (frame) => console.error("[WS][ADMIN PEDIDOS] ", frame.headers?.message, frame.body),
         });
 
-        // 👇👇👇 AQUÍ VA 👇👇👇
-        client.onConnect = () => {
-            console.log("✅ CONNECTED - subscribing to /topic/admin/pedidos");
-
-            client.subscribe("/topic/admin/pedidos", (msg) => {
-                console.log("📩 RAW WS:", msg.body); // <- esto es clave
-
-                try {
-                    const data = JSON.parse(msg.body);
-                    console.log("✅ PARSED WS:", data);
-                    onPedido?.(data);
-                } catch (e) {
-                    console.error("❌ JSON.parse failed:", e);
-                    // si llega texto u otra cosa, igual puedes manejarlo aquí
-                }
-            });
-        };
-        // 👆👆👆 HASTA AQUÍ 👆👆👆
-
-        client.onStompError = (frame) => {
-            console.error("❌ STOMP ERROR", frame.headers, frame.body);
-        };
-
-        client.onWebSocketError = (e) => {
-            console.error("❌ WS ERROR", e);
-        };
-
         client.activate();
+        ref.current = client;
 
         return () => {
-            client.deactivate();
+            ref.current?.deactivate();
+            ref.current = null;
         };
     }, [token, onPedido]);
 }

@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import AdminPedidos from "./pages/AdminPedidos";
 import ProtectedRoute from "./auth/ProtectedRoute";
+import DeliveryPanel from "./pages/DeliveryPanel";
 
 function Placeholder({ title }) {
   return <h2 style={{ fontFamily: "sans-serif", margin: 20 }}>{title}</h2>;
@@ -12,6 +13,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/delivery" element={<DeliveryPanel />} />
 
         <Route
           path="/admin/pedidos"

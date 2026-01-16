@@ -18,22 +18,26 @@ export default function Login() {
             const data = await loginRequest(email, password);
 
             // ✅ guardar en contexto (y localStorage lo maneja AuthContext)
+
             login({
                 token: data.token,
-                user: {
-                    id: data.usuario.id,
-                    rol: data.usuario.rol,
-                    nombre: data.usuario.nombre,
-                    email: data.usuario.email,
-                    activo: data.usuario.activo,
-                },
+                user: data.usuario,
+                rol: data.usuario.rol,
+                userId: data.usuario.id,
             });
+
+            console.log("AFTER login() localStorage:", {
+                token: localStorage.getItem("token"),
+                userId: localStorage.getItem("userId"),
+                rol: localStorage.getItem("rol"),
+            });
+
 
             // ✅ redirección por rol
             if (data.usuario.rol === "ADMIN") nav("/admin/pedidos");
-            else if (data.usuario.rol === "CLIENTE") nav("/cliente");
-            else if (data.usuario.rol === "DOMICILIARIO") nav("/domiciliario");
-            else nav("/login");
+            else if (data.usuario.rol === "CLIENT") nav("/cliente");
+            else if (data.usuario.rol === "DELIVERY") nav("/delivery");
+            else nav("/");
         } catch (e) {
             setErr("Credenciales inválidas o backend no responde.");
         }
