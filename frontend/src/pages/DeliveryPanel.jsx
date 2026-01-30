@@ -41,6 +41,43 @@ export default function DeliveryPanel() {
         setDisponible(next);
     }
 
+    async function avanzarEstadoPedido() {
+        if (!pedidoActual) return;
+
+        let nuevoEstado = null;
+
+        if (pedidoActual.estado === "ASIGNADO") nuevoEstado = "EN_CAMINO";
+        else if (pedidoActual.estado === "EN_CAMINO") nuevoEstado = "ENTREGADO";
+        else return; // CREADO / ENTREGADO / CANCELADO => no se avanza
+
+        const res = await authFetch(`/api/domiciliario/pedidos/${pedidoActual.id}/estado`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ estado: nuevoEstado }),
+        });
+
+        if (!res.ok) {
+            const msg = await safeText(res);
+            alert(`No se pudo actualizar el pedido #${pedidoActual.id}. (HTTP ${res.status}) ${msg}`);
+            return;
+        }
+
+        // backend puede devolver el pedido actualizado
+        let actualizado = null;
+        try { actualizado = await res.json(); } catch { }
+
+        // actualiza UI (si no vino JSON, actualiza estado local)
+        setPedidoActual(prev => {
+            if (!prev) return prev;
+            if (actualizado) return actualizado;
+            return { ...prev, estado: nuevoEstado };
+        });
+
+        if (nuevoEstado === "ENTREGADO") {
+            setDisponible(true);
+        }
+    }
+
     return (
         <div style={{ maxWidth: 900, margin: "20px auto", fontFamily: "sans-serif" }}>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
@@ -84,9 +121,44 @@ export default function DeliveryPanel() {
                         <div><b>Recibe:</b> {pedidoActual.nombreQuienRecibe} — {pedidoActual.telefonoQuienRecibe}</div>
                         <div><b>Costo:</b> {pedidoActual.costoServicio}</div>
 
-                        {/* Si ya creaste endpoints de “recogido/entregado”, aquí van 2 botones */}
-                        {/* <button onClick={...}>Marcar recogido</button>
-                <button onClick={...}>Marcar entregado</button> */}
+                        <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
+                            {pedidoActual.estado === "ASIGNADO" && (
+                                <button
+                                    onClick={avanzarEstadoPedido}
+                                    style={{
+                                        padding: "10px 14px",
+                                        borderRadius: 10,
+                                        border: "1px solid #ddd",
+                                        background: "#fff7e6",
+                                        cursor: "pointer",
+                                    }}
+                                >
+                                    📦 Tengo el pedido
+                                </button>
+                            )}
+
+                            {pedidoActual.estado === "EN_CAMINO" && (
+                                <button
+                                    onClick={avanzarEstadoPedido}
+                                    style={{
+                                        padding: "10px 14px",
+                                        borderRadius: 10,
+                                        border: "1px solid #ddd",
+                                        background: "#e7fff0",
+                                        cursor: "pointer",
+                                    }}
+                                >
+                                    ✅ Finalizar entrega
+                                </button>
+                            )}
+
+                            {(pedidoActual.estado === "ENTREGADO" || pedidoActual.estado === "CANCELADO") && (
+                                <div style={{ color: "#666", marginTop: 8 }}>
+                                    Este pedido ya está <b>{pedidoActual.estado}</b>.
+                                </div>
+                            )}
+                        </div>
+
                     </div>
                 )}
             </div>

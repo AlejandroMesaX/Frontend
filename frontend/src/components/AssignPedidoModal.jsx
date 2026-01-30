@@ -30,7 +30,8 @@ export default function AssignPedidoModal({ open, onClose, pedido, disponibles, 
 
         if (!res.ok) {
             const msg = await safeText(res);
-            alert(`No se pudo asignar el pedido #${pedido.id}. ${msg}`);
+            //alert(`No se pudo asignar el pedido #${pedido.id}. ${msg}`);
+            alert(`No se pudo asignar el pedido #${pedido.id}. (HTTP ${res.status}) ${msg}`);
             return;
         }
 
