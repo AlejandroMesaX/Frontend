@@ -18,13 +18,27 @@ export function useDeliveryPedidosRealtime({ token, userId, onPedido }) {
         client.onConnect = () => {
             client.subscribe(`/topic/delivery/${userId}/pedidos`, (msg) => {
                 try {
-                    onPedido?.(JSON.parse(msg.body));
-                } catch { }
+                    const pedido = JSON.parse(msg.body);
+
+                    // ✅ Si llega un pedido terminado, lo “ocultamos” del panel
+                    if (pedido?.estado === "ENTREGADO" || pedido?.estado === "CANCELADO") {
+                        onPedido?.(null);
+                        return;
+                    }
+
+                    onPedido?.(pedido);
+                } catch {
+                    // si llega algo raro, no rompas la UI
+                }
             });
         };
 
         client.onStompError = (frame) => {
             console.error("[WS][DELIVERY]", frame.headers?.message, frame.body);
+        };
+
+        client.onWebSocketError = (e) => {
+            console.error("[WS][DELIVERY] socket error", e);
         };
 
         client.activate();
@@ -36,4 +50,3 @@ export function useDeliveryPedidosRealtime({ token, userId, onPedido }) {
         };
     }, [token, userId, onPedido]);
 }
-

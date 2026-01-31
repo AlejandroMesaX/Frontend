@@ -73,7 +73,8 @@ export default function DeliveryPanel() {
             return { ...prev, estado: nuevoEstado };
         });
 
-        if (nuevoEstado === "ENTREGADO") {
+        if (nuevoEstado === "ENTREGADO" || nuevoEstado === "CANCELADO") {
+            setPedidoActual(null);
             setDisponible(true);
         }
     }
