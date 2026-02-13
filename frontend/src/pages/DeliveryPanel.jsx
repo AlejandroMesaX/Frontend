@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../auth/AuthContext";
 import { authFetch } from "../api/http";
 import { useDeliveryPedidosRealtime } from "../realtime/useDeliveryPedidosRealtime";
@@ -13,6 +13,29 @@ export default function DeliveryPanel() {
     // Historial
     const [historial, setHistorial] = useState([]);
     const [loadingHist, setLoadingHist] = useState(false);
+    const [diaFiltro, setDiaFiltro] = useState(""); // formato YYYY-MM-DD
+
+    // Finanzas filtros
+    const todayISO = useMemo(() => new Date().toISOString().slice(0, 10), []);
+    const [finDia, setFinDia] = useState("");       // YYYY-MM-DD (opcional)
+    const [finDesde, setFinDesde] = useState("");   // YYYY-MM-DD (opcional)
+    const [finHasta, setFinHasta] = useState("");   // YYYY-MM-DD (opcional)
+
+    function toNumberMoney(val) {
+        if (val == null) return 0;
+        // soporta "12000", 12000, "12,000", "12.000"
+        const s = String(val).replace(/\./g, "").replace(/,/g, ".");
+        const n = Number(s);
+        return Number.isFinite(n) ? n : 0;
+    }
+
+    function yyyyMMddOf(fechaCreacion) {
+        if (!fechaCreacion) return null;
+        return String(fechaCreacion).slice(0, 10); // ISO safe
+    }
+
+
+
 
     // ✅ WS pedidos
     useDeliveryPedidosRealtime({
@@ -109,7 +132,7 @@ export default function DeliveryPanel() {
     async function cargarHistorial() {
         setLoadingHist(true);
         try {
-            const res = await authFetch("/api/delivery/me/pedidos/entregados");
+            const res = await authFetch("/api/domiciliario/pedidos/me/entregados");
             if (!res.ok) {
                 const msg = await safeText(res);
                 alert("No se pudo cargar historial. " + msg);
@@ -124,8 +147,15 @@ export default function DeliveryPanel() {
 
     useEffect(() => {
         if (tab === "historial") cargarHistorial();
+
+        if (tab === "finanzas") {
+            // si no hay filtros, por defecto hoy
+            if (!finDia && !finDesde && !finHasta) setFinDia(todayISO);
+            cargarHistorial(); // reutilizamos el mismo array "historial"
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tab]);
+
 
     const puedeTengoPedido = pedidoActual?.estado === "ASIGNADO";
     const puedeFinalizar = pedidoActual?.estado === "EN_CAMINO";
@@ -133,6 +163,58 @@ export default function DeliveryPanel() {
     const tienePedidoActivo =
         pedidoActual &&
         (pedidoActual.estado === "ASIGNADO" || pedidoActual.estado === "EN_CAMINO");
+
+    const historialFiltrado = useMemo(() => {
+        if (!diaFiltro) return historial;
+
+        // diaFiltro viene como "YYYY-MM-DD"
+        return historial.filter((p) => {
+            if (!p.fechaCreacion) return false;
+
+            // Si fechaCreacion viene tipo "2026-01-23T12:36:02..."
+            // tomamos solo la parte de la fecha:
+            const fecha = String(p.fechaCreacion).slice(0, 10);
+            return fecha === diaFiltro;
+        });
+    }, [historial, diaFiltro]);
+
+    const finanzasFiltrado = useMemo(() => {
+        // dataset base: historial (entregados)
+        const base = Array.isArray(historial) ? historial : [];
+
+        // ✅ Si no hay nada seleccionado, por defecto hoy
+        const dia = finDia || (!finDesde && !finHasta ? todayISO : "");
+
+        // 1) filtro por día exacto
+        if (dia) {
+            return base.filter((p) => yyyyMMddOf(p.fechaCreacion) === dia);
+        }
+
+        // 2) filtro por rango desde-hasta (inclusive)
+        const desde = finDesde || "0000-01-01";
+        const hasta = finHasta || "9999-12-31";
+
+        return base.filter((p) => {
+            const f = yyyyMMddOf(p.fechaCreacion);
+            if (!f) return false;
+            return f >= desde && f <= hasta;
+        });
+    }, [historial, finDia, finDesde, finHasta, todayISO]);
+
+    const finResumen = useMemo(() => {
+        const total = finanzasFiltrado.reduce((acc, p) => acc + toNumberMoney(p.costoServicio), 0);
+        const comisionEmpresa = total * 0.2;
+        const netoDelivery = total - comisionEmpresa;
+        return {
+            total,
+            comisionEmpresa,
+            netoDelivery,
+            pedidos: finanzasFiltrado.length,
+        };
+    }, [finanzasFiltrado]);
+
+
+
 
 
     return (
@@ -225,7 +307,9 @@ export default function DeliveryPanel() {
                 <NavBtn active={tab === "inicio"} onClick={() => setTab("inicio")}>Inicio</NavBtn>
                 <NavBtn active={tab === "historial"} onClick={() => setTab("historial")}>Historial</NavBtn>
                 <NavBtn active={tab === "finanzas"} onClick={() => setTab("finanzas")}>Finanzas (pendiente)</NavBtn>
+
             </div>
+
 
             {/* INICIO */}
             {tab === "inicio" && (
@@ -360,15 +444,53 @@ export default function DeliveryPanel() {
                             {loadingHist ? "Cargando..." : "Recargar"}
                         </button>
                     </div>
+                    <div style={{ marginTop: 10, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                        <label style={{ fontSize: 13, color: "#444" }}>
+                            Filtrar por día:
+                        </label>
+
+                        <input
+                            type="date"
+                            value={diaFiltro}
+                            onChange={(e) => setDiaFiltro(e.target.value)}
+                            style={{
+                                padding: "8px 10px",
+                                borderRadius: 10,
+                                border: "1px solid #e5e7eb",
+                            }}
+                        />
+
+                        <button
+                            onClick={() => setDiaFiltro("")}
+                            disabled={!diaFiltro}
+                            style={{
+                                padding: "8px 10px",
+                                borderRadius: 10,
+                                border: "1px solid #e5e7eb",
+                                background: "#fff",
+                                cursor: diaFiltro ? "pointer" : "not-allowed",
+                                opacity: diaFiltro ? 1 : 0.5,
+                            }}
+                        >
+                            Quitar filtro
+                        </button>
+
+                        <span style={{ fontSize: 12, color: "#666" }}>
+                            Mostrando: <b>{historialFiltrado.length}</b> / {historial.length}
+                        </span>
+                    </div>
+
 
                     <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
                         {loadingHist && <div style={{ color: "#666" }}>Cargando historial…</div>}
 
-                        {!loadingHist && historial.length === 0 && (
-                            <div style={{ color: "#666" }}>Aún no tienes pedidos entregados.</div>
+                        {!loadingHist && historialFiltrado.length === 0 && (
+                            <div style={{ color: "#666" }}>
+                                {diaFiltro ? "No hay pedidos entregados para ese día." : "Aún no tienes pedidos entregados."}
+                            </div>
                         )}
 
-                        {historial.map((p) => (
+                        {historialFiltrado.map((p) => (
                             <div key={p.id} style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
                                 <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
                                     <div>
@@ -393,10 +515,146 @@ export default function DeliveryPanel() {
             {/* FINANZAS */}
             {tab === "finanzas" && (
                 <div style={{ marginTop: 12, border: "1px solid #ddd", borderRadius: 12, padding: 12 }}>
-                    <h3 style={{ marginTop: 0 }}>Finanzas</h3>
-                    <div style={{ color: "#666" }}>Pendiente: luego definimos qué métricas y reportes van aquí.</div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                        <h3 style={{ margin: 0 }}>Finanzas</h3>
+                        <button onClick={cargarHistorial} disabled={loadingHist}>
+                            {loadingHist ? "Cargando..." : "Recargar"}
+                        </button>
+                    </div>
+
+                    {/* ✅ Resumen superior */}
+                    <div
+                        style={{
+                            marginTop: 12,
+                            padding: 12,
+                            borderRadius: 12,
+                            border: "1px solid #eee",
+                            background: "#fafafa",
+                            display: "grid",
+                            gap: 8,
+                        }}
+                    >
+                        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                            <span style={{ fontWeight: 800, fontSize: 16 }}>💰 Ganancias (según filtro)</span>
+                            <span style={{ fontSize: 12, color: "#666" }}>
+                                Pedidos: <b>{finResumen.pedidos}</b>
+                            </span>
+                        </div>
+
+                        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                            <Metric label="Total" value={finResumen.total} />
+                            <Metric label="Comisión empresa (20%)" value={finResumen.comisionEmpresa} />
+                            <Metric label="Tu neto (80%)" value={finResumen.netoDelivery} />
+                        </div>
+                    </div>
+
+                    {/* ✅ Filtros */}
+                    <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
+                        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                            <label style={{ fontSize: 13, color: "#444", fontWeight: 700 }}>Filtrar por día:</label>
+                            <input
+                                type="date"
+                                value={finDia}
+                                onChange={(e) => {
+                                    setFinDia(e.target.value);
+                                    // si elige día, limpiamos rango
+                                    setFinDesde("");
+                                    setFinHasta("");
+                                }}
+                                style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid #e5e7eb" }}
+                            />
+
+                            <button
+                                onClick={() => {
+                                    setFinDia(todayISO);
+                                    setFinDesde("");
+                                    setFinHasta("");
+                                }}
+                                style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid #e5e7eb", background: "#fff" }}
+                            >
+                                Hoy
+                            </button>
+
+                            <button
+                                onClick={() => {
+                                    setFinDia("");
+                                    setFinDesde("");
+                                    setFinHasta("");
+                                    // vuelve al default hoy
+                                    setFinDia(todayISO);
+                                }}
+                                style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid #e5e7eb", background: "#fff" }}
+                            >
+                                Limpiar
+                            </button>
+                        </div>
+
+                        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                            <label style={{ fontSize: 13, color: "#444", fontWeight: 700 }}>Rango:</label>
+
+                            <span style={{ fontSize: 13, color: "#666" }}>Desde</span>
+                            <input
+                                type="date"
+                                value={finDesde}
+                                onChange={(e) => {
+                                    setFinDesde(e.target.value);
+                                    // al usar rango, limpiamos día
+                                    setFinDia("");
+                                }}
+                                style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid #e5e7eb" }}
+                            />
+
+                            <span style={{ fontSize: 13, color: "#666" }}>Hasta</span>
+                            <input
+                                type="date"
+                                value={finHasta}
+                                onChange={(e) => {
+                                    setFinHasta(e.target.value);
+                                    setFinDia("");
+                                }}
+                                style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid #e5e7eb" }}
+                            />
+
+                            <span style={{ fontSize: 12, color: "#666" }}>
+                                Mostrando: <b>{finanzasFiltrado.length}</b> / {historial.length}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* ✅ Lista como historial */}
+                    <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
+                        {loadingHist && <div style={{ color: "#666" }}>Cargando…</div>}
+
+                        {!loadingHist && finanzasFiltrado.length === 0 && (
+                            <div style={{ color: "#666" }}>
+                                No hay pedidos entregados para el filtro seleccionado.
+                            </div>
+                        )}
+
+                        {finanzasFiltrado.map((p) => (
+                            <div key={p.id} style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                                    <div>
+                                        <div>
+                                            <b>#{p.id}</b> — {p.estado}
+                                        </div>
+                                        <div style={{ fontSize: 13, color: "#444", marginTop: 4 }}>
+                                            <b>Entrega:</b> {p.barrioEntrega} — {p.direccionEntrega}
+                                        </div>
+                                        <div style={{ fontSize: 13, color: "#444" }}>
+                                            <b>Costo:</b> {p.costoServicio}
+                                        </div>
+                                    </div>
+                                    <div style={{ fontSize: 12, color: "#666", textAlign: "right" }}>
+                                        {p.fechaCreacion ? <div>Creado: {p.fechaCreacion}</div> : null}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
+
         </div>
     );
 }
@@ -418,6 +676,19 @@ function NavBtn({ active, onClick, children }) {
         </button>
     );
 }
+
+function Metric({ label, value }) {
+    const n = Number(value || 0);
+    return (
+        <div style={{ padding: 10, borderRadius: 12, border: "1px solid #e5e7eb", background: "#fff", minWidth: 200 }}>
+            <div style={{ fontSize: 12, color: "#666", fontWeight: 700 }}>{label}</div>
+            <div style={{ fontSize: 18, fontWeight: 900, marginTop: 4 }}>
+                ${n.toLocaleString("es-CO")}
+            </div>
+        </div>
+    );
+}
+
 
 async function safeText(res) {
     try { return await res.text(); } catch { return ""; }
