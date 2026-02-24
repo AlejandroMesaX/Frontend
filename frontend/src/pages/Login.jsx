@@ -34,10 +34,15 @@ export default function Login() {
 
 
             // ✅ redirección por rol
-            if (data.usuario.rol === "ADMIN") nav("/admin/pedidos");
-            else if (data.usuario.rol === "CLIENT") nav("/cliente");
-            else if (data.usuario.rol === "DELIVERY") nav("/delivery");
-            else nav("/");
+            //if (data.usuario.rol === "ADMIN") nav("/admin/pedidos");
+            //else if (data.usuario.rol === "CLIENT") nav("/cliente");
+            //else if (data.usuario.rol === "DELIVERY") nav("/delivery");
+            //else nav("/");
+            if (data.usuario.rol === "ADMIN") nav("/admin");
+            else if (data.usuario.rol === "DELIVERY") nav("/domiciliario");
+            else if (data.usuario.rol === "CLIENTE") nav("/cliente");
+            else nav("/login");
+
         } catch (e) {
             setErr("Credenciales inválidas o backend no responde.");
         }
