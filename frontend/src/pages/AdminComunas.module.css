@@ -27,7 +27,7 @@
     flex-wrap: wrap;
 }
 
-/* Botones generales */
+/* Botones */
 .btn {
     padding: 8px 14px;
     border-radius: 8px;
@@ -71,38 +71,6 @@
     cursor: not-allowed;
 }
 
-.btnDanger {
-    padding: 8px 14px;
-    border-radius: 8px;
-    border: 1px solid #d33;
-    background: #fff;
-    color: #d33;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 500;
-    transition: background 0.15s;
-}
-
-.btnDanger:hover:not(:disabled) {
-    background: #fef2f2;
-}
-
-.btnSuccess {
-    padding: 8px 14px;
-    border-radius: 8px;
-    border: 1px solid #16a34a;
-    background: #fff;
-    color: #16a34a;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 500;
-    transition: background 0.15s;
-}
-
-.btnSuccess:hover:not(:disabled) {
-    background: #f0fdf4;
-}
-
 /* Filtros */
 .filtros {
     margin-top: 12px;
@@ -120,29 +88,34 @@
     color: #111827;
     outline: none;
     transition: border-color 0.15s;
+    min-width: 260px;
 }
 
 .input:focus {
     border-color: #9ca3af;
 }
 
-.inputSearch {
-    min-width: 260px;
+.inputError {
+    border-color: #ef4444 !important;
 }
 
-.select {
+.inputSmall {
     padding: 10px 12px;
     border-radius: 10px;
     border: 1px solid #e5e7eb;
     font-size: 13px;
     color: #111827;
-    background: #fff;
-    cursor: pointer;
     outline: none;
+    width: 160px;
+    transition: border-color 0.15s;
 }
 
-.select:focus {
+.inputSmall:focus {
     border-color: #9ca3af;
+}
+
+.inputFull {
+    width: 100%;
 }
 
 .contador {
@@ -178,38 +151,13 @@
     border-bottom: 1px solid #f1f1f1;
 }
 
-.tdAcciones {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
 .emptyRow {
     padding: 12px;
     color: #666;
     font-size: 13px;
 }
 
-/* Badge activo */
-.badge {
-    padding: 4px 10px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 800;
-    border: 1px solid #e5e7eb;
-}
-
-.badgeActivo {
-    background: #ecfdf5;
-    color: #065f46;
-}
-
-.badgeInactivo {
-    background: #fef2f2;
-    color: #991b1b;
-}
-
-/* Modal backdrop */
+/* Modal */
 .backdrop {
     position: fixed;
     inset: 0;
@@ -221,7 +169,6 @@
     z-index: 9999;
 }
 
-/* Modal */
 .modal {
     width: min(520px, 95vw);
     background: #fff;
@@ -264,53 +211,13 @@
     gap: 10px;
 }
 
-.checkboxLabel {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    font-size: 13px;
-    color: #374151;
-    cursor: pointer;
-}
-
 .modalFooter {
     display: flex;
     justify-content: flex-end;
     gap: 8px;
 }
 
-/* Error inline */
-.errorInline {
-    color: #b91c1c;
-    font-size: 12px;
-    margin-top: 2px;
-}
-
-/* Modal confirmación */
-.confirmModal {
-    width: min(400px, 95vw);
-    background: #fff;
-    border-radius: 12px;
-    padding: 20px;
-    border: 1px solid #ddd;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.confirmModal p {
-    margin: 0;
-    font-size: 14px;
-    color: #374151;
-    line-height: 1.5;
-}
-
-.confirmFooter {
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-}
-
+/* Campo con helper */
 .field {
     display: grid;
     gap: 4px;
@@ -322,6 +229,7 @@
     font-weight: 700;
 }
 
-.inputError {
-    border-color: #ef4444 !important;
+.hint {
+    font-size: 12px;
+    color: #666;
 }

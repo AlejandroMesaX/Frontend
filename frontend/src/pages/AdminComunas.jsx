@@ -1,48 +1,106 @@
 import { useEffect, useMemo, useState } from "react";
 import { authFetch } from "../api/http";
+import { parseBackendError, errorFronted } from "../api/errors";
+import Toast from "../components/Toast";
+import s from "./AdminComunas.module.css";
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+
+function onlyDigits(str) {
+    return String(str ?? "").replace(/\D/g, "");
+}
+
+function formatCOP(digits) {
+    const n = Number(digits || 0);
+    return n ? n.toLocaleString("es-CO") : "";
+}
+
+function getErrors(form, editing, numerosExistentes) {
+    const errors = {};
+    const n = Number(form.numero);
+    const tb = Number(form.tarifaBase);
+    const r = Number(form.recargoPorSalto);
+
+    if (!form.numero) {
+        errors.numero = "El número es obligatorio.";
+    } else if (!Number.isInteger(n) || n <= 0) {
+        errors.numero = "Debe ser un entero mayor a 0.";
+    } else {
+        const yaExiste = numerosExistentes.has(n);
+        if (!editing && yaExiste) errors.numero = `Ya existe la Comuna ${n}.`;
+        if (editing && yaExiste && Number(editing.numero) !== n)
+            errors.numero = `Ya existe la Comuna ${n}.`;
+    }
+
+    if (form.tarifaBase === "") {
+        errors.tarifaBase = "La tarifa base es obligatoria.";
+    } else if (!Number.isInteger(tb) || tb < 0) {
+        errors.tarifaBase = "Debe ser un entero mayor o igual a 0.";
+    }
+
+    if (form.recargoPorSalto === "") {
+        errors.recargoPorSalto = "El recargo es obligatorio.";
+    } else if (!Number.isInteger(r) || r < 0) {
+        errors.recargoPorSalto = "Debe ser un entero mayor o igual a 0.";
+    }
+
+    return errors;
+}
+
+function Helper({ show, text }) {
+    if (!show || !text) return null;
+    return <div className={s.helper}>{text}</div>;
+}
+
+// ── Componente principal ─────────────────────────────────────────────────────
 
 export default function AdminComunas() {
     const [comunas, setComunas] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [loadingGuardar, setLoadingGuardar] = useState(false);
+    const [toast, setToast] = useState(null);
 
-    // filtros
-    const [q, setQ] = useState(""); // por numero
+    // Filtros
+    const [q, setQ] = useState("");
     const [minBase, setMinBase] = useState("");
     const [maxBase, setMaxBase] = useState("");
 
-    // modal
+    // Modal
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState(null);
     const [form, setForm] = useState({ numero: "", tarifaBase: "", recargoPorSalto: "" });
-
     const [touched, setTouched] = useState({});
 
+    // ── Carga ───────────────────────────────────────────────────────────────
 
     async function cargar() {
         setLoading(true);
         try {
             const res = await authFetch("/api/admin/comunas");
             if (!res.ok) {
-                const msg = await safeText(res);
-                alert("No se pudo cargar comunas. " + msg);
+                const error = await parseBackendError(res);
+                setToast(error);
                 return;
             }
             const data = await res.json();
             const arr = Array.isArray(data) ? data : [];
             arr.sort((a, b) => Number(a.numero) - Number(b.numero));
             setComunas(arr);
+        } catch {
+            setToast(errorFronted("No se pudo conectar con el servidor."));
         } finally {
             setLoading(false);
         }
     }
 
-    useEffect(() => {
-        cargar();
-    }, []);
+    useEffect(() => { cargar(); }, []);
 
-    const numerosExistentes = useMemo(() => {
-        return new Set(comunas.map((c) => Number(c.numero)));
-    }, [comunas]);
+    // ── Memos ───────────────────────────────────────────────────────────────
+
+    const numerosExistentes = useMemo(
+        () => new Set(comunas.map((c) => Number(c.numero))),
+        [comunas]
+    );
 
     const errors = useMemo(
         () => getErrors(form, editing, numerosExistentes),
@@ -51,8 +109,6 @@ export default function AdminComunas() {
 
     const canSubmit = Object.keys(errors).length === 0;
 
-
-
     const filtradas = useMemo(() => {
         const qq = q.trim();
         const min = minBase !== "" ? Number(minBase) : null;
@@ -60,21 +116,20 @@ export default function AdminComunas() {
 
         return comunas.filter((c) => {
             const matchNumero = !qq || String(c.numero ?? "").includes(qq);
-
             const base = Number(c.tarifaBase ?? 0);
             const matchMin = min == null || base >= min;
             const matchMax = max == null || base <= max;
-
             return matchNumero && matchMin && matchMax;
         });
     }, [comunas, q, minBase, maxBase]);
 
+    // ── Modal ───────────────────────────────────────────────────────────────
+
     function abrirCrear() {
         setEditing(null);
         setForm({ numero: "", tarifaBase: "", recargoPorSalto: "" });
-        setOpen(true);
         setTouched({});
-
+        setOpen(true);
     }
 
     function abrirEditar(c) {
@@ -84,63 +139,13 @@ export default function AdminComunas() {
             tarifaBase: c.tarifaBase != null ? String(c.tarifaBase) : "",
             recargoPorSalto: c.recargoPorSalto != null ? String(c.recargoPorSalto) : "",
         });
-        setOpen(true);
         setTouched({});
-
+        setOpen(true);
     }
-
-    function validar() {
-        const numero = Number(form.numero);
-        const tarifaBase = Number(form.tarifaBase);
-        const recargoPorSalto = Number(form.recargoPorSalto);
-
-        if (!numero || numero <= 0) return "El número de comuna es obligatorio (mayor a 0).";
-        if (Number.isNaN(tarifaBase) || tarifaBase < 0) return "Tarifa base inválida.";
-        if (Number.isNaN(recargoPorSalto) || recargoPorSalto < 0) return "Recargo por salto inválido.";
-
-        // ✅ Validación número duplicado
-        // - si estamos creando: no puede existir
-        // - si estamos editando: puede existir si es el mismo registro
-        const yaExiste = numerosExistentes.has(numero);
-        if (!editing && yaExiste) {
-            return `Ya existe la Comuna ${numero}. Elige otro número.`;
-        }
-        if (editing && yaExiste && Number(editing.numero) !== numero) {
-            return `Ya existe la Comuna ${numero}. Elige otro número.`;
-        }
-
-        return null;
-    }
-
-    function getErrors({ numero, tarifaBase, recargoPorSalto }, editing, numerosExistentes) {
-        const errors = {};
-
-        const n = Number(numero);
-        const tb = Number(tarifaBase);
-        const r = Number(recargoPorSalto);
-
-        if (!numero) errors.numero = "El número es obligatorio.";
-        else if (!Number.isInteger(n) || n <= 0) errors.numero = "Debe ser un entero mayor a 0.";
-        else {
-            const yaExiste = numerosExistentes.has(n);
-            if (!editing && yaExiste) errors.numero = `Ya existe la Comuna ${n}.`;
-            if (editing && yaExiste && Number(editing.numero) !== n) errors.numero = `Ya existe la Comuna ${n}.`;
-        }
-
-        if (tarifaBase === "") errors.tarifaBase = "La tarifa base es obligatoria.";
-        else if (!Number.isInteger(tb) || tb < 0) errors.tarifaBase = "Debe ser un entero mayor o igual a 0.";
-
-        if (recargoPorSalto === "") errors.recargoPorSalto = "El recargo es obligatorio.";
-        else if (!Number.isInteger(r) || r < 0) errors.recargoPorSalto = "Debe ser un entero mayor o igual a 0.";
-
-        return errors;
-    }
-
-
 
     async function guardar() {
+        // Marcar todos los campos como tocados para mostrar errores
         setTouched({ numero: true, tarifaBase: true, recargoPorSalto: true });
-
         if (!canSubmit) return;
 
         const payload = {
@@ -149,115 +154,124 @@ export default function AdminComunas() {
             recargoPorSalto: Number(form.recargoPorSalto || 0),
         };
 
+        setLoadingGuardar(true);
+        setToast(null);
 
-        // ✅ CREAR -> 201 sin body => recargar
-        if (!editing) {
-            const res = await authFetch("/api/admin/comunas", {
-                method: "POST",
+        try {
+            const url = editing
+                ? `/api/admin/comunas/${editing.id}`
+                : "/api/admin/comunas";
+            const method = editing ? "PATCH" : "POST";
+
+            const res = await authFetch(url, {
+                method,
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
             });
 
             if (!res.ok) {
-                const msg = await safeText(res);
-                alert("No se pudo crear comuna. " + msg);
+                const error = await parseBackendError(res);
+                // Si el error tiene field lo mostramos como error de campo
+                if (error.field) {
+                    setTouched((t) => ({ ...t, [error.field]: true }));
+                    // Forzamos el error en el campo correspondiente via toast
+                    // ya que errors viene de getErrors (frontend)
+                    setToast(error);
+                } else {
+                    setToast(error);
+                }
                 return;
             }
 
             setOpen(false);
             await cargar();
-            return;
+
+        } catch {
+            setToast(errorFronted("No se pudo conectar con el servidor."));
+        } finally {
+            setLoadingGuardar(false);
         }
-
-        // ✅ EDITAR -> 204 sin body => recargar
-        const res = await authFetch(`/api/admin/comunas/${editing.id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-        });
-
-        if (!res.ok) {
-            const msg = await safeText(res);
-            alert("No se pudo editar comuna. " + msg);
-            return;
-        }
-
-        setOpen(false);
-        await cargar();
     }
 
-    return (
-        <div style={{ border: "1px solid #ddd", borderRadius: 12, padding: 12, background: "#fff" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-                <h3 style={{ margin: 0 }}>Comunas</h3>
+    // ── Render ──────────────────────────────────────────────────────────────
 
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    <button onClick={cargar} disabled={loading}>
+    return (
+        <div className={s.container}>
+
+            {/* Header */}
+            <div className={s.header}>
+                <h3>Comunas</h3>
+                <div className={s.headerActions}>
+                    <button className={s.btn} onClick={cargar} disabled={loading}>
                         {loading ? "Cargando..." : "Recargar"}
                     </button>
-                    <button onClick={abrirCrear}>+ Crear comuna</button>
+                    <button className={s.btnPrimary} onClick={abrirCrear}>
+                        + Crear comuna
+                    </button>
                 </div>
             </div>
 
-            {/* filtros */}
-            <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+            {/* Filtros */}
+            <div className={s.filtros}>
                 <input
+                    className={s.input}
                     value={q}
                     onChange={(e) => setQ(e.target.value)}
                     placeholder="Filtrar por número (ej: 1, 2...)"
-                    style={inp}
                 />
-
                 <input
+                    className={s.inputSmall}
                     value={minBase}
                     onChange={(e) => setMinBase(e.target.value)}
                     placeholder="Tarifa base min"
-                    style={inpSmall}
                     inputMode="numeric"
                 />
-
                 <input
+                    className={s.inputSmall}
                     value={maxBase}
                     onChange={(e) => setMaxBase(e.target.value)}
                     placeholder="Tarifa base max"
-                    style={inpSmall}
                     inputMode="numeric"
                 />
-
-                <span style={{ fontSize: 12, color: "#666" }}>
+                <span className={s.contador}>
                     Mostrando: <b>{filtradas.length}</b> / {comunas.length}
                 </span>
             </div>
 
-            {/* tabla */}
-            <div style={{ marginTop: 12, overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            {/* Tabla */}
+            <div className={s.tableWrap}>
+                <table className={s.table}>
                     <thead>
-                        <tr style={{ textAlign: "left", borderBottom: "1px solid #eee" }}>
-                            <th style={th}>ID</th>
-                            <th style={th}>Número</th>
-                            <th style={th}>Tarifa base</th>
-                            <th style={th}>Recargo por salto</th>
-                            <th style={th}>Acciones</th>
+                        <tr>
+                            <th className={s.th}>ID</th>
+                            <th className={s.th}>Número</th>
+                            <th className={s.th}>Tarifa base</th>
+                            <th className={s.th}>Recargo por salto</th>
+                            <th className={s.th}>Acciones</th>
                         </tr>
                     </thead>
-
                     <tbody>
                         {filtradas.map((c) => (
-                            <tr key={c.id} style={{ borderBottom: "1px solid #f1f1f1" }}>
-                                <td style={td}>{c.id}</td>
-                                <td style={td}><b>Comuna {c.numero}</b></td>
-                                <td style={td}>${Number(c.tarifaBase || 0).toLocaleString("es-CO")}</td>
-                                <td style={td}>${Number(c.recargoPorSalto || 0).toLocaleString("es-CO")}</td>
-                                <td style={td}>
-                                    <button onClick={() => abrirEditar(c)}>Editar</button>
+                            <tr key={c.id}>
+                                <td className={s.td}>{c.id}</td>
+                                <td className={s.td}><b>Comuna {c.numero}</b></td>
+                                <td className={s.td}>
+                                    ${Number(c.tarifaBase || 0).toLocaleString("es-CO")}
+                                </td>
+                                <td className={s.td}>
+                                    ${Number(c.recargoPorSalto || 0).toLocaleString("es-CO")}
+                                </td>
+                                <td className={s.td}>
+                                    <button className={s.btn} onClick={() => abrirEditar(c)}>
+                                        Editar
+                                    </button>
                                 </td>
                             </tr>
                         ))}
 
                         {!loading && filtradas.length === 0 && (
                             <tr>
-                                <td style={{ padding: 12, color: "#666" }} colSpan={5}>
+                                <td className={s.emptyRow} colSpan={5}>
                                     No hay comunas con ese filtro.
                                 </td>
                             </tr>
@@ -266,156 +280,111 @@ export default function AdminComunas() {
                 </table>
             </div>
 
-            {/* modal */}
+            {/* Modal */}
             {open && (
-                <div style={styles.backdrop}>
-                    <div style={styles.modal}>
-                        <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-                            <h3 style={{ margin: 0 }}>{editing ? `Editar Comuna ${editing.numero}` : "Crear comuna"}</h3>
-                            <button onClick={guardar} disabled={!canSubmit} style={{
-                                opacity: canSubmit ? 1 : 0.5,
-                                cursor: canSubmit ? "pointer" : "not-allowed"
-                            }}>
-                                {editing ? "Guardar cambios" : "Crear"}
+                <div className={s.backdrop}>
+                    <div className={s.modal}>
+                        <div className={s.modalHeader}>
+                            <h3>
+                                {editing ? `Editar Comuna ${editing.numero}` : "Crear comuna"}
+                            </h3>
+                            <button className={s.btnClose} onClick={() => setOpen(false)}>✕</button>
+                        </div>
+
+                        <div className={s.modalBody}>
+
+                            {/* Número */}
+                            <div className={s.field}>
+                                <input
+                                    className={`${s.input} ${s.inputFull} ${touched.numero && errors.numero ? s.inputError : ""}`}
+                                    value={form.numero}
+                                    onChange={(e) => {
+                                        const value = e.target.value.replace(/\D/g, "").replace(/^0+/, "");
+                                        setForm((p) => ({ ...p, numero: value }));
+                                    }}
+                                    onBlur={() => setTouched((t) => ({ ...t, numero: true }))}
+                                    onPaste={(e) => {
+                                        const texto = e.clipboardData.getData("text");
+                                        if (!/^\d+$/.test(texto)) e.preventDefault();
+                                    }}
+                                    placeholder="Número (ej: 1)"
+                                    inputMode="numeric"
+                                    maxLength={3}
+                                    disabled={!!editing}
+                                />
+                                <Helper show={touched.numero} text={errors.numero} />
+                            </div>
+
+                            {/* Tarifa base */}
+                            <div className={s.field}>
+                                <input
+                                    className={`${s.input} ${s.inputFull} ${touched.tarifaBase && errors.tarifaBase ? s.inputError : ""}`}
+                                    value={formatCOP(form.tarifaBase)}
+                                    onChange={(e) => {
+                                        const digits = onlyDigits(e.target.value).replace(/^0+/, "");
+                                        setForm((p) => ({ ...p, tarifaBase: digits }));
+                                    }}
+                                    onBlur={() => setTouched((t) => ({ ...t, tarifaBase: true }))}
+                                    onPaste={(e) => {
+                                        const texto = e.clipboardData.getData("text");
+                                        if (!onlyDigits(texto)) e.preventDefault();
+                                    }}
+                                    placeholder="Tarifa base (ej: 5.000)"
+                                    inputMode="numeric"
+                                />
+                                <div className={s.hint}>
+                                    Valor: ${Number(form.tarifaBase || 0).toLocaleString("es-CO")}
+                                </div>
+                                <Helper show={touched.tarifaBase} text={errors.tarifaBase} />
+                            </div>
+
+                            {/* Recargo por salto */}
+                            <div className={s.field}>
+                                <input
+                                    className={`${s.input} ${s.inputFull} ${touched.recargoPorSalto && errors.recargoPorSalto ? s.inputError : ""}`}
+                                    value={formatCOP(form.recargoPorSalto)}
+                                    onChange={(e) => {
+                                        const digits = onlyDigits(e.target.value).replace(/^0+/, "");
+                                        setForm((p) => ({ ...p, recargoPorSalto: digits }));
+                                    }}
+                                    onBlur={() => setTouched((t) => ({ ...t, recargoPorSalto: true }))}
+                                    onPaste={(e) => {
+                                        const texto = e.clipboardData.getData("text");
+                                        if (!onlyDigits(texto)) e.preventDefault();
+                                    }}
+                                    placeholder="Recargo por salto (ej: 1.000)"
+                                    inputMode="numeric"
+                                />
+                                <div className={s.hint}>
+                                    Valor: ${Number(form.recargoPorSalto || 0).toLocaleString("es-CO")}
+                                </div>
+                                <Helper show={touched.recargoPorSalto} text={errors.recargoPorSalto} />
+                            </div>
+                        </div>
+
+                        <div className={s.modalFooter}>
+                            <button
+                                className={s.btn}
+                                onClick={() => setOpen(false)}
+                                disabled={loadingGuardar}
+                            >
+                                Cancelar
                             </button>
-
-                        </div>
-
-                        <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
-                            <input
-                                value={form.numero}
-                                onChange={(e) => {
-                                    let value = e.target.value.replace(/\D/g, "").replace(/^0+/, "");
-                                    setForm((p) => ({ ...p, numero: value }));
-                                }}
-                                onBlur={() => setTouched((t) => ({ ...t, numero: true }))}
-                                onPaste={(e) => {
-                                    const texto = e.clipboardData.getData("text");
-                                    if (!/^\d+$/.test(texto)) e.preventDefault();
-                                }}
-                                placeholder="Número (ej: 1)"
-                                style={inputStyle(touched.numero && !!errors.numero)}
-                                inputMode="numeric"
-                                maxLength={3}
-                                disabled={!!editing}
-                            />
-
-                            <Helper show={touched.numero} text={errors.numero} />
-
-
-
-                            <input
-                                value={formatCOP(form.tarifaBase)}
-                                onChange={(e) => {
-                                    // lo que el usuario escribe puede traer puntos, $, espacios, etc.
-                                    let digits = onlyDigits(e.target.value).replace(/^0+/, "");
-                                    setForm((p) => ({ ...p, tarifaBase: digits }));
-                                }}
-                                onBlur={() => setTouched((t) => ({ ...t, tarifaBase: true }))}
-                                onPaste={(e) => {
-                                    const texto = e.clipboardData.getData("text");
-                                    const digits = onlyDigits(texto);
-                                    if (!digits) e.preventDefault();
-                                }}
-                                placeholder="Tarifa base (ej: 5.000)"
-                                style={inputStyle(touched.tarifaBase && !!errors.tarifaBase)}
-                                inputMode="numeric"
-                            />
-                            <div style={{ fontSize: 12, color: "#666" }}>
-                                Valor: ${Number(form.tarifaBase || 0).toLocaleString("es-CO")}
-                            </div>
-
-                            <Helper show={touched.tarifaBase} text={errors.tarifaBase} />
-
-
-
-
-                            <input
-                                value={formatCOP(form.recargoPorSalto)}
-                                onChange={(e) => {
-                                    let digits = onlyDigits(e.target.value).replace(/^0+/, "");
-                                    setForm((p) => ({ ...p, recargoPorSalto: digits }));
-                                }}
-                                onBlur={() => setTouched((t) => ({ ...t, recargoPorSalto: true }))}
-                                onPaste={(e) => {
-                                    const texto = e.clipboardData.getData("text");
-                                    const digits = onlyDigits(texto);
-                                    if (!digits) e.preventDefault();
-                                }}
-                                placeholder="Recargo por salto (ej: 1.000)"
-                                style={inputStyle(touched.recargoPorSalto && !!errors.recargoPorSalto)}
-                                inputMode="numeric"
-                            />
-                            <div style={{ fontSize: 12, color: "#666" }}>
-                                Valor: ${Number(form.recargoPorSalto || 0).toLocaleString("es-CO")}
-                            </div>
-
-                            <Helper show={touched.recargoPorSalto} text={errors.recargoPorSalto} />
-
-
-
-                        </div>
-
-                        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 14 }}>
-                            <button onClick={() => setOpen(false)}>Cancelar</button>
-                            <button onClick={guardar}>{editing ? "Guardar cambios" : "Crear"}</button>
+                            <button
+                                className={s.btnPrimary}
+                                onClick={guardar}
+                                disabled={loadingGuardar}
+                            >
+                                {loadingGuardar
+                                    ? "Guardando..."
+                                    : editing ? "Guardar cambios" : "Crear"}
+                            </button>
                         </div>
                     </div>
                 </div>
             )}
+
+            {toast && <Toast error={toast} onClose={() => setToast(null)} />}
         </div>
     );
 }
-
-async function safeText(res) {
-    try { return await res.text(); } catch { return ""; }
-}
-
-function inputStyle(hasError) {
-    return {
-        ...inp,
-        border: hasError ? "1px solid #ef4444" : "1px solid #e5e7eb",
-        outline: "none",
-    };
-}
-
-function Helper({ show, text }) {
-    if (!show || !text) return null;
-    return <div style={{ fontSize: 12, color: "#ef4444", fontWeight: 700 }}>{text}</div>;
-}
-
-function onlyDigits(s) {
-    return String(s ?? "").replace(/\D/g, "");
-}
-
-function formatCOP(digits) {
-    const n = Number(digits || 0);
-    return n ? n.toLocaleString("es-CO") : "";
-}
-
-
-
-const th = { padding: 10, fontSize: 13, color: "#111827" };
-const td = { padding: 10, fontSize: 13, color: "#111827", verticalAlign: "top" };
-const inp = { padding: "10px 12px", borderRadius: 10, border: "1px solid #e5e7eb", minWidth: 260 };
-const inpSmall = { padding: "10px 12px", borderRadius: 10, border: "1px solid #e5e7eb", width: 160 };
-
-const styles = {
-    backdrop: {
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.35)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 12,
-        zIndex: 9999,
-    },
-    modal: {
-        width: "min(520px, 95vw)",
-        background: "#fff",
-        borderRadius: 12,
-        padding: 14,
-        border: "1px solid #ddd",
-    },
-};
