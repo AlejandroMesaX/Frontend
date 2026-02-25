@@ -1,0 +1,201 @@
+/* Backdrop */
+.backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    z-index: 9999;
+}
+
+/* Modal */
+.modal {
+    width: min(520px, 95vw);
+    background: #fff;
+    border-radius: 12px;
+    padding: 14px;
+    border: 1px solid #ddd;
+}
+
+/* Header */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.header h3 {
+    margin: 0;
+}
+
+.btnClose {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: #374151;
+}
+
+.btnClose:hover {
+    color: #111827;
+}
+
+/* Info FIFO */
+.fifoInfo {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #eee;
+    background: #fafafa;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.fifoLabel {
+    font-size: 12px;
+    color: #666;
+}
+
+/* Lista domiciliarios */
+.lista {
+    margin-top: 12px;
+    display: grid;
+    gap: 8px;
+    max-height: 320px;
+    overflow: auto;
+}
+
+.listaVacia {
+    color: #666;
+}
+
+/* Item domiciliario */
+.itemBtn {
+    width: 100%;
+    text-align: left;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: border 0.15s, background 0.15s;
+}
+
+.itemBtn:hover {
+    border-color: #9ca3af;
+    background: #f9fafb;
+}
+
+.itemBtnActivo {
+    border: 2px solid #111827;
+    background: #f9fafb;
+}
+
+.itemInfo {
+    display: grid;
+    gap: 2px;
+}
+
+.itemEmail {
+    font-weight: 800;
+}
+
+.itemDesde {
+    font-size: 12px;
+    color: #666;
+}
+
+.itemRight {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.itemId {
+    font-size: 12px;
+    color: #111827;
+    font-weight: 800;
+}
+
+/* Badge estado */
+.badge {
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    border: 1px solid #e5e7eb;
+}
+
+/* Resumen seleccionado */
+.seleccionado {
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.seleccionadoEmail {
+    font-weight: 800;
+}
+
+.seleccionadoDesde {
+    font-size: 12px;
+    color: #666;
+}
+
+/* Error inline */
+.errorInline {
+    color: #b91c1c;
+    font-size: 13px;
+    margin-top: 8px;
+}
+
+/* Footer botones */
+.footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.btnCancelar {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    cursor: pointer;
+}
+
+.btnCancelar:hover:not(:disabled) {
+    background: #f3f4f6;
+}
+
+.btnAsignar {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    background: #111827;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.btnAsignar:hover:not(:disabled) {
+    background: #1f2937;
+}
+
+.btnAsignar:disabled,
+.btnCancelar:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

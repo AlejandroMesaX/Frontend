@@ -15,14 +15,21 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/delivery" element={<DeliveryPanel />} />
-        <Route path="/admin" element={<AdminPanel />} />
 
         <Route
           path="/admin"
           element={
             <ProtectedRoute role="ADMIN">
-              <AdminPedidos />
+              <AdminPanel />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/domiciliario"
+          element={
+            <ProtectedRoute role="DELIVERY">  {/* ✅ DELIVERY no DOMICILIARIO */}
+              <DeliveryPanel />
             </ProtectedRoute>
           }
         />
@@ -32,15 +39,6 @@ export default function App() {
           element={
             <ProtectedRoute role="CLIENTE">
               <Placeholder title="Cliente - próximamente" />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/domiciliario"
-          element={
-            <ProtectedRoute role="DOMICILIARIO">
-              <Placeholder title="Domiciliario - próximamente" />
             </ProtectedRoute>
           }
         />

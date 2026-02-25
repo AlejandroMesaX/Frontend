@@ -17,7 +17,6 @@ export default function Login() {
         try {
             const data = await loginRequest(email, password);
 
-            // ✅ guardar en contexto (y localStorage lo maneja AuthContext)
 
             login({
                 token: data.token,
@@ -26,18 +25,6 @@ export default function Login() {
                 userId: data.usuario.id,
             });
 
-            console.log("AFTER login() localStorage:", {
-                token: localStorage.getItem("token"),
-                userId: localStorage.getItem("userId"),
-                rol: localStorage.getItem("rol"),
-            });
-
-
-            // ✅ redirección por rol
-            //if (data.usuario.rol === "ADMIN") nav("/admin/pedidos");
-            //else if (data.usuario.rol === "CLIENT") nav("/cliente");
-            //else if (data.usuario.rol === "DELIVERY") nav("/delivery");
-            //else nav("/");
             if (data.usuario.rol === "ADMIN") nav("/admin");
             else if (data.usuario.rol === "DELIVERY") nav("/domiciliario");
             else if (data.usuario.rol === "CLIENTE") nav("/cliente");
