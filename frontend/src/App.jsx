@@ -1,9 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
-import AdminPedidos from "./pages/AdminPedidos";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import DeliveryPanel from "./pages/DeliveryPanel";
 import AdminPanel from "./pages/AdminPanel";
+import ClientePanel from "./pages/ClientePanel";
 
 
 function Placeholder({ title }) {
@@ -37,8 +37,8 @@ export default function App() {
         <Route
           path="/cliente"
           element={
-            <ProtectedRoute role="CLIENTE">
-              <Placeholder title="Cliente - próximamente" />
+            <ProtectedRoute role="CLIENT">
+              <ClientePanel />
             </ProtectedRoute>
           }
         />

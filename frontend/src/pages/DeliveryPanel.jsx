@@ -1,145 +1,242 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../auth/AuthContext";
 import { authFetch } from "../api/http";
+import { parseBackendError, errorFronted } from "../api/errors";
 import { useDeliveryPedidosRealtime } from "../realtime/useDeliveryPedidosRealtime";
+import Toast from "../components/Toast";
+import s from "./DeliveryPanel.module.css";
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function toNumberMoney(val) {
+    if (val == null) return 0;
+    const n = Number(String(val).replace(/\./g, "").replace(/,/g, "."));
+    return Number.isFinite(n) ? n : 0;
+}
+
+function yyyyMMddOf(fechaCreacion) {
+    if (!fechaCreacion) return null;
+    return String(fechaCreacion).slice(0, 10);
+}
+
+// ── Componentes pequeños ──────────────────────────────────────────────────────
+
+function Metric({ label, value }) {
+    return (
+        <div className={s.metric}>
+            <div className={s.metricLabel}>{label}</div>
+            <div className={s.metricValue}>
+                ${Number(value || 0).toLocaleString("es-CO")}
+            </div>
+        </div>
+    );
+}
+
+// ── Modal incidencia (reemplaza prompt()) ─────────────────────────────────────
+
+function IncidenciaModal({ open, onConfirm, onCancel, loading }) {
+    const [motivo, setMotivo] = useState("");
+    const [touched, setTouched] = useState(false);
+
+    useEffect(() => {
+        if (open) { setMotivo(""); setTouched(false); }
+    }, [open]);
+
+    if (!open) return null;
+
+    const hasError = touched && !motivo.trim();
+
+    return (
+        <div className={s.backdrop}>
+            <div className={s.modal}>
+                <div className={s.modalHeader}>
+                    <h3>🆘 Reportar incidencia</h3>
+                    <button className={s.btnClose} onClick={onCancel}>✕</button>
+                </div>
+
+                <div>
+                    <textarea
+                        className={`${s.textarea} ${hasError ? s.textareaError : ""}`}
+                        value={motivo}
+                        onChange={(e) => setMotivo(e.target.value)}
+                        onBlur={() => setTouched(true)}
+                        placeholder="Describe el problema detalladamente..."
+                    />
+                    {hasError && (
+                        <div className={s.helper}>⚠️ El motivo es obligatorio.</div>
+                    )}
+                </div>
+
+                <div className={s.modalFooter}>
+                    <button className={s.btn} onClick={onCancel} disabled={loading}>
+                        Cancelar
+                    </button>
+                    <button
+                        className={s.btnWarning}
+                        onClick={() => {
+                            setTouched(true);
+                            if (!motivo.trim()) return;
+                            onConfirm(motivo.trim());
+                        }}
+                        disabled={loading}
+                    >
+                        {loading ? "Enviando..." : "Reportar"}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+
+const TABS = [
+    { key: "inicio", label: "Inicio" },
+    { key: "historial", label: "Historial" },
+    { key: "finanzas", label: "Finanzas" },
+];
+
+// ── Componente principal ──────────────────────────────────────────────────────
 
 export default function DeliveryPanel() {
     const { token, userId, logout } = useAuth();
 
-    const [tab, setTab] = useState("inicio"); // inicio | historial | finanzas
+    const [tab, setTab] = useState("inicio");
     const [disponible, setDisponible] = useState(false);
     const [pedidoActual, setPedidoActual] = useState(null);
+    const [toast, setToast] = useState(null);
+    const [loadingDisponible, setLoadingDisponible] = useState(false);
+    const [loadingAvanzar, setLoadingAvanzar] = useState(false);
+    const [loadingAyuda, setLoadingAyuda] = useState(false);
 
     // Historial
     const [historial, setHistorial] = useState([]);
     const [loadingHist, setLoadingHist] = useState(false);
-    const [diaFiltro, setDiaFiltro] = useState(""); // formato YYYY-MM-DD
+    const [diaFiltro, setDiaFiltro] = useState("");
 
-    // Finanzas filtros
+    // Finanzas
     const todayISO = useMemo(() => new Date().toISOString().slice(0, 10), []);
-    const [finDia, setFinDia] = useState("");       // YYYY-MM-DD (opcional)
-    const [finDesde, setFinDesde] = useState("");   // YYYY-MM-DD (opcional)
-    const [finHasta, setFinHasta] = useState("");   // YYYY-MM-DD (opcional)
+    const [finDia, setFinDia] = useState("");
+    const [finDesde, setFinDesde] = useState("");
+    const [finHasta, setFinHasta] = useState("");
 
-    function toNumberMoney(val) {
-        if (val == null) return 0;
-        // soporta "12000", 12000, "12,000", "12.000"
-        const s = String(val).replace(/\./g, "").replace(/,/g, ".");
-        const n = Number(s);
-        return Number.isFinite(n) ? n : 0;
-    }
+    // Modal incidencia
+    const [openIncidencia, setOpenIncidencia] = useState(false);
 
-    function yyyyMMddOf(fechaCreacion) {
-        if (!fechaCreacion) return null;
-        return String(fechaCreacion).slice(0, 10); // ISO safe
-    }
+    // ── Realtime ────────────────────────────────────────────────────────────
 
-
-
-
-    // ✅ WS pedidos
     useDeliveryPedidosRealtime({
         token,
         userId,
-        onPedido: (pedido) => {
-            console.log("📦 Pedido realtime:", pedido);
-            setPedidoActual(pedido); // si llega null, lo quita
-        },
+        onPedido: (pedido) => setPedidoActual(pedido),
     });
+
+    // ── Estados derivados ───────────────────────────────────────────────────
+
+    const tienePedidoActivo =
+        pedidoActual &&
+        (pedidoActual.estado === "ASIGNADO" || pedidoActual.estado === "EN_CAMINO");
+
+    const puedeTengoPedido = pedidoActual?.estado === "ASIGNADO";
+    const puedeFinalizar = pedidoActual?.estado === "EN_CAMINO";
+    const puedeAyuda = pedidoActual?.estado === "EN_CAMINO";
+
+    // ── Acciones ────────────────────────────────────────────────────────────
 
     async function toggleDisponible() {
         if (tienePedidoActivo) {
-            alert("No puedes cambiar disponibilidad mientras tengas un pedido activo.");
-            return;
-        }
-        const next = !disponible;
-
-        const res = await authFetch("/api/delivery/me/disponibilidad", {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ disponible: next }),
-        });
-
-        if (!res.ok) {
-            const msg = await safeText(res);
-            alert("No se pudo actualizar disponibilidad. " + msg);
+            setToast(errorFronted("No puedes cambiar disponibilidad mientras tengas un pedido activo."));
             return;
         }
 
-        setDisponible(next);
+        setLoadingDisponible(true);
+        try {
+            const next = !disponible;
+            const res = await authFetch("/api/delivery/me/disponibilidad", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ disponible: next }),
+            });
+
+            if (!res.ok) { setToast(await parseBackendError(res)); return; }
+            setDisponible(next);
+
+        } catch {
+            setToast(errorFronted("No se pudo conectar con el servidor."));
+        } finally {
+            setLoadingDisponible(false);
+        }
     }
 
-    // ✅ Cambiar estado (ASIGNADO->EN_CAMINO, EN_CAMINO->ENTREGADO)
     async function avanzarEstado(nuevoEstado) {
         if (!pedidoActual) return;
 
-        // ⚠️ Ajusta esta ruta si tu backend usa otra
-        const res = await authFetch(`/api/domiciliario/pedidos/${pedidoActual.id}/estado`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ estado: nuevoEstado }),
-        });
+        setLoadingAvanzar(true);
+        try {
+            const res = await authFetch(`/api/domiciliario/pedidos/${pedidoActual.id}/estado`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ estado: nuevoEstado }),
+            });
 
-        if (!res.ok) {
-            const msg = await safeText(res);
-            alert(`No se pudo actualizar el estado. (HTTP ${res.status}) ${msg}`);
-            return;
+            if (!res.ok) { setToast(await parseBackendError(res)); return; }
+
+            let actualizado = null;
+            try { actualizado = await res.json(); } catch { }
+
+            if (nuevoEstado === "ENTREGADO") {
+                setPedidoActual(null);
+                setDisponible(true);
+                return;
+            }
+
+            setPedidoActual((prev) => {
+                if (!prev) return prev;
+                return actualizado ?? { ...prev, estado: nuevoEstado };
+            });
+
+        } catch {
+            setToast(errorFronted("No se pudo conectar con el servidor."));
+        } finally {
+            setLoadingAvanzar(false);
         }
-
-        // Si backend devuelve DTO actualizado
-        let actualizado = null;
-        try { actualizado = await res.json(); } catch { }
-
-        // Si finaliza, ocultar pedido y dejar disponible (UX)
-        if (nuevoEstado === "ENTREGADO") {
-            setPedidoActual(null);
-            setDisponible(true);
-            return;
-        }
-
-        // Si no finaliza, actualizar estado en pantalla
-        setPedidoActual((prev) => {
-            if (!prev) return prev;
-            if (actualizado) return actualizado;
-            return { ...prev, estado: nuevoEstado };
-        });
     }
 
-    // ✅ Ayuda/incidencia (solo EN_CAMINO)
-    async function pedirAyuda() {
+    async function confirmarAyuda(motivo) {
         if (!pedidoActual) return;
 
-        const motivo = prompt("Describe el problema (motivo):");
-        if (!motivo || !motivo.trim()) return;
+        setLoadingAyuda(true);
+        try {
+            const res = await authFetch(`/api/domiciliario/pedidos/${pedidoActual.id}/ayuda`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ motivo }),
+            });
 
-        const res = await authFetch(`/api/domiciliario/pedidos/${pedidoActual.id}/ayuda`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ motivo }),
-        });
+            if (!res.ok) { setToast(await parseBackendError(res)); return; }
 
-        if (!res.ok) {
-            const msg = await safeText(res);
-            alert(`No se pudo reportar la incidencia. (HTTP ${res.status}) ${msg}`);
-            return;
+            setOpenIncidencia(false);
+            setPedidoActual(null);
+            setDisponible(true);
+
+        } catch {
+            setToast(errorFronted("No se pudo conectar con el servidor."));
+        } finally {
+            setLoadingAyuda(false);
         }
-
-        alert("Tu solicitud fue enviada. El administrador reasignará el pedido.");
-        setPedidoActual(null);
-        setDisponible(true);
     }
+
+    // ── Historial ───────────────────────────────────────────────────────────
 
     async function cargarHistorial() {
         setLoadingHist(true);
         try {
             const res = await authFetch("/api/domiciliario/pedidos/me/entregados");
-            if (!res.ok) {
-                const msg = await safeText(res);
-                alert("No se pudo cargar historial. " + msg);
-                return;
-            }
+            if (!res.ok) { setToast(await parseBackendError(res)); return; }
             const data = await res.json();
             setHistorial(Array.isArray(data) ? data : []);
+        } catch {
+            setToast(errorFronted("No se pudo conectar con el servidor."));
         } finally {
             setLoadingHist(false);
         }
@@ -147,143 +244,77 @@ export default function DeliveryPanel() {
 
     useEffect(() => {
         if (tab === "historial") cargarHistorial();
-
         if (tab === "finanzas") {
-            // si no hay filtros, por defecto hoy
             if (!finDia && !finDesde && !finHasta) setFinDia(todayISO);
-            cargarHistorial(); // reutilizamos el mismo array "historial"
+            cargarHistorial();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tab]);
 
-
-    const puedeTengoPedido = pedidoActual?.estado === "ASIGNADO";
-    const puedeFinalizar = pedidoActual?.estado === "EN_CAMINO";
-    const puedeAyuda = pedidoActual?.estado === "EN_CAMINO"; // 👈 como pediste
-    const tienePedidoActivo =
-        pedidoActual &&
-        (pedidoActual.estado === "ASIGNADO" || pedidoActual.estado === "EN_CAMINO");
+    // ── Memos ───────────────────────────────────────────────────────────────
 
     const historialFiltrado = useMemo(() => {
         if (!diaFiltro) return historial;
-
-        // diaFiltro viene como "YYYY-MM-DD"
-        return historial.filter((p) => {
-            if (!p.fechaCreacion) return false;
-
-            // Si fechaCreacion viene tipo "2026-01-23T12:36:02..."
-            // tomamos solo la parte de la fecha:
-            const fecha = String(p.fechaCreacion).slice(0, 10);
-            return fecha === diaFiltro;
-        });
+        return historial.filter((p) => String(p.fechaCreacion ?? "").slice(0, 10) === diaFiltro);
     }, [historial, diaFiltro]);
 
     const finanzasFiltrado = useMemo(() => {
-        // dataset base: historial (entregados)
         const base = Array.isArray(historial) ? historial : [];
-
-        // ✅ Si no hay nada seleccionado, por defecto hoy
         const dia = finDia || (!finDesde && !finHasta ? todayISO : "");
 
-        // 1) filtro por día exacto
-        if (dia) {
-            return base.filter((p) => yyyyMMddOf(p.fechaCreacion) === dia);
-        }
+        if (dia) return base.filter((p) => yyyyMMddOf(p.fechaCreacion) === dia);
 
-        // 2) filtro por rango desde-hasta (inclusive)
         const desde = finDesde || "0000-01-01";
         const hasta = finHasta || "9999-12-31";
-
         return base.filter((p) => {
             const f = yyyyMMddOf(p.fechaCreacion);
-            if (!f) return false;
-            return f >= desde && f <= hasta;
+            return f && f >= desde && f <= hasta;
         });
     }, [historial, finDia, finDesde, finHasta, todayISO]);
 
     const finResumen = useMemo(() => {
         const total = finanzasFiltrado.reduce((acc, p) => acc + toNumberMoney(p.costoServicio), 0);
         const comisionEmpresa = total * 0.2;
-        const netoDelivery = total - comisionEmpresa;
-        return {
-            total,
-            comisionEmpresa,
-            netoDelivery,
-            pedidos: finanzasFiltrado.length,
-        };
+        return { total, comisionEmpresa, netoDelivery: total - comisionEmpresa, pedidos: finanzasFiltrado.length };
     }, [finanzasFiltrado]);
 
+    // ── Render ──────────────────────────────────────────────────────────────
 
+    // Badge de estado del header
+    const estadoBadgeStyle = {
+        background: tienePedidoActivo ? "#fff7ed" : disponible ? "#ecfdf5" : "#f3f4f6",
+        color: tienePedidoActivo ? "#9a3412" : disponible ? "#065f46" : "#374151",
+    };
+    const estadoBadgeText = tienePedidoActivo ? "🟠 Pedido activo" : disponible ? "🟢 Disponible" : "⚪ Desconectado";
 
-
+    const pedidoEstadoStyle = {
+        background: pedidoActual?.estado === "ASIGNADO" ? "#eff6ff" : "#eef2ff",
+        color: pedidoActual?.estado === "ASIGNADO" ? "#1d4ed8" : "#4338ca",
+    };
 
     return (
-        <div style={{ maxWidth: 900, margin: "20px auto", fontFamily: "sans-serif" }}>
+        <div className={s.container}>
+
             {/* Header */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <h2 style={{ margin: 0 }}>Domiciliario</h2>
-                <button onClick={logout}>Cerrar sesión</button>
+            <div className={s.header}>
+                <h2>Domiciliario</h2>
+                <button className={s.btnLogout} onClick={logout}>Cerrar sesión</button>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
-                <span
-                    style={{
-                        padding: "4px 10px",
-                        borderRadius: 999,
-                        fontSize: 12,
-                        fontWeight: 700,
-                        border: "1px solid #e5e7eb",
-                        background: tienePedidoActivo ? "#fff7ed" : disponible ? "#ecfdf5" : "#f3f4f6",
-                        color: tienePedidoActivo ? "#9a3412" : disponible ? "#065f46" : "#374151",
-                    }}
-                >
-                    {tienePedidoActivo ? "🟠 Pedido activo" : disponible ? "🟢 Disponible" : "⚪ Desconectado"}
-                </span>
+
+            {/* Badges estado */}
+            <div className={s.badges}>
+                <span className={s.badge} style={estadoBadgeStyle}>{estadoBadgeText}</span>
 
                 {pedidoActual?.estado && (
-                    <span
-                        style={{
-                            padding: "4px 10px",
-                            borderRadius: 999,
-                            fontSize: 12,
-                            fontWeight: 700,
-                            border: "1px solid #e5e7eb",
-                            background:
-                                pedidoActual.estado === "ASIGNADO"
-                                    ? "#eff6ff"
-                                    : pedidoActual.estado === "EN_CAMINO"
-                                        ? "#eef2ff"
-                                        : "#f3f4f6",
-                            color:
-                                pedidoActual.estado === "ASIGNADO"
-                                    ? "#1d4ed8"
-                                    : pedidoActual.estado === "EN_CAMINO"
-                                        ? "#4338ca"
-                                        : "#374151",
-                        }}
-                    >
-                        {pedidoActual.estado === "ASIGNADO"
-                            ? "🔵 ASIGNADO"
-                            : pedidoActual.estado === "EN_CAMINO"
-                                ? "🟣 EN CAMINO"
-                                : pedidoActual.estado}
+                    <span className={s.badge} style={pedidoEstadoStyle}>
+                        {pedidoActual.estado === "ASIGNADO" ? "🔵 ASIGNADO" : "🟣 EN CAMINO"}
                     </span>
                 )}
 
                 {pedidoActual?.motivoIncidencia && (
                     <span
-                        style={{
-                            padding: "4px 10px",
-                            borderRadius: 999,
-                            fontSize: 12,
-                            fontWeight: 700,
-                            border: "1px solid #f59e0b",
-                            background: "#fff7ed",
-                            color: "#92400e",
-                            maxWidth: 420,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                        }}
+                        className={s.badge}
+                        style={{ border: "1px solid #f59e0b", background: "#fff7ed", color: "#92400e", maxWidth: 420, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
                         title={pedidoActual.motivoIncidencia}
                     >
                         🆘 Incidencia: {pedidoActual.motivoIncidencia}
@@ -291,140 +322,90 @@ export default function DeliveryPanel() {
                 )}
             </div>
 
-
             {/* Navbar */}
-            <div
-                style={{
-                    marginTop: 12,
-                    display: "flex",
-                    gap: 8,
-                    padding: 8,
-                    border: "1px solid #eee",
-                    borderRadius: 12,
-                    background: "#fafafa",
-                }}
-            >
-                <NavBtn active={tab === "inicio"} onClick={() => setTab("inicio")}>Inicio</NavBtn>
-                <NavBtn active={tab === "historial"} onClick={() => setTab("historial")}>Historial</NavBtn>
-                <NavBtn active={tab === "finanzas"} onClick={() => setTab("finanzas")}>Finanzas (pendiente)</NavBtn>
+            <nav className={s.nav}>
+                {TABS.map(({ key, label }) => (
+                    <button
+                        key={key}
+                        className={`${s.navBtn} ${tab === key ? s.navBtnActive : ""}`}
+                        onClick={() => setTab(key)}
+                    >
+                        {label}
+                    </button>
+                ))}
+            </nav>
 
-            </div>
-
-
-            {/* INICIO */}
+            {/* ── INICIO ── */}
             {tab === "inicio" && (
                 <>
-                    <div style={{ display: "flex", gap: 10, alignItems: "center", margin: "12px 0" }}>
+                    <div className={s.disponibilidadRow}>
                         <button
+                            className={`${s.btnDisponible} ${disponible ? s.btnDisponibleActivo : ""}`}
                             onClick={toggleDisponible}
-                            disabled={tienePedidoActivo}
-                            title={
-                                tienePedidoActivo
-                                    ? "No puedes cambiar disponibilidad mientras tengas un pedido activo"
-                                    : "Cambiar disponibilidad"
-                            }
-                            style={{
-                                padding: "10px 14px",
-                                borderRadius: 10,
-                                border: "1px solid #ddd",
-                                background: disponible ? "#e7fff0" : "#fff",
-                                opacity: tienePedidoActivo ? 0.5 : 1,
-                                cursor: tienePedidoActivo ? "not-allowed" : "pointer",
-                            }}
+                            disabled={tienePedidoActivo || loadingDisponible}
+                            title={tienePedidoActivo ? "No puedes cambiar disponibilidad con un pedido activo" : ""}
                         >
-                            {disponible ? "✅ Disponible" : "⛔ Desconectado"}
+                            {loadingDisponible ? "Actualizando..." : disponible ? "✅ Disponible" : "⛔ Desconectado"}
                         </button>
-
-
-                        <div style={{ color: "#444" }}>
+                        <span className={s.wsInfo}>
                             WS Topic: <code>/topic/delivery/{userId}/pedidos</code>
-                        </div>
+                        </span>
                     </div>
 
-                    <div style={{ border: "1px solid #ddd", borderRadius: 12, padding: 12 }}>
-                        <h3 style={{ marginTop: 0 }}>Pedido actual</h3>
+                    <div className={s.section}>
+                        <h3 style={{ margin: 0 }}>Pedido actual</h3>
 
                         {!pedidoActual && (
-                            <div style={{ color: "#666" }}>
+                            <div className={s.vacio}>
                                 Aún no tienes pedidos asignados. Mantente disponible.
                             </div>
                         )}
 
                         {pedidoActual && (
-                            <div style={{ display: "grid", gap: 6 }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <div className={s.pedidoCard}>
+                                <div className={s.pedidoTitulo}>
                                     <b>#{pedidoActual.id}</b>
-                                    <span
-                                        style={{
-                                            padding: "2px 8px",
-                                            borderRadius: 999,
-                                            fontSize: 12,
-                                            fontWeight: 700,
-                                            border: "1px solid #e5e7eb",
-                                            background: pedidoActual.estado === "ASIGNADO" ? "#eff6ff" : "#eef2ff",
-                                            color: pedidoActual.estado === "ASIGNADO" ? "#1d4ed8" : "#4338ca",
-                                        }}
-                                    >
+                                    <span className={s.badge} style={pedidoEstadoStyle}>
                                         {pedidoActual.estado}
                                     </span>
                                 </div>
+
+                                {pedidoActual.motivoIncidencia && (
+                                    <div className={s.incidenciaBox}>
+                                        <b>🆘 Motivo de incidencia:</b> {pedidoActual.motivoIncidencia}
+                                    </div>
+                                )}
 
                                 <div><b>Recogida:</b> {pedidoActual.barrioRecogida} — {pedidoActual.direccionRecogida}</div>
                                 <div><b>Entrega:</b> {pedidoActual.barrioEntrega} — {pedidoActual.direccionEntrega}</div>
                                 <div><b>Contacto recogida:</b> {pedidoActual.telefonoContactoRecogida}</div>
                                 <div><b>Recibe:</b> {pedidoActual.nombreQuienRecibe} — {pedidoActual.telefonoQuienRecibe}</div>
-                                <div><b>Costo:</b> {pedidoActual.costoServicio}</div>
+                                <div><b>Costo:</b> ${toNumberMoney(pedidoActual.costoServicio).toLocaleString("es-CO")}</div>
 
-                                {/* Motivo de incidencia (si el pedido fue reasignado o trae motivo) */}
-                                {pedidoActual?.motivoIncidencia && (
-                                    <div
-                                        style={{
-                                            marginTop: 8,
-                                            padding: 10,
-                                            borderRadius: 10,
-                                            border: "1px solid #f59e0b",
-                                            background: "#fff7ed",
-                                            color: "#92400e",
-                                            fontSize: 13,
-                                        }}
-                                    >
-                                        <b>🆘 Motivo de incidencia:</b> {pedidoActual.motivoIncidencia}
-                                    </div>
-                                )}
-
-                                {/* Botones de acción */}
-                                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 10 }}>
+                                <div className={s.pedidoAcciones}>
                                     <button
+                                        className={s.btnAccion}
                                         onClick={() => avanzarEstado("EN_CAMINO")}
-                                        disabled={!puedeTengoPedido}
-                                        title={!puedeTengoPedido ? "Solo cuando está ASIGNADO" : "Marcar EN_CAMINO"}
-                                        style={{ padding: "10px 14px", borderRadius: 10, border: "1px solid #ddd" }}
+                                        disabled={!puedeTengoPedido || loadingAvanzar}
+                                        title={!puedeTengoPedido ? "Solo cuando está ASIGNADO" : ""}
                                     >
                                         📦 Tengo el pedido
                                     </button>
 
                                     <button
+                                        className={s.btnAccion}
                                         onClick={() => avanzarEstado("ENTREGADO")}
-                                        disabled={!puedeFinalizar}
-                                        title={!puedeFinalizar ? "Solo cuando está EN_CAMINO" : "Finalizar ENTREGADO"}
-                                        style={{ padding: "10px 14px", borderRadius: 10, border: "1px solid #ddd" }}
+                                        disabled={!puedeFinalizar || loadingAvanzar}
+                                        title={!puedeFinalizar ? "Solo cuando está EN_CAMINO" : ""}
                                     >
                                         ✅ Finalizar entrega
                                     </button>
 
                                     <button
-                                        onClick={pedirAyuda}
-                                        disabled={!puedeAyuda}
-                                        title={!puedeAyuda ? "Solo disponible cuando ya tienes el pedido (EN_CAMINO)" : "Reportar incidencia"}
-                                        style={{
-                                            background: "#fff",
-                                            border: "1px solid #f59e0b",
-                                            color: "#b45309",
-                                            padding: "10px 14px",
-                                            borderRadius: 10,
-                                            opacity: !puedeAyuda ? 0.5 : 1,
-                                            cursor: !puedeAyuda ? "not-allowed" : "pointer",
-                                        }}
+                                        className={s.btnAyuda}
+                                        onClick={() => setOpenIncidencia(true)}
+                                        disabled={!puedeAyuda || loadingAvanzar}
+                                        title={!puedeAyuda ? "Solo disponible cuando tienes el pedido (EN_CAMINO)" : ""}
                                     >
                                         🆘 Ayuda / No puedo finalizar
                                     </button>
@@ -435,76 +416,54 @@ export default function DeliveryPanel() {
                 </>
             )}
 
-            {/* HISTORIAL */}
+            {/* ── HISTORIAL ── */}
             {tab === "historial" && (
-                <div style={{ marginTop: 12, border: "1px solid #ddd", borderRadius: 12, padding: 12 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <h3 style={{ margin: 0 }}>Historial (entregados)</h3>
-                        <button onClick={cargarHistorial} disabled={loadingHist}>
+                <div className={s.section}>
+                    <div className={s.sectionHeader}>
+                        <h3>Historial (entregados)</h3>
+                        <button className={s.btn} onClick={cargarHistorial} disabled={loadingHist}>
                             {loadingHist ? "Cargando..." : "Recargar"}
                         </button>
                     </div>
-                    <div style={{ marginTop: 10, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                        <label style={{ fontSize: 13, color: "#444" }}>
-                            Filtrar por día:
-                        </label>
 
+                    <div className={s.filtros}>
+                        <span className={s.filtroLabel}>Filtrar por día:</span>
                         <input
                             type="date"
+                            className={s.inputDate}
                             value={diaFiltro}
                             onChange={(e) => setDiaFiltro(e.target.value)}
-                            style={{
-                                padding: "8px 10px",
-                                borderRadius: 10,
-                                border: "1px solid #e5e7eb",
-                            }}
                         />
-
                         <button
+                            className={s.btn}
                             onClick={() => setDiaFiltro("")}
                             disabled={!diaFiltro}
-                            style={{
-                                padding: "8px 10px",
-                                borderRadius: 10,
-                                border: "1px solid #e5e7eb",
-                                background: "#fff",
-                                cursor: diaFiltro ? "pointer" : "not-allowed",
-                                opacity: diaFiltro ? 1 : 0.5,
-                            }}
                         >
                             Quitar filtro
                         </button>
-
-                        <span style={{ fontSize: 12, color: "#666" }}>
+                        <span className={s.contador}>
                             Mostrando: <b>{historialFiltrado.length}</b> / {historial.length}
                         </span>
                     </div>
 
-
-                    <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
-                        {loadingHist && <div style={{ color: "#666" }}>Cargando historial…</div>}
+                    <div className={s.lista}>
+                        {loadingHist && <div className={s.vacio}>Cargando historial…</div>}
 
                         {!loadingHist && historialFiltrado.length === 0 && (
-                            <div style={{ color: "#666" }}>
+                            <div className={s.vacio}>
                                 {diaFiltro ? "No hay pedidos entregados para ese día." : "Aún no tienes pedidos entregados."}
                             </div>
                         )}
 
                         {historialFiltrado.map((p) => (
-                            <div key={p.id} style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-                                <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-                                    <div>
-                                        <div><b>#{p.id}</b> — {p.estado}</div>
-                                        <div style={{ fontSize: 13, color: "#444", marginTop: 4 }}>
-                                            <b>Entrega:</b> {p.barrioEntrega} — {p.direccionEntrega}
-                                        </div>
-                                        <div style={{ fontSize: 13, color: "#444" }}>
-                                            <b>Costo:</b> {p.costoServicio}
-                                        </div>
-                                    </div>
-                                    <div style={{ fontSize: 12, color: "#666", textAlign: "right" }}>
-                                        {p.fechaCreacion ? <div>Creado: {p.fechaCreacion}</div> : null}
-                                    </div>
+                            <div key={p.id} className={s.itemCard}>
+                                <div className={s.itemInfo}>
+                                    <div><b>#{p.id}</b> — {p.estado}</div>
+                                    <div><b>Entrega:</b> {p.barrioEntrega} — {p.direccionEntrega}</div>
+                                    <div><b>Costo:</b> ${toNumberMoney(p.costoServicio).toLocaleString("es-CO")}</div>
+                                </div>
+                                <div className={s.itemMeta}>
+                                    {p.fechaCreacion && <div>Creado: {String(p.fechaCreacion).slice(0, 10)}</div>}
                                 </div>
                             </div>
                         ))}
@@ -512,142 +471,86 @@ export default function DeliveryPanel() {
                 </div>
             )}
 
-            {/* FINANZAS */}
+            {/* ── FINANZAS ── */}
             {tab === "finanzas" && (
-                <div style={{ marginTop: 12, border: "1px solid #ddd", borderRadius: 12, padding: 12 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                        <h3 style={{ margin: 0 }}>Finanzas</h3>
-                        <button onClick={cargarHistorial} disabled={loadingHist}>
+                <div className={s.section}>
+                    <div className={s.sectionHeader}>
+                        <h3>Finanzas</h3>
+                        <button className={s.btn} onClick={cargarHistorial} disabled={loadingHist}>
                             {loadingHist ? "Cargando..." : "Recargar"}
                         </button>
                     </div>
 
-                    {/* ✅ Resumen superior */}
-                    <div
-                        style={{
-                            marginTop: 12,
-                            padding: 12,
-                            borderRadius: 12,
-                            border: "1px solid #eee",
-                            background: "#fafafa",
-                            display: "grid",
-                            gap: 8,
-                        }}
-                    >
-                        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                    {/* Resumen */}
+                    <div className={s.resumenBox}>
+                        <div className={s.resumenTitulo}>
                             <span style={{ fontWeight: 800, fontSize: 16 }}>💰 Ganancias (según filtro)</span>
-                            <span style={{ fontSize: 12, color: "#666" }}>
-                                Pedidos: <b>{finResumen.pedidos}</b>
-                            </span>
+                            <span className={s.contador}>Pedidos: <b>{finResumen.pedidos}</b></span>
                         </div>
-
-                        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                        <div className={s.resumenMetrics}>
                             <Metric label="Total" value={finResumen.total} />
                             <Metric label="Comisión empresa (20%)" value={finResumen.comisionEmpresa} />
                             <Metric label="Tu neto (80%)" value={finResumen.netoDelivery} />
                         </div>
                     </div>
 
-                    {/* ✅ Filtros */}
-                    <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
-                        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                            <label style={{ fontSize: 13, color: "#444", fontWeight: 700 }}>Filtrar por día:</label>
+                    {/* Filtros */}
+                    <div style={{ display: "grid", gap: 10 }}>
+                        <div className={s.filtros}>
+                            <span className={s.filtroLabel}>Filtrar por día:</span>
                             <input
                                 type="date"
+                                className={s.inputDate}
                                 value={finDia}
-                                onChange={(e) => {
-                                    setFinDia(e.target.value);
-                                    // si elige día, limpiamos rango
-                                    setFinDesde("");
-                                    setFinHasta("");
-                                }}
-                                style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid #e5e7eb" }}
+                                onChange={(e) => { setFinDia(e.target.value); setFinDesde(""); setFinHasta(""); }}
                             />
-
-                            <button
-                                onClick={() => {
-                                    setFinDia(todayISO);
-                                    setFinDesde("");
-                                    setFinHasta("");
-                                }}
-                                style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid #e5e7eb", background: "#fff" }}
-                            >
+                            <button className={s.btn} onClick={() => { setFinDia(todayISO); setFinDesde(""); setFinHasta(""); }}>
                                 Hoy
                             </button>
-
-                            <button
-                                onClick={() => {
-                                    setFinDia("");
-                                    setFinDesde("");
-                                    setFinHasta("");
-                                    // vuelve al default hoy
-                                    setFinDia(todayISO);
-                                }}
-                                style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid #e5e7eb", background: "#fff" }}
-                            >
+                            <button className={s.btn} onClick={() => { setFinDia(todayISO); setFinDesde(""); setFinHasta(""); }}>
                                 Limpiar
                             </button>
                         </div>
 
-                        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                            <label style={{ fontSize: 13, color: "#444", fontWeight: 700 }}>Rango:</label>
-
-                            <span style={{ fontSize: 13, color: "#666" }}>Desde</span>
+                        <div className={s.filtros}>
+                            <span className={s.filtroLabel}>Rango:</span>
+                            <span className={s.filtroLabelLight}>Desde</span>
                             <input
                                 type="date"
+                                className={s.inputDate}
                                 value={finDesde}
-                                onChange={(e) => {
-                                    setFinDesde(e.target.value);
-                                    // al usar rango, limpiamos día
-                                    setFinDia("");
-                                }}
-                                style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid #e5e7eb" }}
+                                onChange={(e) => { setFinDesde(e.target.value); setFinDia(""); }}
                             />
-
-                            <span style={{ fontSize: 13, color: "#666" }}>Hasta</span>
+                            <span className={s.filtroLabelLight}>Hasta</span>
                             <input
                                 type="date"
+                                className={s.inputDate}
                                 value={finHasta}
-                                onChange={(e) => {
-                                    setFinHasta(e.target.value);
-                                    setFinDia("");
-                                }}
-                                style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid #e5e7eb" }}
+                                onChange={(e) => { setFinHasta(e.target.value); setFinDia(""); }}
                             />
-
-                            <span style={{ fontSize: 12, color: "#666" }}>
+                            <span className={s.contador}>
                                 Mostrando: <b>{finanzasFiltrado.length}</b> / {historial.length}
                             </span>
                         </div>
                     </div>
 
-                    {/* ✅ Lista como historial */}
-                    <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
-                        {loadingHist && <div style={{ color: "#666" }}>Cargando…</div>}
+                    {/* Lista */}
+                    <div className={s.lista}>
+                        {loadingHist && <div className={s.vacio}>Cargando…</div>}
 
                         {!loadingHist && finanzasFiltrado.length === 0 && (
-                            <div style={{ color: "#666" }}>
-                                No hay pedidos entregados para el filtro seleccionado.
-                            </div>
+                            <div className={s.vacio}>No hay pedidos entregados para el filtro seleccionado.</div>
                         )}
 
                         {finanzasFiltrado.map((p) => (
-                            <div key={p.id} style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-                                <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-                                    <div>
-                                        <div>
-                                            <b>#{p.id}</b> — {p.estado}
-                                        </div>
-                                        <div style={{ fontSize: 13, color: "#444", marginTop: 4 }}>
-                                            <b>Entrega:</b> {p.barrioEntrega} — {p.direccionEntrega}
-                                        </div>
-                                        <div style={{ fontSize: 13, color: "#444" }}>
-                                            <b>Costo:</b> {p.costoServicio}
-                                        </div>
-                                    </div>
-                                    <div style={{ fontSize: 12, color: "#666", textAlign: "right" }}>
-                                        {p.fechaCreacion ? <div>Creado: {p.fechaCreacion}</div> : null}
-                                    </div>
+                            <div key={p.id} className={s.itemCard}>
+                                <div className={s.itemInfo}>
+                                    <div><b>#{p.id}</b> — {p.estado}</div>
+                                    <div><b>Entrega:</b> {p.barrioEntrega} — {p.direccionEntrega}</div>
+                                    <div><b>Costo:</b> ${toNumberMoney(p.costoServicio).toLocaleString("es-CO")}</div>
+                                </div>
+                                <div className={s.itemMeta}>
+                                    {p.fechaCreacion && <div>Creado: {String(p.fechaCreacion).slice(0, 10)}</div>}
                                 </div>
                             </div>
                         ))}
@@ -655,41 +558,15 @@ export default function DeliveryPanel() {
                 </div>
             )}
 
+            {/* Modal incidencia */}
+            <IncidenciaModal
+                open={openIncidencia}
+                onConfirm={confirmarAyuda}
+                onCancel={() => setOpenIncidencia(false)}
+                loading={loadingAyuda}
+            />
+
+            {toast && <Toast error={toast} onClose={() => setToast(null)} />}
         </div>
     );
-}
-
-function NavBtn({ active, onClick, children }) {
-    return (
-        <button
-            onClick={onClick}
-            style={{
-                padding: "10px 14px",
-                borderRadius: 10,
-                border: "1px solid #ddd",
-                background: active ? "#111827" : "#fff",
-                color: active ? "#fff" : "#111827",
-                cursor: "pointer",
-            }}
-        >
-            {children}
-        </button>
-    );
-}
-
-function Metric({ label, value }) {
-    const n = Number(value || 0);
-    return (
-        <div style={{ padding: 10, borderRadius: 12, border: "1px solid #e5e7eb", background: "#fff", minWidth: 200 }}>
-            <div style={{ fontSize: 12, color: "#666", fontWeight: 700 }}>{label}</div>
-            <div style={{ fontSize: 18, fontWeight: 900, marginTop: 4 }}>
-                ${n.toLocaleString("es-CO")}
-            </div>
-        </div>
-    );
-}
-
-
-async function safeText(res) {
-    try { return await res.text(); } catch { return ""; }
 }

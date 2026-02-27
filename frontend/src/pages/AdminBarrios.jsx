@@ -256,7 +256,7 @@ export default function AdminBarrios() {
                             {/* Nombre */}
                             <div className={s.field}>
                                 <input
-                                    className={`${s.input} ${s.inputFull} ${touched.nombre && errors.nombre ? s.inputError : ""}`}
+                                    className={`${s.input} ${touched.nombre && errors.nombre ? s.inputError : ""}`}
                                     value={form.nombre}
                                     onChange={(e) => setForm((p) => ({ ...p, nombre: e.target.value }))}
                                     onBlur={() => setTouched((t) => ({ ...t, nombre: true }))}
@@ -270,7 +270,7 @@ export default function AdminBarrios() {
                             {/* Comuna */}
                             <div className={s.field}>
                                 <select
-                                    className={`${s.select} ${s.inputFull} ${touched.comunaNumero && errors.comunaNumero ? s.inputError : ""}`}
+                                    className={`${s.select} ${touched.comunaNumero && errors.comunaNumero ? s.inputError : ""}`}
                                     value={form.comunaNumero}
                                     onChange={(e) => setForm((p) => ({ ...p, comunaNumero: e.target.value }))}
                                     onBlur={() => setTouched((t) => ({ ...t, comunaNumero: true }))}

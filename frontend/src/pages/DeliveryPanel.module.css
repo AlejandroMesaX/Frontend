@@ -1,0 +1,488 @@
+/* Contenedor principal */
+.container {
+    max-width: 900px;
+    margin: 20px auto;
+    font-family: sans-serif;
+    padding: 0 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Header */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header h2 {
+    margin: 0;
+    font-size: 20px;
+    color: #111827;
+}
+
+.btnLogout {
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: #111827;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.btnLogout:hover {
+    background: #fef2f2;
+    border-color: #fca5a5;
+    color: #991b1b;
+}
+
+/* Badges de estado en header */
+.badges {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.badge {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    border: 1px solid #e5e7eb;
+}
+
+/* Navbar */
+.nav {
+    display: flex;
+    gap: 8px;
+    padding: 8px;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    background: #fafafa;
+    flex-wrap: wrap;
+}
+
+.navBtn {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    background: #fff;
+    color: #111827;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.navBtn:hover:not(.navBtnActive) {
+    background: #f3f4f6;
+}
+
+.navBtnActive {
+    background: #111827;
+    color: #fff;
+    border-color: #111827;
+}
+
+/* Botones generales */
+.btn {
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: #111827;
+    transition: background 0.15s;
+}
+
+.btn:hover:not(:disabled) {
+    background: #f3f4f6;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Sección */
+.section {
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 14px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.sectionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.sectionHeader h3 {
+    margin: 0;
+    font-size: 15px;
+    color: #111827;
+}
+
+/* Inicio — disponibilidad */
+.disponibilidadRow {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.btnDisponible {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    background: #fff;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: background 0.15s;
+}
+
+.btnDisponible:hover:not(:disabled) {
+    background: #f0fdf4;
+}
+
+.btnDisponible:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btnDisponibleActivo {
+    background: #e7fff0;
+    border-color: #16a34a;
+}
+
+.wsInfo {
+    font-size: 12px;
+    color: #666;
+}
+
+/* Card pedido actual */
+.pedidoCard {
+    display: grid;
+    gap: 6px;
+    font-size: 13px;
+    color: #111827;
+}
+
+.pedidoTitulo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.incidenciaBox {
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #f59e0b;
+    background: #fff7ed;
+    color: #92400e;
+    font-size: 13px;
+}
+
+.pedidoAcciones {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.btnAccion {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    background: #fff;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 0.15s;
+}
+
+.btnAccion:hover:not(:disabled) {
+    background: #f3f4f6;
+}
+
+.btnAccion:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btnAyuda {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid #f59e0b;
+    background: #fff;
+    color: #b45309;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 0.15s;
+}
+
+.btnAyuda:hover:not(:disabled) {
+    background: #fff7ed;
+}
+
+.btnAyuda:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.vacio {
+    color: #666;
+    font-size: 13px;
+}
+
+/* Filtros historial / finanzas */
+.filtros {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filtroLabel {
+    font-size: 13px;
+    color: #444;
+    font-weight: 700;
+}
+
+.filtroLabelLight {
+    font-size: 13px;
+    color: #666;
+}
+
+.inputDate {
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    font-size: 13px;
+    color: #111827;
+    outline: none;
+}
+
+.inputDate:focus {
+    border-color: #9ca3af;
+}
+
+.contador {
+    font-size: 12px;
+    color: #666;
+}
+
+/* Lista pedidos */
+.lista {
+    display: grid;
+    gap: 10px;
+}
+
+.itemCard {
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.itemInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 13px;
+    color: #111827;
+}
+
+.itemMeta {
+    font-size: 12px;
+    color: #666;
+    text-align: right;
+}
+
+/* Finanzas resumen */
+.resumenBox {
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid #eee;
+    background: #fafafa;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.resumenTitulo {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.resumenMetrics {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* Metric card */
+.metric {
+    padding: 10px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    min-width: 180px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.metricLabel {
+    font-size: 12px;
+    color: #666;
+    font-weight: 700;
+}
+
+.metricValue {
+    font-size: 18px;
+    font-weight: 900;
+    color: #111827;
+}
+
+/* Modal incidencia */
+.backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    z-index: 9999;
+}
+
+.modal {
+    width: min(480px, 95vw);
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modalHeader h3 {
+    margin: 0;
+    font-size: 15px;
+    color: #111827;
+}
+
+.btnClose {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: #6b7280;
+}
+
+.btnClose:hover {
+    color: #111827;
+}
+
+.textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    font-size: 13px;
+    color: #111827;
+    resize: vertical;
+    min-height: 80px;
+    outline: none;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.textarea:focus {
+    border-color: #9ca3af;
+}
+
+.textareaError {
+    border-color: #ef4444 !important;
+}
+
+.helper {
+    font-size: 12px;
+    color: #ef4444;
+    font-weight: 700;
+}
+
+.modalFooter {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.btnPrimary {
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: none;
+    background: #111827;
+    color: #fff;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: background 0.15s;
+}
+
+.btnPrimary:hover:not(:disabled) {
+    background: #1f2937;
+}
+
+.btnPrimary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btnWarning {
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid #f59e0b;
+    background: #fff;
+    color: #b45309;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: background 0.15s;
+}
+
+.btnWarning:hover:not(:disabled) {
+    background: #fff7ed;
+}
+
+.btnWarning:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

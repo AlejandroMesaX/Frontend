@@ -296,7 +296,7 @@ export default function AdminComunas() {
                             {/* Número */}
                             <div className={s.field}>
                                 <input
-                                    className={`${s.input} ${s.inputFull} ${touched.numero && errors.numero ? s.inputError : ""}`}
+                                    className={`${s.input} ${touched.numero && errors.numero ? s.inputError : ""}`}
                                     value={form.numero}
                                     onChange={(e) => {
                                         const value = e.target.value.replace(/\D/g, "").replace(/^0+/, "");
@@ -318,7 +318,7 @@ export default function AdminComunas() {
                             {/* Tarifa base */}
                             <div className={s.field}>
                                 <input
-                                    className={`${s.input} ${s.inputFull} ${touched.tarifaBase && errors.tarifaBase ? s.inputError : ""}`}
+                                    className={`${s.input} ${touched.tarifaBase && errors.tarifaBase ? s.inputError : ""}`}
                                     value={formatCOP(form.tarifaBase)}
                                     onChange={(e) => {
                                         const digits = onlyDigits(e.target.value).replace(/^0+/, "");
@@ -341,7 +341,7 @@ export default function AdminComunas() {
                             {/* Recargo por salto */}
                             <div className={s.field}>
                                 <input
-                                    className={`${s.input} ${s.inputFull} ${touched.recargoPorSalto && errors.recargoPorSalto ? s.inputError : ""}`}
+                                    className={`${s.input} ${touched.recargoPorSalto && errors.recargoPorSalto ? s.inputError : ""}`}
                                     value={formatCOP(form.recargoPorSalto)}
                                     onChange={(e) => {
                                         const digits = onlyDigits(e.target.value).replace(/^0+/, "");

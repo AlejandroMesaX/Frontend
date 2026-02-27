@@ -1,0 +1,90 @@
+/* Contenedor principal */
+.container {
+    max-width: 1100px;
+    margin: 20px auto;
+    font-family: sans-serif;
+    padding: 0 12px;
+}
+
+/* Header */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.header h2 {
+    margin: 0;
+    font-size: 20px;
+    color: #111827;
+}
+
+.btnLogout {
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: #111827;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.btnLogout:hover {
+    background: #fef2f2;
+    border-color: #fca5a5;
+    color: #991b1b;
+}
+
+/* Navegación de tabs */
+.nav {
+    margin-top: 12px;
+    display: flex;
+    gap: 8px;
+    padding: 8px;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    background: #fafafa;
+    flex-wrap: wrap;
+}
+
+/* Botón de tab */
+.navBtn {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    background: #fff;
+    color: #111827;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.navBtn:hover:not(.navBtnActive) {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+}
+
+.navBtnActive {
+    background: #111827;
+    color: #fff;
+    border-color: #111827;
+}
+
+/* Contenido del tab */
+.content {
+    margin-top: 12px;
+}
+
+/* Placeholder pendiente */
+.placeholder {
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 12px;
+    background: #fff;
+    color: #6b7280;
+    font-size: 14px;
+}
