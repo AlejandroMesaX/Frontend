@@ -1,8 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../auth/AuthContext";
+import { useClientePedidosRealtime } from "../realtime/useClientePedidosRealtime";
+import { useBarriosRealtime } from "../realtime/useBarriosRealtime";
 import { authFetch } from "../api/http";
 import { parseBackendError, errorFronted } from "../api/errors";
 import Toast from "../components/Toast";
+import PedidoDetalleModal from "../components/PedidoDetalleModal";
+import SearchableSelect from "../components/SearchableSelect";
 import s from "./ClientePanel.module.css";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -55,7 +59,7 @@ function ConfirmModal({ open, mensaje, onConfirm, onCancel, loading }) {
 
 // ── Modal solicitar pedido ────────────────────────────────────────────────────
 
-function SolicitarPedidoModal({ open, onClose, onCreated, direcciones, barrios }) {
+function SolicitarPedidoModal({ open, onClose, onCreated, direcciones, barriosOptions }) {
     const [direccionId, setDireccionId] = useState("");
     const [form, setForm] = useState({
         direccionRecogida: "",
@@ -95,10 +99,15 @@ function SolicitarPedidoModal({ open, onClose, onCreated, direcciones, barrios }
             setForm((p) => ({ ...p, direccionRecogida: "", barrioRecogida: "", telefonoContactoRecogida: "" }));
         } else {
             setDireccionId(dir.id);
+            // Buscar el valor exacto en barriosOptions para que el SearchableSelect lo reconozca
+            const normalize = (s) => String(s ?? "").trim().toLowerCase();
+            const matchBarrio = barriosOptions.find(
+                (o) => normalize(o.value) === normalize(dir.barrio)
+            );
             setForm((p) => ({
                 ...p,
                 direccionRecogida: dir.direccionRecogida ?? "",
-                barrioRecogida: dir.barrio ?? "",
+                barrioRecogida: matchBarrio ? matchBarrio.value : (dir.barrio ?? ""),
                 telefonoContactoRecogida: dir.telefonoContacto ?? "",
             }));
         }
@@ -211,27 +220,14 @@ function SolicitarPedidoModal({ open, onClose, onCreated, direcciones, barrios }
 
                         <div className={s.field}>
                             <label className={s.fieldLabel}>Barrio de recogida</label>
-                            {barrios.length > 0 ? (
-                                <select
-                                    className={`${s.select} ${touched.barrioRecogida && errors.barrioRecogida ? s.inputError : ""}`}
-                                    value={form.barrioRecogida}
-                                    onChange={(e) => setForm((p) => ({ ...p, barrioRecogida: e.target.value }))}
-                                    onBlur={() => setTouched((t) => ({ ...t, barrioRecogida: true }))}
-                                >
-                                    <option value="">-- Selecciona barrio --</option>
-                                    {barrios.map((b) => (
-                                        <option key={b.id} value={b.nombre}>{b.nombre}</option>
-                                    ))}
-                                </select>
-                            ) : (
-                                <input
-                                    className={`${s.input} ${touched.barrioRecogida && errors.barrioRecogida ? s.inputError : ""}`}
-                                    value={form.barrioRecogida}
-                                    onChange={(e) => setForm((p) => ({ ...p, barrioRecogida: e.target.value }))}
-                                    onBlur={() => setTouched((t) => ({ ...t, barrioRecogida: true }))}
-                                    placeholder="Ej: El Centro"
-                                />
-                            )}
+                            <SearchableSelect
+                                options={barriosOptions}
+                                value={form.barrioRecogida}
+                                onChange={(v) => setForm((p) => ({ ...p, barrioRecogida: v }))}
+                                onBlur={() => setTouched((t) => ({ ...t, barrioRecogida: true }))}
+                                placeholder="-- Selecciona barrio --"
+                                error={!!(touched.barrioRecogida && errors.barrioRecogida)}
+                            />
                             {touched.barrioRecogida && errors.barrioRecogida && (
                                 <div className={s.helper}>⚠️ {errors.barrioRecogida}</div>
                             )}
@@ -275,27 +271,14 @@ function SolicitarPedidoModal({ open, onClose, onCreated, direcciones, barrios }
 
                         <div className={s.field}>
                             <label className={s.fieldLabel}>Barrio de entrega</label>
-                            {barrios.length > 0 ? (
-                                <select
-                                    className={`${s.select} ${touched.barrioEntrega && errors.barrioEntrega ? s.inputError : ""}`}
-                                    value={form.barrioEntrega}
-                                    onChange={(e) => setForm((p) => ({ ...p, barrioEntrega: e.target.value }))}
-                                    onBlur={() => setTouched((t) => ({ ...t, barrioEntrega: true }))}
-                                >
-                                    <option value="">-- Selecciona barrio --</option>
-                                    {barrios.map((b) => (
-                                        <option key={b.id} value={b.nombre}>{b.nombre}</option>
-                                    ))}
-                                </select>
-                            ) : (
-                                <input
-                                    className={`${s.input} ${touched.barrioEntrega && errors.barrioEntrega ? s.inputError : ""}`}
-                                    value={form.barrioEntrega}
-                                    onChange={(e) => setForm((p) => ({ ...p, barrioEntrega: e.target.value }))}
-                                    onBlur={() => setTouched((t) => ({ ...t, barrioEntrega: true }))}
-                                    placeholder="Ej: La Esmeralda"
-                                />
-                            )}
+                            <SearchableSelect
+                                options={barriosOptions}
+                                value={form.barrioEntrega}
+                                onChange={(v) => setForm((p) => ({ ...p, barrioEntrega: v }))}
+                                onBlur={() => setTouched((t) => ({ ...t, barrioEntrega: true }))}
+                                placeholder="-- Selecciona barrio --"
+                                error={!!(touched.barrioEntrega && errors.barrioEntrega)}
+                            />
                             {touched.barrioEntrega && errors.barrioEntrega && (
                                 <div className={s.helper}>⚠️ {errors.barrioEntrega}</div>
                             )}
@@ -360,7 +343,7 @@ function SolicitarPedidoModal({ open, onClose, onCreated, direcciones, barrios }
 
 // ── Modal dirección ───────────────────────────────────────────────────────────
 
-function DireccionModal({ open, onClose, onSaved, editing, barrios }) {
+function DireccionModal({ open, onClose, onSaved, editing, barriosOptions }) {
     const [form, setForm] = useState({ direccionRecogida: "", barrio: "", telefonoContacto: "" });
     const [touched, setTouched] = useState({});
     const [loading, setLoading] = useState(false);
@@ -382,13 +365,14 @@ function DireccionModal({ open, onClose, onSaved, editing, barrios }) {
         const e = {};
         if (!form.direccionRecogida.trim()) e.direccionRecogida = "La dirección es obligatoria.";
         if (!form.barrio.trim()) e.barrio = "El barrio es obligatorio.";
+        if (!form.telefonoContacto.trim()) e.telefonoContacto = "El teléfono de contacto es obligatorio.";
         return e;
     }, [form]);
 
     const canSubmit = Object.keys(errors).length === 0;
 
     async function guardar() {
-        setTouched({ direccionRecogida: true, barrio: true });
+        setTouched({ direccionRecogida: true, barrio: true, telefonoContacto: true });
         if (!canSubmit) return;
 
         setLoading(true);
@@ -406,7 +390,7 @@ function DireccionModal({ open, onClose, onSaved, editing, barrios }) {
                 body: JSON.stringify({
                     direccionRecogida: form.direccionRecogida.trim(),
                     barrio: form.barrio.trim(),
-                    telefonoContacto: form.telefonoContacto.trim() || null,
+                    telefonoContacto: form.telefonoContacto.trim(),
                 }),
             });
 
@@ -454,41 +438,32 @@ function DireccionModal({ open, onClose, onSaved, editing, barrios }) {
 
                     <div className={s.field}>
                         <label className={s.fieldLabel}>Barrio</label>
-                        {barrios.length > 0 ? (
-                            <select
-                                className={`${s.select} ${touched.barrio && errors.barrio ? s.inputError : ""}`}
-                                value={form.barrio}
-                                onChange={(e) => setForm((p) => ({ ...p, barrio: e.target.value }))}
-                                onBlur={() => setTouched((t) => ({ ...t, barrio: true }))}
-                            >
-                                <option value="">-- Selecciona barrio --</option>
-                                {barrios.map((b) => (
-                                    <option key={b.id} value={b.nombre}>{b.nombre}</option>
-                                ))}
-                            </select>
-                        ) : (
-                            <input
-                                className={`${s.input} ${touched.barrio && errors.barrio ? s.inputError : ""}`}
-                                value={form.barrio}
-                                onChange={(e) => setForm((p) => ({ ...p, barrio: e.target.value }))}
-                                onBlur={() => setTouched((t) => ({ ...t, barrio: true }))}
-                                placeholder="Ej: El Centro"
-                            />
-                        )}
+                        <SearchableSelect
+                            options={barriosOptions}
+                            value={form.barrio}
+                            onChange={(v) => setForm((p) => ({ ...p, barrio: v }))}
+                            onBlur={() => setTouched((t) => ({ ...t, barrio: true }))}
+                            placeholder="-- Selecciona barrio --"
+                            error={!!(touched.barrio && errors.barrio)}
+                        />
                         {touched.barrio && errors.barrio && (
                             <div className={s.helper}>⚠️ {errors.barrio}</div>
                         )}
                     </div>
 
                     <div className={s.field}>
-                        <label className={s.fieldLabel}>Teléfono de contacto (opcional)</label>
+                        <label className={s.fieldLabel}>Teléfono de contacto</label>
                         <input
-                            className={s.input}
+                            className={`${s.input} ${touched.telefonoContacto && errors.telefonoContacto ? s.inputError : ""}`}
                             value={form.telefonoContacto}
                             onChange={(e) => setForm((p) => ({ ...p, telefonoContacto: e.target.value }))}
+                            onBlur={() => setTouched((t) => ({ ...t, telefonoContacto: true }))}
                             placeholder="Ej: 3001234567"
                             inputMode="tel"
                         />
+                        {touched.telefonoContacto && errors.telefonoContacto && (
+                            <div className={s.helper}>⚠️ {errors.telefonoContacto}</div>
+                        )}
                     </div>
                 </div>
 
@@ -526,7 +501,7 @@ const ESTADOS_ACTIVOS = new Set(["CREADO", "ASIGNADO", "EN_CAMINO", "INCIDENCIA"
 // ── Componente principal ──────────────────────────────────────────────────────
 
 export default function ClientePanel() {
-    const { logout } = useAuth();
+    const { token, userId, logout } = useAuth();
     const [tab, setTab] = useState("inicio");
     const [toast, setToast] = useState(null);
 
@@ -543,6 +518,10 @@ export default function ClientePanel() {
 
     // Barrios (para selectores)
     const [barrios, setBarrios] = useState([]);
+    const barriosOptions = useMemo(
+        () => barrios.map((b) => ({ value: b.nombre, label: b.nombre })),
+        [barrios]
+    );
 
     // Modal solicitar
     const [openSolicitar, setOpenSolicitar] = useState(false);
@@ -558,6 +537,39 @@ export default function ClientePanel() {
     // Modal confirmar eliminar dirección
     const [confirmDir, setConfirmDir] = useState({ open: false, direccionId: null });
     const [loadingEliminarDir, setLoadingEliminarDir] = useState(false);
+
+    // Modal detalle pedido
+    const [detalle, setDetalle] = useState(null);
+
+    // ── Realtime ────────────────────────────────────────────────────────────
+
+    const onPedidoRealtime = useCallback((pedido) => {
+        setPedidos((prev) => {
+            const idx = prev.findIndex((p) => p.id === pedido.id);
+            if (idx === -1) return [pedido, ...prev];
+            const copy = [...prev];
+            copy[idx] = { ...copy[idx], ...pedido };
+            return copy;
+        });
+        // Si el modal de detalle está abierto para este pedido, actualizarlo
+        setDetalle((d) => d?.id === pedido.id ? { ...d, ...pedido } : d);
+    }, []);
+
+    const onBarrioRealtime = useCallback((barrio) => {
+        setBarrios((prev) => {
+            // Si se desactivó, quitarlo de la lista
+            if (!barrio.activo) return prev.filter((b) => b.id !== barrio.id);
+            // Si se activó y no estaba, agregarlo
+            const idx = prev.findIndex((b) => b.id === barrio.id);
+            if (idx === -1) return [...prev, barrio];
+            const copy = [...prev];
+            copy[idx] = barrio;
+            return copy;
+        });
+    }, []);
+
+    useClientePedidosRealtime({ token, userId, onPedido: onPedidoRealtime });
+    useBarriosRealtime({ token, onBarrio: onBarrioRealtime });
 
     // ── Carga ───────────────────────────────────────────────────────────────
 
@@ -591,7 +603,7 @@ export default function ClientePanel() {
 
     async function cargarBarrios() {
         try {
-            const res = await authFetch("/api/barrios");
+            const res = await authFetch("/api/admin/barrios?includeInactivos=false");
             if (!res.ok) return;
             const data = await res.json();
             setBarrios(Array.isArray(data) ? data.filter((b) => b.activo !== false) : []);
@@ -627,7 +639,7 @@ export default function ClientePanel() {
     async function confirmarCancelar() {
         setLoadingCancelar(true);
         try {
-            const res = await authFetch(`/api/cliente/pedidos/${confirm.pedidoId}/cancelar`, {
+            const res = await authFetch(`/api/cliente/pedidos/${confirm.pedidoId}`, {
                 method: "PATCH",
             });
             if (!res.ok) { setToast(await parseBackendError(res)); return; }
@@ -705,7 +717,12 @@ export default function ClientePanel() {
                             )}
 
                             {pedidosActivos.map((p) => (
-                                <div key={p.id} className={s.card}>
+                                <div
+                                    key={p.id}
+                                    className={`${s.card} ${s.cardClickable}`}
+                                    onClick={(e) => { if (!e.target.closest("button")) setDetalle(p); }}
+                                    title="Click para ver detalle"
+                                >
                                     <div className={s.cardInfo}>
                                         <div className={s.cardTitulo}>
                                             <b>#{p.id}</b>
@@ -726,6 +743,9 @@ export default function ClientePanel() {
                                         <div><b>Entrega:</b> {p.barrioEntrega} — {p.direccionEntrega}</div>
                                         <div><b>Recibe:</b> {p.nombreQuienRecibe} — {p.telefonoQuienRecibe}</div>
                                         <div><b>Costo:</b> ${toNumberMoney(p.costoServicio).toLocaleString("es-CO")}</div>
+                                        {p.domiciliarioId && (
+                                            <div><b>Domiciliario:</b> {p.domiciliarioNombre ?? `#${p.domiciliarioId}`}</div>
+                                        )}
                                     </div>
 
                                     <div className={s.cardAcciones}>
@@ -751,8 +771,8 @@ export default function ClientePanel() {
                     <div className={s.sectionHeader}>
                         <h3>Mis direcciones</h3>
                         <div style={{ display: "flex", gap: 8 }}>
-                            <button className={s.btn} onClick={cargarDirecciones} disabled={loadingDirecciones}>
-                                {loadingDirecciones ? "Cargando..." : "Recargar"}
+                            <button className={s.btn} onClick={cargarPedidos} disabled={loadingPedidos}>
+                                {loadingPedidos ? "Cargando..." : "Recargar"}
                             </button>
                             <button className={s.btnPrimary} onClick={() => { setEditingDireccion(null); setOpenDireccion(true); }}>
                                 + Nueva dirección
@@ -825,7 +845,7 @@ export default function ClientePanel() {
                         )}
 
                         {historialFiltrado.map((p) => (
-                            <div key={p.id} className={s.itemCard}>
+                            <div key={p.id} className={`${s.itemCard} ${s.itemCardClickable}`} onClick={() => setDetalle(p)} title="Click para ver detalle">
                                 <div className={s.itemInfo}>
                                     <div className={s.cardTitulo}>
                                         <b>#{p.id}</b>
@@ -846,12 +866,37 @@ export default function ClientePanel() {
                 </div>
             )}
 
+            {/* Modal detalle pedido */}
+            <PedidoDetalleModal
+                open={!!detalle}
+                pedido={detalle}
+                onClose={() => setDetalle(null)}
+                showCliente={false}
+                showDomi={true}
+                actions={detalle && (
+                    <>
+                        {(detalle.estado === "CREADO" || detalle.estado === "ASIGNADO") && (
+                            <button
+                                className={s.btnDanger}
+                                onClick={() => {
+                                    setDetalle(null);
+                                    setConfirm({ open: true, pedidoId: detalle.id });
+                                }}
+                            >
+                                Cancelar pedido
+                            </button>
+                        )}
+                        <button className={s.btn} onClick={() => setDetalle(null)}>Cerrar</button>
+                    </>
+                )}
+            />
+
             {/* Modal solicitar pedido */}
             <SolicitarPedidoModal
                 open={openSolicitar}
                 onClose={() => setOpenSolicitar(false)}
                 direcciones={direcciones}
-                barrios={barrios}
+                barriosOptions={barriosOptions}
                 onCreated={(creado) => {
                     if (creado) setPedidos((prev) => [creado, ...prev]);
                     else cargarPedidos();
@@ -863,7 +908,7 @@ export default function ClientePanel() {
                 open={openDireccion}
                 onClose={() => setOpenDireccion(false)}
                 editing={editingDireccion}
-                barrios={barrios}
+                barriosOptions={barriosOptions}
                 onSaved={(resultado, wasEditing) => {
                     if (!resultado) { cargarDirecciones(); return; }
                     if (wasEditing) {

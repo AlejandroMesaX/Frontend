@@ -5,10 +5,11 @@ import { parseBackendError, errorFronted } from "../api/errors";
 import { useAdminPedidosRealtime } from "../realtime/useAdminPedidosRealtime";
 import { useAdminDomiciliariosRealtime } from "../realtime/useAdminDomiciliariosRealtime";
 import AssignPedidoModal from "../components/AssignPedidoModal";
+import PedidoDetalleModal from "../components/PedidoDetalleModal";
 import Toast from "../components/Toast";
 import s from "./AdminPedidos.module.css";
 
-// ── Badges ───────────────────────────────────────────────────────────────────
+// ── Badges ────────────────────────────────────────────────────────────────────
 
 function EstadoPedidoBadge({ estado }) {
     const cfg = {
@@ -50,9 +51,7 @@ function ConfirmModal({ open, pedidoId, onConfirm, onCancel, loading }) {
             <div className={s.confirmModal}>
                 <p>¿Cancelar el pedido <b>#{pedidoId}</b>? Esta acción no se puede deshacer.</p>
                 <div className={s.confirmFooter}>
-                    <button className={s.btn} onClick={onCancel} disabled={loading}>
-                        Volver
-                    </button>
+                    <button className={s.btn} onClick={onCancel} disabled={loading}>Volver</button>
                     <button className={s.btnDanger} onClick={onConfirm} disabled={loading}>
                         {loading ? "Cancelando..." : "Sí, cancelar"}
                     </button>
@@ -72,6 +71,9 @@ export default function AdminPedidos() {
     const [disponibles, setDisponibles] = useState([]);
     const [toast, setToast] = useState(null);
 
+    // Modal detalle
+    const [detalle, setDetalle] = useState(null);
+
     // Modal asignar
     const [openAssign, setOpenAssign] = useState(false);
     const [pedidoSel, setPedidoSel] = useState(null);
@@ -90,6 +92,8 @@ export default function AdminPedidos() {
                 if (idx === -1) return [pedido, ...prev];
                 const copy = [...prev];
                 copy[idx] = { ...copy[idx], ...pedido };
+                // Si el modal de detalle está abierto para este pedido, actualizarlo también
+                setDetalle((d) => d?.id === pedido.id ? { ...d, ...pedido } : d);
                 return copy;
             }),
     });
@@ -151,29 +155,36 @@ export default function AdminPedidos() {
     // ── Memos ───────────────────────────────────────────────────────────────
 
     const pedidosVisibles = useMemo(() =>
-        pedidos
-            .filter((p) => ESTADOS_VISIBLES.has(p.estado))
-            .sort((a, b) => b.id - a.id),
+        pedidos.filter((p) => ESTADOS_VISIBLES.has(p.estado)).sort((a, b) => b.id - a.id),
         [pedidos]
     );
 
     // ── Acciones ────────────────────────────────────────────────────────────
 
-    function openAsignar(pedido) {
-        setPedidoSel(pedido);
+    function abrirDetalle(p, e) {
+        // Evitar abrir si se hizo click en un botón
+        if (e.target.closest("button")) return;
+        setDetalle(p);
+    }
+
+    function abrirAsignar(p, e) {
+        e.stopPropagation();
+        setPedidoSel(p);
         setOpenAssign(true);
+    }
+
+    function abrirCancelar(p, e) {
+        e.stopPropagation();
+        setConfirm({ open: true, pedidoId: p.id });
     }
 
     async function confirmarCancelar() {
         setLoadingCancelar(true);
         try {
             const res = await authFetch(`/api/admin/pedidos/${confirm.pedidoId}`, { method: "DELETE" });
-            if (!res.ok) {
-                const error = await parseBackendError(res);
-                setToast(error);
-                return;
-            }
+            if (!res.ok) { setToast(await parseBackendError(res)); return; }
             setPedidos((prev) => prev.filter((p) => p.id !== confirm.pedidoId));
+            setDetalle((d) => d?.id === confirm.pedidoId ? null : d);
         } catch {
             setToast(errorFronted("No se pudo conectar con el servidor."));
         } finally {
@@ -203,7 +214,6 @@ export default function AdminPedidos() {
                     {disponibles.length === 0 && (
                         <span className={s.domiVacio}>No hay domiciliarios disponibles.</span>
                     )}
-
                     {disponibles.slice(0, 10).map((d) => (
                         <span
                             key={d.id}
@@ -214,11 +224,8 @@ export default function AdminPedidos() {
                             <EstadoDomiBadge estado={d.estadoDelivery} />
                         </span>
                     ))}
-
                     {disponibles.length > 10 && (
-                        <span className={s.domiMas}>
-                            Mostrando 10 de {disponibles.length}
-                        </span>
+                        <span className={s.domiMas}>Mostrando 10 de {disponibles.length}</span>
                     )}
                 </div>
             </div>
@@ -230,7 +237,12 @@ export default function AdminPedidos() {
                 )}
 
                 {pedidosVisibles.map((p) => (
-                    <div key={p.id} className={s.card}>
+                    <div
+                        key={p.id}
+                        className={`${s.card} ${s.cardClickable}`}
+                        onClick={(e) => abrirDetalle(p, e)}
+                        title="Click para ver detalle"
+                    >
                         <div className={s.cardInner}>
                             <div className={s.cardInfo}>
                                 <div className={s.cardTitulo}>
@@ -253,7 +265,7 @@ export default function AdminPedidos() {
                             <div className={s.cardAcciones}>
                                 <button
                                     className={s.btnAsignar}
-                                    onClick={() => openAsignar(p)}
+                                    onClick={(e) => abrirAsignar(p, e)}
                                     disabled={
                                         !(p.estado === "CREADO" || p.estado === "INCIDENCIA") ||
                                         disponibles.length === 0
@@ -273,8 +285,7 @@ export default function AdminPedidos() {
 
                                 <button
                                     className={s.btnCancelar}
-                                    onClick={() => setConfirm({ open: true, pedidoId: p.id })}
-                                    title="Cancelar pedido"
+                                    onClick={(e) => abrirCancelar(p, e)}
                                 >
                                     Cancelar
                                 </button>
@@ -284,6 +295,35 @@ export default function AdminPedidos() {
                 ))}
             </div>
 
+            {/* Modal detalle */}
+            <PedidoDetalleModal
+                open={!!detalle}
+                pedido={detalle}
+                onClose={() => setDetalle(null)}
+                showCliente={true}
+                showDomi={true}
+                actions={detalle && (
+                    <>
+                        <button
+                            className={s.btnAsignar}
+                            onClick={() => { setDetalle(null); setPedidoSel(detalle); setOpenAssign(true); }}
+                            disabled={
+                                !(detalle.estado === "CREADO" || detalle.estado === "INCIDENCIA") ||
+                                disponibles.length === 0
+                            }
+                        >
+                            {detalle.estado === "INCIDENCIA" ? "Reasignar" : "Asignar"}
+                        </button>
+                        <button
+                            className={s.btnCancelar}
+                            onClick={() => { setDetalle(null); setConfirm({ open: true, pedidoId: detalle.id }); }}
+                        >
+                            Cancelar pedido
+                        </button>
+                    </>
+                )}
+            />
+
             {/* Modal asignar */}
             <AssignPedidoModal
                 open={openAssign}
@@ -292,15 +332,11 @@ export default function AdminPedidos() {
                 disponibles={disponibles}
                 onAssigned={(actualizado, domiciliarioId) => {
                     if (actualizado) {
-                        setPedidos((prev) =>
-                            prev.map((p) => p.id === actualizado.id ? actualizado : p)
-                        );
+                        setPedidos((prev) => prev.map((p) => p.id === actualizado.id ? actualizado : p));
                     } else if (pedidoSel) {
                         setPedidos((prev) =>
                             prev.map((p) =>
-                                p.id === pedidoSel.id
-                                    ? { ...p, domiciliarioId, estado: "ASIGNADO" }
-                                    : p
+                                p.id === pedidoSel.id ? { ...p, domiciliarioId, estado: "ASIGNADO" } : p
                             )
                         );
                     }

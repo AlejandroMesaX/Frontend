@@ -3,6 +3,7 @@ import { useAuth } from "../auth/AuthContext";
 import { authFetch } from "../api/http";
 import { parseBackendError, errorFronted } from "../api/errors";
 import { useDeliveryPedidosRealtime } from "../realtime/useDeliveryPedidosRealtime";
+import PedidoDetalleModal from "../components/PedidoDetalleModal";
 import Toast from "../components/Toast";
 import s from "./DeliveryPanel.module.css";
 
@@ -122,6 +123,9 @@ export default function DeliveryPanel() {
 
     // Modal incidencia
     const [openIncidencia, setOpenIncidencia] = useState(false);
+
+    // Modal detalle
+    const [detalle, setDetalle] = useState(null);
 
     // ── Realtime ────────────────────────────────────────────────────────────
 
@@ -456,7 +460,7 @@ export default function DeliveryPanel() {
                         )}
 
                         {historialFiltrado.map((p) => (
-                            <div key={p.id} className={s.itemCard}>
+                            <div key={p.id} className={`${s.itemCard} ${s.itemCardClickable}`} onClick={() => setDetalle(p)} title="Click para ver detalle">
                                 <div className={s.itemInfo}>
                                     <div><b>#{p.id}</b> — {p.estado}</div>
                                     <div><b>Entrega:</b> {p.barrioEntrega} — {p.direccionEntrega}</div>
@@ -543,7 +547,7 @@ export default function DeliveryPanel() {
                         )}
 
                         {finanzasFiltrado.map((p) => (
-                            <div key={p.id} className={s.itemCard}>
+                            <div key={p.id} className={`${s.itemCard} ${s.itemCardClickable}`} onClick={() => setDetalle(p)} title="Click para ver detalle">
                                 <div className={s.itemInfo}>
                                     <div><b>#{p.id}</b> — {p.estado}</div>
                                     <div><b>Entrega:</b> {p.barrioEntrega} — {p.direccionEntrega}</div>
@@ -559,6 +563,19 @@ export default function DeliveryPanel() {
             )}
 
             {/* Modal incidencia */}
+
+            {/* Modal detalle pedido */}
+            <PedidoDetalleModal
+                open={!!detalle}
+                pedido={detalle}
+                onClose={() => setDetalle(null)}
+                showCliente={true}
+                showDomi={false}
+                actions={detalle && (
+                    <button className={s.btn} onClick={() => setDetalle(null)}>Cerrar</button>
+                )}
+            />
+
             <IncidenciaModal
                 open={openIncidencia}
                 onConfirm={confirmarAyuda}
