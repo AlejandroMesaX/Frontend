@@ -7,33 +7,25 @@ import PedidoDetalleModal from "../components/PedidoDetalleModal";
 import Toast from "../components/Toast";
 import s from "./DeliveryPanel.module.css";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
 function toNumberMoney(val) {
     if (val == null) return 0;
     const n = Number(String(val).replace(/\./g, "").replace(/,/g, "."));
     return Number.isFinite(n) ? n : 0;
 }
 
-function yyyyMMddOf(fechaCreacion) {
-    if (!fechaCreacion) return null;
-    return String(fechaCreacion).slice(0, 10);
+function yyyyMMddOf(fecha) {
+    if (!fecha) return null;
+    return String(fecha).slice(0, 10);
 }
-
-// ── Componentes pequeños ──────────────────────────────────────────────────────
 
 function Metric({ label, value }) {
     return (
         <div className={s.metric}>
             <div className={s.metricLabel}>{label}</div>
-            <div className={s.metricValue}>
-                ${Number(value || 0).toLocaleString("es-CO")}
-            </div>
+            <div className={s.metricValue}>${Number(value || 0).toLocaleString("es-CO")}</div>
         </div>
     );
 }
-
-// ── Modal incidencia (reemplaza prompt()) ─────────────────────────────────────
 
 function IncidenciaModal({ open, onConfirm, onCancel, loading }) {
     const [motivo, setMotivo] = useState("");
@@ -44,7 +36,6 @@ function IncidenciaModal({ open, onConfirm, onCancel, loading }) {
     }, [open]);
 
     if (!open) return null;
-
     const hasError = touched && !motivo.trim();
 
     return (
@@ -54,31 +45,22 @@ function IncidenciaModal({ open, onConfirm, onCancel, loading }) {
                     <h3>🆘 Reportar incidencia</h3>
                     <button className={s.btnClose} onClick={onCancel}>✕</button>
                 </div>
-
-                <div>
+                <div className={s.modalBody}>
                     <textarea
-                        className={`${s.textarea} ${hasError ? s.textareaError : ""}`}
+                        className={`${s.textarea} ${hasError ? s.inputError : ""}`}
                         value={motivo}
                         onChange={(e) => setMotivo(e.target.value)}
                         onBlur={() => setTouched(true)}
                         placeholder="Describe el problema detalladamente..."
+                        rows={4}
                     />
-                    {hasError && (
-                        <div className={s.helper}>⚠️ El motivo es obligatorio.</div>
-                    )}
+                    {hasError && <div className={s.helper}>⚠️ El motivo es obligatorio.</div>}
                 </div>
-
                 <div className={s.modalFooter}>
-                    <button className={s.btn} onClick={onCancel} disabled={loading}>
-                        Cancelar
-                    </button>
+                    <button className={s.btn} onClick={onCancel} disabled={loading}>Cancelar</button>
                     <button
                         className={s.btnWarning}
-                        onClick={() => {
-                            setTouched(true);
-                            if (!motivo.trim()) return;
-                            onConfirm(motivo.trim());
-                        }}
+                        onClick={() => { setTouched(true); if (!motivo.trim()) return; onConfirm(motivo.trim()); }}
                         disabled={loading}
                     >
                         {loading ? "Enviando..." : "Reportar"}
@@ -89,15 +71,11 @@ function IncidenciaModal({ open, onConfirm, onCancel, loading }) {
     );
 }
 
-// ── Tabs ──────────────────────────────────────────────────────────────────────
-
 const TABS = [
     { key: "inicio", label: "Inicio" },
     { key: "historial", label: "Historial" },
     { key: "finanzas", label: "Finanzas" },
 ];
-
-// ── Componente principal ──────────────────────────────────────────────────────
 
 export default function DeliveryPanel() {
     const { token, userId, logout } = useAuth();
@@ -109,41 +87,45 @@ export default function DeliveryPanel() {
     const [loadingDisponible, setLoadingDisponible] = useState(false);
     const [loadingAvanzar, setLoadingAvanzar] = useState(false);
     const [loadingAyuda, setLoadingAyuda] = useState(false);
+    const [openIncidencia, setOpenIncidencia] = useState(false);
+    const [detalle, setDetalle] = useState(null);
 
-    // Historial
     const [historial, setHistorial] = useState([]);
     const [loadingHist, setLoadingHist] = useState(false);
     const [diaFiltro, setDiaFiltro] = useState("");
-
-    // Finanzas
-    const todayISO = useMemo(() => new Date().toISOString().slice(0, 10), []);
+    const todayISO = useMemo(() => {
+        const d = new Date();
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, "0");
+        const dd = String(d.getDate()).padStart(2, "0");
+        return `${yyyy}-${mm}-${dd}`;
+    }, []);
     const [finDia, setFinDia] = useState("");
     const [finDesde, setFinDesde] = useState("");
     const [finHasta, setFinHasta] = useState("");
 
-    // Modal incidencia
-    const [openIncidencia, setOpenIncidencia] = useState(false);
-
-    // Modal detalle
-    const [detalle, setDetalle] = useState(null);
-
     // ── Realtime ────────────────────────────────────────────────────────────
 
     useDeliveryPedidosRealtime({
-        token,
-        userId,
-        onPedido: (pedido) => setPedidoActual(pedido),
+        token, userId,
+        onPedido: (pedido) => {
+            setPedidoActual(pedido);
+            setDetalle((d) => d?.id === pedido?.id ? (pedido ? { ...d, ...pedido } : null) : d);
+        },
     });
 
-    // ── Estados derivados ───────────────────────────────────────────────────
+    // ── Derivados ───────────────────────────────────────────────────────────
 
-    const tienePedidoActivo =
-        pedidoActual &&
+    const tienePedidoActivo = pedidoActual &&
         (pedidoActual.estado === "ASIGNADO" || pedidoActual.estado === "EN_CAMINO");
 
-    const puedeTengoPedido = pedidoActual?.estado === "ASIGNADO";
-    const puedeFinalizar = pedidoActual?.estado === "EN_CAMINO";
     const puedeAyuda = pedidoActual?.estado === "EN_CAMINO";
+
+    const btnAvance = pedidoActual?.estado === "ASIGNADO"
+        ? { label: "📦 Tengo el pedido", estado: "EN_CAMINO" }
+        : pedidoActual?.estado === "EN_CAMINO"
+            ? { label: "✅ Finalizar entrega", estado: "ENTREGADO" }
+            : null;
 
     // ── Acciones ────────────────────────────────────────────────────────────
 
@@ -152,7 +134,6 @@ export default function DeliveryPanel() {
             setToast(errorFronted("No puedes cambiar disponibilidad mientras tengas un pedido activo."));
             return;
         }
-
         setLoadingDisponible(true);
         try {
             const next = !disponible;
@@ -161,10 +142,8 @@ export default function DeliveryPanel() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ disponible: next }),
             });
-
             if (!res.ok) { setToast(await parseBackendError(res)); return; }
             setDisponible(next);
-
         } catch {
             setToast(errorFronted("No se pudo conectar con el servidor."));
         } finally {
@@ -174,7 +153,6 @@ export default function DeliveryPanel() {
 
     async function avanzarEstado(nuevoEstado) {
         if (!pedidoActual) return;
-
         setLoadingAvanzar(true);
         try {
             const res = await authFetch(`/api/domiciliario/pedidos/${pedidoActual.id}/estado`, {
@@ -182,23 +160,16 @@ export default function DeliveryPanel() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ estado: nuevoEstado }),
             });
-
             if (!res.ok) { setToast(await parseBackendError(res)); return; }
-
             let actualizado = null;
             try { actualizado = await res.json(); } catch { }
-
             if (nuevoEstado === "ENTREGADO") {
                 setPedidoActual(null);
+                setDetalle(null);
                 setDisponible(true);
                 return;
             }
-
-            setPedidoActual((prev) => {
-                if (!prev) return prev;
-                return actualizado ?? { ...prev, estado: nuevoEstado };
-            });
-
+            setPedidoActual((prev) => prev ? (actualizado ?? { ...prev, estado: nuevoEstado }) : prev);
         } catch {
             setToast(errorFronted("No se pudo conectar con el servidor."));
         } finally {
@@ -208,7 +179,6 @@ export default function DeliveryPanel() {
 
     async function confirmarAyuda(motivo) {
         if (!pedidoActual) return;
-
         setLoadingAyuda(true);
         try {
             const res = await authFetch(`/api/domiciliario/pedidos/${pedidoActual.id}/ayuda`, {
@@ -216,21 +186,16 @@ export default function DeliveryPanel() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ motivo }),
             });
-
             if (!res.ok) { setToast(await parseBackendError(res)); return; }
-
             setOpenIncidencia(false);
             setPedidoActual(null);
             setDisponible(true);
-
         } catch {
             setToast(errorFronted("No se pudo conectar con el servidor."));
         } finally {
             setLoadingAyuda(false);
         }
     }
-
-    // ── Historial ───────────────────────────────────────────────────────────
 
     async function cargarHistorial() {
         setLoadingHist(true);
@@ -259,21 +224,16 @@ export default function DeliveryPanel() {
 
     const historialFiltrado = useMemo(() => {
         if (!diaFiltro) return historial;
-        return historial.filter((p) => String(p.fechaCreacion ?? "").slice(0, 10) === diaFiltro);
+        return historial.filter((p) => yyyyMMddOf(p.fechaCreacion) === diaFiltro);
     }, [historial, diaFiltro]);
 
     const finanzasFiltrado = useMemo(() => {
         const base = Array.isArray(historial) ? historial : [];
         const dia = finDia || (!finDesde && !finHasta ? todayISO : "");
-
         if (dia) return base.filter((p) => yyyyMMddOf(p.fechaCreacion) === dia);
-
         const desde = finDesde || "0000-01-01";
         const hasta = finHasta || "9999-12-31";
-        return base.filter((p) => {
-            const f = yyyyMMddOf(p.fechaCreacion);
-            return f && f >= desde && f <= hasta;
-        });
+        return base.filter((p) => { const f = yyyyMMddOf(p.fechaCreacion); return f && f >= desde && f <= hasta; });
     }, [historial, finDia, finDesde, finHasta, todayISO]);
 
     const finResumen = useMemo(() => {
@@ -284,7 +244,6 @@ export default function DeliveryPanel() {
 
     // ── Render ──────────────────────────────────────────────────────────────
 
-    // Badge de estado del header
     const estadoBadgeStyle = {
         background: tienePedidoActivo ? "#fff7ed" : disponible ? "#ecfdf5" : "#f3f4f6",
         color: tienePedidoActivo ? "#9a3412" : disponible ? "#065f46" : "#374151",
@@ -301,29 +260,16 @@ export default function DeliveryPanel() {
 
             {/* Header */}
             <div className={s.header}>
-                <h2>Domiciliario</h2>
+                <div className={s.headerLeft}>
+                    <h2>GoFast</h2>
+                    <span className={s.badge} style={estadoBadgeStyle}>{estadoBadgeText}</span>
+                    {pedidoActual?.estado && (
+                        <span className={s.badge} style={pedidoEstadoStyle}>
+                            {pedidoActual.estado === "ASIGNADO" ? "🔵 ASIGNADO" : "🟣 EN CAMINO"}
+                        </span>
+                    )}
+                </div>
                 <button className={s.btnLogout} onClick={logout}>Cerrar sesión</button>
-            </div>
-
-            {/* Badges estado */}
-            <div className={s.badges}>
-                <span className={s.badge} style={estadoBadgeStyle}>{estadoBadgeText}</span>
-
-                {pedidoActual?.estado && (
-                    <span className={s.badge} style={pedidoEstadoStyle}>
-                        {pedidoActual.estado === "ASIGNADO" ? "🔵 ASIGNADO" : "🟣 EN CAMINO"}
-                    </span>
-                )}
-
-                {pedidoActual?.motivoIncidencia && (
-                    <span
-                        className={s.badge}
-                        style={{ border: "1px solid #f59e0b", background: "#fff7ed", color: "#92400e", maxWidth: 420, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
-                        title={pedidoActual.motivoIncidencia}
-                    >
-                        🆘 Incidencia: {pedidoActual.motivoIncidencia}
-                    </span>
-                )}
             </div>
 
             {/* Navbar */}
@@ -342,77 +288,95 @@ export default function DeliveryPanel() {
             {/* ── INICIO ── */}
             {tab === "inicio" && (
                 <>
-                    <div className={s.disponibilidadRow}>
-                        <button
-                            className={`${s.btnDisponible} ${disponible ? s.btnDisponibleActivo : ""}`}
-                            onClick={toggleDisponible}
-                            disabled={tienePedidoActivo || loadingDisponible}
-                            title={tienePedidoActivo ? "No puedes cambiar disponibilidad con un pedido activo" : ""}
-                        >
-                            {loadingDisponible ? "Actualizando..." : disponible ? "✅ Disponible" : "⛔ Desconectado"}
-                        </button>
-                        <span className={s.wsInfo}>
-                            WS Topic: <code>/topic/delivery/{userId}/pedidos</code>
-                        </span>
+                    {/* Disponibilidad */}
+                    <div className={s.section}>
+                        <div className={s.sectionHeader}>
+                            <h3>Disponibilidad</h3>
+                            <button
+                                className={disponible ? s.btnDisponibleActivo : s.btnDisponible}
+                                onClick={toggleDisponible}
+                                disabled={tienePedidoActivo || loadingDisponible}
+                                title={tienePedidoActivo ? "No puedes cambiar disponibilidad con un pedido activo" : ""}
+                            >
+                                {loadingDisponible
+                                    ? "Actualizando..."
+                                    : disponible
+                                        ? "✅ Disponible — click para desconectarse"
+                                        : "⛔ Desconectado — click para conectarse"}
+                            </button>
+                        </div>
                     </div>
 
+                    {/* Pedido actual */}
                     <div className={s.section}>
-                        <h3 style={{ margin: 0 }}>Pedido actual</h3>
+                        <div className={s.sectionHeader}>
+                            <h3>Pedido actual</h3>
+                        </div>
 
-                        {!pedidoActual && (
-                            <div className={s.vacio}>
-                                Aún no tienes pedidos asignados. Mantente disponible.
-                            </div>
-                        )}
+                        {!pedidoActual ? (
+                            <div className={s.vacio}>Aún no tienes pedidos asignados. Mantente disponible.</div>
+                        ) : (
+                            <div
+                                className={`${s.card} ${s.cardClickable}`}
+                                onClick={(e) => { if (!e.target.closest("button")) setDetalle(pedidoActual); }}
+                                title="Click para ver detalle"
+                            >
+                                <div className={s.cardInfo}>
+                                    <div className={s.cardTitulo}>
+                                        <b>#{pedidoActual.id}</b>
+                                        <span className={s.badge} style={pedidoEstadoStyle}>
+                                            {pedidoActual.estado === "ASIGNADO" ? "🔵 ASIGNADO" : "🟣 EN CAMINO"}
+                                        </span>
+                                    </div>
 
-                        {pedidoActual && (
-                            <div className={s.pedidoCard}>
-                                <div className={s.pedidoTitulo}>
-                                    <b>#{pedidoActual.id}</b>
-                                    <span className={s.badge} style={pedidoEstadoStyle}>
-                                        {pedidoActual.estado}
-                                    </span>
+                                    {pedidoActual.motivoIncidencia && (
+                                        <div className={s.incidenciaBox}>
+                                            <b>🆘 Incidencia:</b> {pedidoActual.motivoIncidencia}
+                                        </div>
+                                    )}
+
+                                    <div className={s.cardGrid}>
+                                        <div>
+                                            <div className={s.cardSectionLabel}>📦 Recogida</div>
+                                            <div>{pedidoActual.barrioRecogida} — {pedidoActual.direccionRecogida}</div>
+                                            <div className={s.cardMeta}>Tel: {pedidoActual.telefonoContactoRecogida}</div>
+                                        </div>
+                                        <div>
+                                            <div className={s.cardSectionLabel}>🏠 Entrega</div>
+                                            <div>{pedidoActual.barrioEntrega} — {pedidoActual.direccionEntrega}</div>
+                                            <div className={s.cardMeta}>
+                                                {pedidoActual.nombreQuienRecibe} · {pedidoActual.telefonoQuienRecibe}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className={s.cardFooterRow}>
+                                        {pedidoActual.clienteId && (
+                                            <span><b>Cliente:</b> {pedidoActual.clienteNombre ?? `#${pedidoActual.clienteId}`}</span>
+                                        )}
+                                        <span><b>Costo:</b> ${toNumberMoney(pedidoActual.costoServicio).toLocaleString("es-CO")}</span>
+                                    </div>
                                 </div>
 
-                                {pedidoActual.motivoIncidencia && (
-                                    <div className={s.incidenciaBox}>
-                                        <b>🆘 Motivo de incidencia:</b> {pedidoActual.motivoIncidencia}
-                                    </div>
-                                )}
-
-                                <div><b>Recogida:</b> {pedidoActual.barrioRecogida} — {pedidoActual.direccionRecogida}</div>
-                                <div><b>Entrega:</b> {pedidoActual.barrioEntrega} — {pedidoActual.direccionEntrega}</div>
-                                <div><b>Contacto recogida:</b> {pedidoActual.telefonoContactoRecogida}</div>
-                                <div><b>Recibe:</b> {pedidoActual.nombreQuienRecibe} — {pedidoActual.telefonoQuienRecibe}</div>
-                                <div><b>Costo:</b> ${toNumberMoney(pedidoActual.costoServicio).toLocaleString("es-CO")}</div>
-
-                                <div className={s.pedidoAcciones}>
-                                    <button
-                                        className={s.btnAccion}
-                                        onClick={() => avanzarEstado("EN_CAMINO")}
-                                        disabled={!puedeTengoPedido || loadingAvanzar}
-                                        title={!puedeTengoPedido ? "Solo cuando está ASIGNADO" : ""}
-                                    >
-                                        📦 Tengo el pedido
-                                    </button>
-
-                                    <button
-                                        className={s.btnAccion}
-                                        onClick={() => avanzarEstado("ENTREGADO")}
-                                        disabled={!puedeFinalizar || loadingAvanzar}
-                                        title={!puedeFinalizar ? "Solo cuando está EN_CAMINO" : ""}
-                                    >
-                                        ✅ Finalizar entrega
-                                    </button>
-
-                                    <button
-                                        className={s.btnAyuda}
-                                        onClick={() => setOpenIncidencia(true)}
-                                        disabled={!puedeAyuda || loadingAvanzar}
-                                        title={!puedeAyuda ? "Solo disponible cuando tienes el pedido (EN_CAMINO)" : ""}
-                                    >
-                                        🆘 Ayuda / No puedo finalizar
-                                    </button>
+                                <div className={s.cardAcciones}>
+                                    {btnAvance && (
+                                        <button
+                                            className={s.btnPrimary}
+                                            onClick={() => avanzarEstado(btnAvance.estado)}
+                                            disabled={loadingAvanzar}
+                                        >
+                                            {loadingAvanzar ? "Procesando..." : btnAvance.label}
+                                        </button>
+                                    )}
+                                    {puedeAyuda && (
+                                        <button
+                                            className={s.btnWarning}
+                                            onClick={() => setOpenIncidencia(true)}
+                                            disabled={loadingAvanzar}
+                                        >
+                                            🆘 Reportar incidencia
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         )}
@@ -432,43 +396,29 @@ export default function DeliveryPanel() {
 
                     <div className={s.filtros}>
                         <span className={s.filtroLabel}>Filtrar por día:</span>
-                        <input
-                            type="date"
-                            className={s.inputDate}
-                            value={diaFiltro}
-                            onChange={(e) => setDiaFiltro(e.target.value)}
-                        />
-                        <button
-                            className={s.btn}
-                            onClick={() => setDiaFiltro("")}
-                            disabled={!diaFiltro}
-                        >
-                            Quitar filtro
-                        </button>
-                        <span className={s.contador}>
-                            Mostrando: <b>{historialFiltrado.length}</b> / {historial.length}
-                        </span>
+                        <input type="date" className={s.inputDate} value={diaFiltro} onChange={(e) => setDiaFiltro(e.target.value)} />
+                        <button className={s.btn} onClick={() => setDiaFiltro("")} disabled={!diaFiltro}>Quitar filtro</button>
+                        <span className={s.contador}>Mostrando: <b>{historialFiltrado.length}</b> / {historial.length}</span>
                     </div>
 
                     <div className={s.lista}>
                         {loadingHist && <div className={s.vacio}>Cargando historial…</div>}
-
                         {!loadingHist && historialFiltrado.length === 0 && (
                             <div className={s.vacio}>
                                 {diaFiltro ? "No hay pedidos entregados para ese día." : "Aún no tienes pedidos entregados."}
                             </div>
                         )}
-
                         {historialFiltrado.map((p) => (
                             <div key={p.id} className={`${s.itemCard} ${s.itemCardClickable}`} onClick={() => setDetalle(p)} title="Click para ver detalle">
                                 <div className={s.itemInfo}>
-                                    <div><b>#{p.id}</b> — {p.estado}</div>
+                                    <div className={s.cardTitulo}>
+                                        <b>#{p.id}</b>
+                                        <span className={s.badge} style={{ background: "#ecfdf5", color: "#065f46" }}>🟢 ENTREGADO</span>
+                                    </div>
                                     <div><b>Entrega:</b> {p.barrioEntrega} — {p.direccionEntrega}</div>
                                     <div><b>Costo:</b> ${toNumberMoney(p.costoServicio).toLocaleString("es-CO")}</div>
                                 </div>
-                                <div className={s.itemMeta}>
-                                    {p.fechaCreacion && <div>Creado: {String(p.fechaCreacion).slice(0, 10)}</div>}
-                                </div>
+                                <div className={s.itemMeta}>{p.fechaCreacion && <div>{yyyyMMddOf(p.fechaCreacion)}</div>}</div>
                             </div>
                         ))}
                     </div>
@@ -485,10 +435,9 @@ export default function DeliveryPanel() {
                         </button>
                     </div>
 
-                    {/* Resumen */}
                     <div className={s.resumenBox}>
                         <div className={s.resumenTitulo}>
-                            <span style={{ fontWeight: 800, fontSize: 16 }}>💰 Ganancias (según filtro)</span>
+                            <span>💰 Ganancias (según filtro)</span>
                             <span className={s.contador}>Pedidos: <b>{finResumen.pedidos}</b></span>
                         </div>
                         <div className={s.resumenMetrics}>
@@ -498,73 +447,43 @@ export default function DeliveryPanel() {
                         </div>
                     </div>
 
-                    {/* Filtros */}
-                    <div style={{ display: "grid", gap: 10 }}>
+                    <div className={s.filtrosGroup}>
                         <div className={s.filtros}>
-                            <span className={s.filtroLabel}>Filtrar por día:</span>
-                            <input
-                                type="date"
-                                className={s.inputDate}
-                                value={finDia}
-                                onChange={(e) => { setFinDia(e.target.value); setFinDesde(""); setFinHasta(""); }}
-                            />
-                            <button className={s.btn} onClick={() => { setFinDia(todayISO); setFinDesde(""); setFinHasta(""); }}>
-                                Hoy
-                            </button>
-                            <button className={s.btn} onClick={() => { setFinDia(todayISO); setFinDesde(""); setFinHasta(""); }}>
-                                Limpiar
-                            </button>
+                            <span className={s.filtroLabel}>Por día:</span>
+                            <input type="date" className={s.inputDate} value={finDia} onChange={(e) => { setFinDia(e.target.value); setFinDesde(""); setFinHasta(""); }} />
+                            <button className={s.btn} onClick={() => { setFinDia(todayISO); setFinDesde(""); setFinHasta(""); }}>Hoy</button>
+                            <button className={s.btn} onClick={() => { setFinDia(""); setFinDesde(""); setFinHasta(""); }}>Limpiar</button>
                         </div>
-
                         <div className={s.filtros}>
                             <span className={s.filtroLabel}>Rango:</span>
                             <span className={s.filtroLabelLight}>Desde</span>
-                            <input
-                                type="date"
-                                className={s.inputDate}
-                                value={finDesde}
-                                onChange={(e) => { setFinDesde(e.target.value); setFinDia(""); }}
-                            />
+                            <input type="date" className={s.inputDate} value={finDesde} onChange={(e) => { setFinDesde(e.target.value); setFinDia(""); }} />
                             <span className={s.filtroLabelLight}>Hasta</span>
-                            <input
-                                type="date"
-                                className={s.inputDate}
-                                value={finHasta}
-                                onChange={(e) => { setFinHasta(e.target.value); setFinDia(""); }}
-                            />
-                            <span className={s.contador}>
-                                Mostrando: <b>{finanzasFiltrado.length}</b> / {historial.length}
-                            </span>
+                            <input type="date" className={s.inputDate} value={finHasta} onChange={(e) => { setFinHasta(e.target.value); setFinDia(""); }} />
+                            <span className={s.contador}>Mostrando: <b>{finanzasFiltrado.length}</b> / {historial.length}</span>
                         </div>
                     </div>
 
-                    {/* Lista */}
                     <div className={s.lista}>
                         {loadingHist && <div className={s.vacio}>Cargando…</div>}
-
                         {!loadingHist && finanzasFiltrado.length === 0 && (
                             <div className={s.vacio}>No hay pedidos entregados para el filtro seleccionado.</div>
                         )}
-
                         {finanzasFiltrado.map((p) => (
                             <div key={p.id} className={`${s.itemCard} ${s.itemCardClickable}`} onClick={() => setDetalle(p)} title="Click para ver detalle">
                                 <div className={s.itemInfo}>
-                                    <div><b>#{p.id}</b> — {p.estado}</div>
+                                    <div><b>#{p.id}</b></div>
                                     <div><b>Entrega:</b> {p.barrioEntrega} — {p.direccionEntrega}</div>
                                     <div><b>Costo:</b> ${toNumberMoney(p.costoServicio).toLocaleString("es-CO")}</div>
                                 </div>
-                                <div className={s.itemMeta}>
-                                    {p.fechaCreacion && <div>Creado: {String(p.fechaCreacion).slice(0, 10)}</div>}
-                                </div>
+                                <div className={s.itemMeta}>{p.fechaCreacion && <div>{yyyyMMddOf(p.fechaCreacion)}</div>}</div>
                             </div>
                         ))}
                     </div>
                 </div>
             )}
 
-            {/* Modal incidencia */}
-
-            {/* Modal detalle pedido */}
+            {/* Modal detalle */}
             <PedidoDetalleModal
                 open={!!detalle}
                 pedido={detalle}
@@ -572,16 +491,29 @@ export default function DeliveryPanel() {
                 showCliente={true}
                 showDomi={false}
                 actions={detalle && (
-                    <button className={s.btn} onClick={() => setDetalle(null)}>Cerrar</button>
+                    <>
+                        {detalle.estado === "ASIGNADO" && (
+                            <button className={s.btnPrimary} onClick={() => { avanzarEstado("EN_CAMINO"); setDetalle(null); }} disabled={loadingAvanzar}>
+                                📦 Tengo el pedido
+                            </button>
+                        )}
+                        {detalle.estado === "EN_CAMINO" && (
+                            <>
+                                <button className={s.btnPrimary} onClick={() => { avanzarEstado("ENTREGADO"); setDetalle(null); }} disabled={loadingAvanzar}>
+                                    ✅ Finalizar entrega
+                                </button>
+                                <button className={s.btnWarning} onClick={() => { setDetalle(null); setOpenIncidencia(true); }} disabled={loadingAvanzar}>
+                                    🆘 Incidencia
+                                </button>
+                            </>
+                        )}
+                        <button className={s.btn} onClick={() => setDetalle(null)}>Cerrar</button>
+                    </>
                 )}
             />
 
-            <IncidenciaModal
-                open={openIncidencia}
-                onConfirm={confirmarAyuda}
-                onCancel={() => setOpenIncidencia(false)}
-                loading={loadingAyuda}
-            />
+            {/* Modal incidencia */}
+            <IncidenciaModal open={openIncidencia} onConfirm={confirmarAyuda} onCancel={() => setOpenIncidencia(false)} loading={loadingAyuda} />
 
             {toast && <Toast error={toast} onClose={() => setToast(null)} />}
         </div>

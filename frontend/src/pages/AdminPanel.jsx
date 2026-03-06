@@ -4,6 +4,7 @@ import AdminPedidos from "./AdminPedidos";
 import AdminUsuarios from "./AdminUsuarios";
 import AdminBarrios from "./AdminBarrios";
 import AdminComunas from "./AdminComunas";
+import AdminFinanzas from "./AdminFinanzas";
 import s from "./AdminPanel.module.css";
 
 const TABS = [
@@ -21,15 +22,11 @@ export default function AdminPanel() {
     return (
         <div className={s.container}>
 
-            {/* Header */}
             <div className={s.header}>
-                <h2>Admin</h2>
-                <button className={s.btnLogout} onClick={logout}>
-                    Cerrar sesión
-                </button>
+                <h2>GoFast — Admin</h2>
+                <button className={s.btnLogout} onClick={logout}>Cerrar sesión</button>
             </div>
 
-            {/* Navegación */}
             <nav className={s.nav}>
                 {TABS.map(({ key, label }) => (
                     <button
@@ -42,17 +39,13 @@ export default function AdminPanel() {
                 ))}
             </nav>
 
-            {/* Contenido */}
             <div className={s.content}>
                 {tab === "pedidos" && <AdminPedidos />}
                 {tab === "usuarios" && <AdminUsuarios />}
                 {tab === "barrios" && <AdminBarrios />}
                 {tab === "comunas" && <AdminComunas />}
-                {tab === "finanzas" && (
-                    <div className={s.placeholder}>Finanzas (pendiente)</div>
-                )}
+                {tab === "finanzas" && <AdminFinanzas />}
             </div>
         </div>
     );
 }
-

@@ -1,0 +1,291 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Sección */
+.section {
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 14px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.sectionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.sectionHeader h3 {
+    margin: 0;
+    font-size: 15px;
+    color: #111827;
+}
+
+/* Filtros */
+.filtrosGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.filtros {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filtroLabel {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.filtroLabelLight {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.inputDate {
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    font-size: 13px;
+    color: #111827;
+    outline: none;
+}
+
+.inputDate:focus {
+    border-color: #9ca3af;
+}
+
+.inputText {
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    font-size: 13px;
+    color: #111827;
+    outline: none;
+    width: 200px;
+}
+
+.inputText:focus {
+    border-color: #9ca3af;
+}
+
+.contador {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+/* Botones */
+.btn {
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: #111827;
+    transition: background 0.15s;
+}
+
+.btn:hover:not(:disabled) {
+    background: #f3f4f6;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Métricas */
+.metricsGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+@media (max-width: 600px) {
+    .metricsGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.metric {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 12px;
+    background: #fafafa;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.metricHighlight {
+    border-color: #86efac;
+    background: #f0fdf4;
+}
+
+.metricLabel {
+    font-size: 11px;
+    color: #6b7280;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.metricValue {
+    font-size: 20px;
+    font-weight: 800;
+    color: #111827;
+}
+
+/* Tabla por domiciliario */
+.tabla {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+    font-size: 13px;
+}
+
+.tablaRow {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+    gap: 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.tablaRow:last-child {
+    border-bottom: none;
+}
+
+.tablaHeader {
+    background: #f9fafb;
+    font-weight: 700;
+    font-size: 12px;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.tablaTotal {
+    background: #f0fdf4;
+    font-weight: 700;
+    color: #065f46;
+}
+
+.colNombre {
+    padding: 10px 12px;
+    color: #111827;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.colNum {
+    padding: 10px 12px;
+    text-align: right;
+    color: #111827;
+    white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+    .tablaRow {
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+    }
+}
+
+/* Lista historial */
+.lista {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.vacio {
+    font-size: 13px;
+    color: #6b7280;
+    padding: 12px;
+    text-align: center;
+    border: 1px dashed #ddd;
+    border-radius: 10px;
+}
+
+.itemCard {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    background: #fff;
+    font-size: 13px;
+    transition: box-shadow 0.15s;
+}
+
+.itemCard:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.itemInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    color: #111827;
+}
+
+.itemTitulo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 2px;
+}
+
+.itemFinanzas {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+    flex-shrink: 0;
+    min-width: 120px;
+}
+
+.itemTotal {
+    font-size: 15px;
+    font-weight: 800;
+    color: #111827;
+}
+
+.itemSub {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.itemFecha {
+    font-size: 11px;
+    color: #9ca3af;
+    margin-top: 4px;
+}
+
+/* Badge */
+.badge {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    border: 1px solid #e5e7eb;
+    white-space: nowrap;
+}

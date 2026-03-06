@@ -1,12 +1,13 @@
-/* Contenedor principal */
 .container {
     max-width: 1100px;
     margin: 20px auto;
     font-family: sans-serif;
     padding: 0 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
-/* Header */
 .header {
     display: flex;
     justify-content: space-between;
@@ -38,9 +39,7 @@
     color: #991b1b;
 }
 
-/* Navegación de tabs */
 .nav {
-    margin-top: 12px;
     display: flex;
     gap: 8px;
     padding: 8px;
@@ -50,7 +49,6 @@
     flex-wrap: wrap;
 }
 
-/* Botón de tab */
 .navBtn {
     padding: 10px 14px;
     border-radius: 10px;
@@ -74,17 +72,18 @@
     border-color: #111827;
 }
 
-/* Contenido del tab */
 .content {
-    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
 }
 
-/* Placeholder pendiente */
 .placeholder {
     border: 1px solid #ddd;
     border-radius: 12px;
-    padding: 12px;
+    padding: 24px;
     background: #fff;
     color: #6b7280;
     font-size: 14px;
+    text-align: center;
 }

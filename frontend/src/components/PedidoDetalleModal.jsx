@@ -111,9 +111,7 @@ export default function PedidoDetalleModal({
                     {/* Cliente (admin y delivery lo ven) */}
                     {showCliente && (
                         <Section title="🧑‍💼 Cliente">
-                            <Row label="ID" value={pedido.clienteId ?? pedido.usuarioId} />
                             <Row label="Nombre" value={pedido.clienteNombre ?? pedido.nombreCliente} />
-                            <Row label="Email" value={pedido.clienteEmail} />
                             <Row label="Teléfono" value={pedido.clienteTelefono} />
                         </Section>
                     )}
