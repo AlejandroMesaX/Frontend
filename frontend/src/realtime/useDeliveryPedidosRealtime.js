@@ -15,21 +15,14 @@ export function useDeliveryPedidosRealtime({ token, userId, onPedido }) {
             heartbeatOutgoing: 10000,
         });
 
+        // ✅ Después
         client.onConnect = () => {
             client.subscribe(`/topic/delivery/${userId}/pedidos`, (msg) => {
                 try {
                     const pedido = JSON.parse(msg.body);
-
-                    // ✅ Si llega un pedido terminado, lo “ocultamos” del panel
-                    if (pedido?.estado === "ENTREGADO" || pedido?.estado === "CANCELADO") {
-                        onPedido?.(null);
-                        return;
-                    }
-
+                    // Siempre pasar el pedido completo — el componente decide qué hacer
                     onPedido?.(pedido);
-                } catch {
-                    // si llega algo raro, no rompas la UI
-                }
+                } catch { }
             });
         };
 

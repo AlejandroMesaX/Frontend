@@ -345,6 +345,17 @@ export default function AdminPedidos() {
     const [pedidoSel, setPedidoSel] = useState(null);
     const [confirm, setConfirm] = useState({ open: false, pedidoId: null });
     const [loadingCancelar, setLoadingCancelar] = useState(false);
+    const [gananciasHoy, setGananciasHoy] = useState([]); // pedidos ENTREGADO del día
+
+    // ── Helper fecha local ───────────────────────────────────────────────────
+
+    function todayLocal() {
+        const d = new Date();
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, "0");
+        const dd = String(d.getDate()).padStart(2, "0");
+        return `${yyyy}-${mm}-${dd}`;
+    }
 
     // ── Realtime ────────────────────────────────────────────────────────────
 
@@ -359,6 +370,19 @@ export default function AdminPedidos() {
                 return copy;
             });
             setDetalle((d) => d?.id === pedido.id ? { ...d, ...pedido } : d);
+            // Acumular ganancias del día en tiempo real
+            if (pedido.estado === "ENTREGADO") {
+                const fechaPedido = pedido.fechaCreacion
+                    ? String(pedido.fechaCreacion).slice(0, 10)
+                    : todayLocal();
+                if (fechaPedido === todayLocal()) {
+                    setGananciasHoy((prev) => {
+                        const exists = prev.find((p) => p.id === pedido.id);
+                        if (exists) return prev;
+                        return [...prev, pedido];
+                    });
+                }
+            }
         }, []),
     });
 
@@ -391,6 +415,23 @@ export default function AdminPedidos() {
             } catch {
                 setToast(errorFronted("No se pudieron cargar los pedidos."));
             }
+        })();
+    }, []);
+
+    useEffect(() => {
+        (async () => {
+            try {
+                const res = await authFetch("/api/admin/pedidos?estado=ENTREGADO");
+                if (res.ok) {
+                    const data = await res.json();
+                    const d = new Date();
+                    const hoy = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+                    const deHoy = (Array.isArray(data) ? data : []).filter(
+                        (p) => String(p.fechaCreacion ?? "").slice(0, 10) === hoy
+                    );
+                    setGananciasHoy(deHoy);
+                }
+            } catch { /* silencioso */ }
         })();
     }, []);
 
@@ -445,6 +486,15 @@ export default function AdminPedidos() {
         [domiciliarios]
     );
 
+    // ── Resumen ganancias hoy ───────────────────────────────────────────────
+
+    const resumenHoy = useMemo(() => {
+        const totalBruto = gananciasHoy.reduce((acc, p) => acc + (Number(p.costoServicio) || 0), 0);
+        const gananciaEmpresa = totalBruto * 0.20;
+        const pagosDomis = totalBruto * 0.80;
+        return { totalBruto, gananciaEmpresa, pagosDomis, pedidos: gananciasHoy.length };
+    }, [gananciasHoy]);
+
     // ── Acciones ────────────────────────────────────────────────────────────
 
     function abrirDetalle(p, e) {
@@ -482,6 +532,28 @@ export default function AdminPedidos() {
 
     return (
         <div className={s.container}>
+
+            {/* Ganancias del día */}
+            <div className={s.section}>
+                <div className={s.sectionHeader}>
+                    <h3>💰 Ganancias hoy — {new Date().toLocaleDateString("es-CO", { weekday: "long", day: "numeric", month: "long" })}</h3>
+                    <span style={{ fontSize: 12, color: "#6b7280" }}>{resumenHoy.pedidos} pedidos entregados</span>
+                </div>
+                <div className={s.metricsGrid}>
+                    <div className={s.metric}>
+                        <div className={s.metricLabel}>Total facturado</div>
+                        <div className={s.metricValue}>${resumenHoy.totalBruto.toLocaleString("es-CO")}</div>
+                    </div>
+                    <div className={`${s.metric} ${s.metricHighlight}`}>
+                        <div className={s.metricLabel}>Ganancia empresa (20%)</div>
+                        <div className={s.metricValue}>${resumenHoy.gananciaEmpresa.toLocaleString("es-CO")}</div>
+                    </div>
+                    <div className={s.metric}>
+                        <div className={s.metricLabel}>Pagos a domiciliarios (80%)</div>
+                        <div className={s.metricValue}>${resumenHoy.pagosDomis.toLocaleString("es-CO")}</div>
+                    </div>
+                </div>
+            </div>
 
             {/* Panel domiciliarios — visualizador colapsable */}
             <div className={s.section}>
@@ -526,16 +598,17 @@ export default function AdminPedidos() {
                                 )}
 
                                 <div><b>Recogida:</b> {p.barrioRecogida} — {p.direccionRecogida}</div>
-                                <div><b>Envia:</b> {p.clienteNombre} - {p.telefonoContactoRecogida}</div>
+                                {p.telefonoContactoRecogida && <div><b>Contacto recogida:</b> {p.telefonoContactoRecogida}</div>}
                                 <div><b>Entrega:</b> {p.barrioEntrega} — {p.direccionEntrega}</div>
                                 {p.nombreQuienRecibe && <div><b>Recibe:</b> {p.nombreQuienRecibe} · {p.telefonoQuienRecibe}</div>}
+                                <div><b>Costo:</b> ${Number(p.costoServicio || 0).toLocaleString("es-CO")}</div>
+                                {p.clienteId && <div><b>Cliente:</b> {p.clienteNombre ?? `#${p.clienteId}`}</div>}
                                 {p.domiciliarioId && (
                                     <div>
                                         <b>Domiciliario:</b>{" "}
                                         {domiciliarios.find((d) => d.id === p.domiciliarioId)?.nombre ?? p.domiciliarioNombre ?? `#${p.domiciliarioId}`}
                                     </div>
                                 )}
-                                <div><b>Costo:</b> ${Number(p.costoServicio || 0).toLocaleString("es-CO")}</div>
                             </div>
 
                             <div className={s.cardAcciones}>

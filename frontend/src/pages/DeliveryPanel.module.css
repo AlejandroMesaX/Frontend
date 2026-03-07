@@ -559,3 +559,45 @@
     color: #ef4444;
     font-weight: 700;
 }
+
+/* Ganancias hoy */
+.metricsGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+@media (max-width: 480px) {
+    .metricsGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.metric {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 12px;
+    background: #fafafa;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.metricHighlight {
+    border-color: #86efac;
+    background: #f0fdf4;
+}
+
+.metricLabel {
+    font-size: 11px;
+    color: #6b7280;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.metricValue {
+    font-size: 20px;
+    font-weight: 800;
+    color: #111827;
+}

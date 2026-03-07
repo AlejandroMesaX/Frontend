@@ -89,6 +89,7 @@ export default function DeliveryPanel() {
     const [loadingAyuda, setLoadingAyuda] = useState(false);
     const [openIncidencia, setOpenIncidencia] = useState(false);
     const [detalle, setDetalle] = useState(null);
+    const [gananciasHoy, setGananciasHoy] = useState([]);
 
     const [historial, setHistorial] = useState([]);
     const [loadingHist, setLoadingHist] = useState(false);
@@ -109,8 +110,22 @@ export default function DeliveryPanel() {
     useDeliveryPedidosRealtime({
         token, userId,
         onPedido: (pedido) => {
-            setPedidoActual(pedido);
+            // Limpiar pedido actual si terminó
+            if (!pedido || pedido.estado === "ENTREGADO" || pedido.estado === "CANCELADO") {
+                setPedidoActual(null);
+            } else {
+                setPedidoActual(pedido);
+            }
             setDetalle((d) => d?.id === pedido?.id ? (pedido ? { ...d, ...pedido } : null) : d);
+            // Acumular ganancias del día cuando se entrega
+            if (pedido?.estado === "ENTREGADO") {
+                const d = new Date();
+                const hoy = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+                const fechaPedido = pedido.fechaCreacion ? String(pedido.fechaCreacion).slice(0, 10) : hoy;
+                if (fechaPedido === hoy) {
+                    setGananciasHoy((prev) => prev.find((p) => p.id === pedido.id) ? prev : [...prev, pedido]);
+                }
+            }
         },
     });
 
@@ -197,6 +212,48 @@ export default function DeliveryPanel() {
         }
     }
 
+    // ── Carga estado inicial al montar ──────────────────────────────────────
+
+    useEffect(() => {
+        (async () => {
+            try {
+                // Cargar pedido activo (persiste tras recarga)
+                const resPedido = await authFetch("/api/domiciliario/pedidos/me/activo");
+                if (resPedido.ok) {
+                    const pedido = await resPedido.json().catch(() => null);
+                    if (pedido?.id) {
+                        setPedidoActual(pedido);
+                        setDisponible(true); // si tiene pedido activo, estaba disponible
+                    }
+                }
+
+                // Cargar disponibilidad actual
+                const resMe = await authFetch("/api/delivery/me");
+                if (resMe.ok) {
+                    const me = await resMe.json().catch(() => null);
+                    if (me?.disponible != null) setDisponible(me.disponible);
+                }
+            } catch { /* silencioso */ }
+        })();
+    }, []);
+
+    useEffect(() => {
+        (async () => {
+            try {
+                const res = await authFetch("/api/domiciliario/pedidos/me/entregados");
+                if (res.ok) {
+                    const data = await res.json();
+                    const d = new Date();
+                    const hoy = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+                    const deHoy = (Array.isArray(data) ? data : []).filter(
+                        (p) => String(p.fechaCreacion ?? "").slice(0, 10) === hoy
+                    );
+                    setGananciasHoy(deHoy);
+                }
+            } catch { /* silencioso */ }
+        })();
+    }, []);
+
     async function cargarHistorial() {
         setLoadingHist(true);
         try {
@@ -241,6 +298,13 @@ export default function DeliveryPanel() {
         const comisionEmpresa = total * 0.2;
         return { total, comisionEmpresa, netoDelivery: total - comisionEmpresa, pedidos: finanzasFiltrado.length };
     }, [finanzasFiltrado]);
+
+    // ── Resumen ganancias hoy ───────────────────────────────────────────────
+
+    const resumenHoy = useMemo(() => {
+        const bruto = gananciasHoy.reduce((acc, p) => acc + (Number(p.costoServicio) || 0), 0);
+        return { bruto, neto: bruto * 0.80, comision: bruto * 0.20, pedidos: gananciasHoy.length };
+    }, [gananciasHoy]);
 
     // ── Render ──────────────────────────────────────────────────────────────
 
@@ -304,6 +368,28 @@ export default function DeliveryPanel() {
                                         ? "✅ Disponible — click para desconectarse"
                                         : "⛔ Desconectado — click para conectarse"}
                             </button>
+                        </div>
+                    </div>
+
+                    {/* Ganancias del día */}
+                    <div className={s.section}>
+                        <div className={s.sectionHeader}>
+                            <h3>💰 Tus ganancias hoy</h3>
+                            <span style={{ fontSize: 12, color: "#6b7280" }}>{resumenHoy.pedidos} pedidos entregados</span>
+                        </div>
+                        <div className={s.metricsGrid}>
+                            <div className={s.metric}>
+                                <div className={s.metricLabel}>Total facturado</div>
+                                <div className={s.metricValue}>${resumenHoy.bruto.toLocaleString("es-CO")}</div>
+                            </div>
+                            <div className={`${s.metric} ${s.metricHighlight}`}>
+                                <div className={s.metricLabel}>Tu ganancia (80%)</div>
+                                <div className={s.metricValue}>${resumenHoy.neto.toLocaleString("es-CO")}</div>
+                            </div>
+                            <div className={s.metric}>
+                                <div className={s.metricLabel}>A pagar a la empresa (20%)</div>
+                                <div className={s.metricValue}>${resumenHoy.comision.toLocaleString("es-CO")}</div>
+                            </div>
                         </div>
                     </div>
 
