@@ -548,10 +548,7 @@ export default function AdminPedidos() {
                         <div className={s.metricLabel}>Ganancia empresa (20%)</div>
                         <div className={s.metricValue}>${resumenHoy.gananciaEmpresa.toLocaleString("es-CO")}</div>
                     </div>
-                    <div className={s.metric}>
-                        <div className={s.metricLabel}>Pagos a domiciliarios (80%)</div>
-                        <div className={s.metricValue}>${resumenHoy.pagosDomis.toLocaleString("es-CO")}</div>
-                    </div>
+
                 </div>
             </div>
 

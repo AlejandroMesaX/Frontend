@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { authFetch } from "../api/http";
 import { useAuth } from "../auth/AuthContext";
 import AdminPedidos from "./AdminPedidos";
 import AdminUsuarios from "./AdminUsuarios";
 import AdminBarrios from "./AdminBarrios";
 import AdminComunas from "./AdminComunas";
 import AdminFinanzas from "./AdminFinanzas";
+import TarifasPanel from "./TarifasPanel";
 import s from "./AdminPanel.module.css";
 
 const TABS = [
@@ -13,7 +15,21 @@ const TABS = [
     { key: "barrios", label: "Barrios" },
     { key: "comunas", label: "Comunas" },
     { key: "finanzas", label: "Finanzas" },
+    { key: "tarifas", label: "Tarifas" },
 ];
+
+function AdminTarifas() {
+    const [barrios, setBarrios] = useState([]);
+    useEffect(() => {
+        (async () => {
+            try {
+                const res = await authFetch("/api/admin/barrios?includeInactivos=false");
+                if (res.ok) setBarrios(await res.json());
+            } catch { /* silencioso */ }
+        })();
+    }, []);
+    return <TarifasPanel barrios={barrios} />;
+}
 
 export default function AdminPanel() {
     const { logout } = useAuth();
@@ -45,6 +61,7 @@ export default function AdminPanel() {
                 {tab === "barrios" && <AdminBarrios />}
                 {tab === "comunas" && <AdminComunas />}
                 {tab === "finanzas" && <AdminFinanzas />}
+                {tab === "tarifas" && <AdminTarifas />}
             </div>
         </div>
     );

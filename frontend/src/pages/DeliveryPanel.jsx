@@ -5,6 +5,7 @@ import { parseBackendError, errorFronted } from "../api/errors";
 import { useDeliveryPedidosRealtime } from "../realtime/useDeliveryPedidosRealtime";
 import PedidoDetalleModal from "../components/PedidoDetalleModal";
 import Toast from "../components/Toast";
+import TarifasPanel from "./TarifasPanel";
 import s from "./DeliveryPanel.module.css";
 
 function toNumberMoney(val) {
@@ -75,6 +76,7 @@ const TABS = [
     { key: "inicio", label: "Inicio" },
     { key: "historial", label: "Historial" },
     { key: "finanzas", label: "Finanzas" },
+    { key: "tarifas", label: "Tarifas" },
 ];
 
 export default function DeliveryPanel() {
@@ -90,6 +92,7 @@ export default function DeliveryPanel() {
     const [openIncidencia, setOpenIncidencia] = useState(false);
     const [detalle, setDetalle] = useState(null);
     const [gananciasHoy, setGananciasHoy] = useState([]);
+    const [barrios, setBarrios] = useState([]);
 
     const [historial, setHistorial] = useState([]);
     const [loadingHist, setLoadingHist] = useState(false);
@@ -223,7 +226,6 @@ export default function DeliveryPanel() {
                     const pedido = await resPedido.json().catch(() => null);
                     if (pedido?.id) {
                         setPedidoActual(pedido);
-                        setDisponible(true); // si tiene pedido activo, estaba disponible
                     }
                 }
 
@@ -233,6 +235,10 @@ export default function DeliveryPanel() {
                     const me = await resMe.json().catch(() => null);
                     if (me?.disponible != null) setDisponible(me.disponible);
                 }
+
+                // Cargar barrios para tarifas
+                const resBarrios = await authFetch("/api/admin/barrios?includeInactivos=false");
+                if (resBarrios.ok) setBarrios(await resBarrios.json());
             } catch { /* silencioso */ }
         })();
     }, []);
@@ -512,6 +518,7 @@ export default function DeliveryPanel() {
             )}
 
             {/* ── FINANZAS ── */}
+            {tab === "tarifas" && <div className={s.tabContent}><TarifasPanel barrios={barrios} /></div>}
             {tab === "finanzas" && (
                 <div className={s.section}>
                     <div className={s.sectionHeader}>

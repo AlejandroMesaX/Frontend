@@ -7,6 +7,7 @@ import { parseBackendError, errorFronted } from "../api/errors";
 import Toast from "../components/Toast";
 import PedidoDetalleModal from "../components/PedidoDetalleModal";
 import SearchableSelect from "../components/SearchableSelect";
+import TarifasPanel from "./TarifasPanel";
 import s from "./ClientePanel.module.css";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -494,6 +495,7 @@ const TABS = [
     { key: "inicio", label: "Inicio" },
     { key: "direcciones", label: "Direcciones" },
     { key: "historial", label: "Historial" },
+    { key: "tarifas", label: "Tarifas" },
 ];
 
 const ESTADOS_ACTIVOS = new Set(["CREADO", "ASIGNADO", "EN_CAMINO", "INCIDENCIA"]);
@@ -717,12 +719,7 @@ export default function ClientePanel() {
                             )}
 
                             {pedidosActivos.map((p) => (
-                                <div
-                                    key={p.id}
-                                    className={`${s.card} ${s.cardClickable}`}
-                                    onClick={(e) => { if (!e.target.closest("button")) setDetalle(p); }}
-                                    title="Click para ver detalle"
-                                >
+                                <div key={p.id} className={`${s.card} ${s.cardClickable}`} onClick={(e) => { if (!e.target.closest("button")) setDetalle(p); }} title="Click para ver detalle">
                                     <div className={s.cardInfo}>
                                         <div className={s.cardTitulo}>
                                             <b>#{p.id}</b>
@@ -743,9 +740,6 @@ export default function ClientePanel() {
                                         <div><b>Entrega:</b> {p.barrioEntrega} — {p.direccionEntrega}</div>
                                         <div><b>Recibe:</b> {p.nombreQuienRecibe} — {p.telefonoQuienRecibe}</div>
                                         <div><b>Costo:</b> ${toNumberMoney(p.costoServicio).toLocaleString("es-CO")}</div>
-                                        {p.domiciliarioId && (
-                                            <div><b>Domiciliario:</b> {p.domiciliarioNombre ?? `#${p.domiciliarioId}`}</div>
-                                        )}
                                     </div>
 
                                     <div className={s.cardAcciones}>
@@ -771,8 +765,8 @@ export default function ClientePanel() {
                     <div className={s.sectionHeader}>
                         <h3>Mis direcciones</h3>
                         <div style={{ display: "flex", gap: 8 }}>
-                            <button className={s.btn} onClick={cargarPedidos} disabled={loadingPedidos}>
-                                {loadingPedidos ? "Cargando..." : "Recargar"}
+                            <button className={s.btn} onClick={cargarDirecciones} disabled={loadingDirecciones}>
+                                {loadingDirecciones ? "Cargando..." : "Recargar"}
                             </button>
                             <button className={s.btnPrimary} onClick={() => { setEditingDireccion(null); setOpenDireccion(true); }}>
                                 + Nueva dirección
@@ -812,6 +806,8 @@ export default function ClientePanel() {
             )}
 
             {/* ── HISTORIAL ── */}
+            {tab === "tarifas" && <TarifasPanel barrios={barrios} />}
+
             {tab === "historial" && (
                 <div className={s.section}>
                     <div className={s.sectionHeader}>
