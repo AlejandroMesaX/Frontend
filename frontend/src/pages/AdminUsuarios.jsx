@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useAuth } from "../auth/AuthContext";
+import { useAdminUsuariosRealtime } from "../realtime/useAdminUsuariosRealtime";
 import { authFetch } from "../api/http";
 import { parseBackendError, errorFronted } from "../api/errors";
 import Toast from "../components/Toast";
@@ -6,7 +8,10 @@ import s from "./AdminUsuarios.module.css";
 
 const ROLES = ["ADMIN", "CLIENT", "DELIVERY"];
 
+
 // ── Badges ───────────────────────────────────────────────────────────────────
+
+
 
 function ActivoBadge({ activo }) {
     return (
@@ -27,6 +32,41 @@ function RolBadge({ rol }) {
         <span className={s.badge} style={{ background: cfg.bg, color: cfg.color }}>
             {cfg.text}
         </span>
+    );
+}
+
+// ── Indicador fortaleza contraseña ───────────────────────────────────────────
+
+function PasswordStrength({ password }) {
+    const checks = [
+        { label: "Mínimo 6 caracteres", ok: password.length >= 6 },
+        { label: "Letra mayúscula", ok: /[A-Z]/.test(password) },
+        { label: "Letra minúscula", ok: /[a-z]/.test(password) },
+        { label: "Número", ok: /\d/.test(password) },
+        { label: "Carácter especial", ok: /[^a-zA-Z\d]/.test(password) },
+    ];
+    const passed = checks.filter((c) => c.ok).length;
+    const color = passed <= 2 ? "#ef4444" : passed <= 3 ? "#f59e0b" : "#16a34a";
+
+    return (
+        <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 3 }}>
+            <div style={{ display: "flex", gap: 4 }}>
+                {checks.map((_, i) => (
+                    <div key={i} style={{
+                        flex: 1, height: 4, borderRadius: 2,
+                        background: i < passed ? color : "#e5e7eb",
+                        transition: "background 0.2s"
+                    }} />
+                ))}
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 10px", marginTop: 2 }}>
+                {checks.map((c) => (
+                    <span key={c.label} style={{ fontSize: 11, color: c.ok ? "#16a34a" : "#9ca3af" }}>
+                        {c.ok ? "✓" : "○"} {c.label}
+                    </span>
+                ))}
+            </div>
+        </div>
     );
 }
 
@@ -54,6 +94,7 @@ function ConfirmModal({ open, mensaje, onConfirm, onCancel, loading }) {
 // ── Componente principal ──────────────────────────────────────────────────────
 
 export default function AdminUsuarios() {
+    const { token } = useAuth();
     const [usuarios, setUsuarios] = useState([]);
     const [loading, setLoading] = useState(false);
     const [loadingGuardar, setLoadingGuardar] = useState(false);
@@ -68,7 +109,7 @@ export default function AdminUsuarios() {
     // Modal crear/editar
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState(null);
-    const [form, setForm] = useState({ nombre: "", email: "", password: "", rol: "CLIENTE", activo: true });
+    const [form, setForm] = useState({ nombre: "", email: "", password: "", rol: "CLIENT", activo: true });
     const [touched, setTouched] = useState({});
 
     // Modal confirmación toggle
@@ -92,6 +133,19 @@ export default function AdminUsuarios() {
 
     useEffect(() => { cargarUsuarios(); }, []);
 
+    useAdminUsuariosRealtime({  // ← y aquí
+        token,
+        onUsuario: useCallback((usuario) => {
+            setUsuarios((prev) => {
+                const idx = prev.findIndex((u) => u.id === usuario.id);
+                if (idx === -1) return [usuario, ...prev];
+                const copy = [...prev];
+                copy[idx] = { ...copy[idx], ...usuario };
+                return copy;
+            });
+        }, []),
+    });
+
     // ── Memos ───────────────────────────────────────────────────────────────
 
     const filtrados = useMemo(() => {
@@ -113,15 +167,34 @@ export default function AdminUsuarios() {
 
     // ── Validación en tiempo real ───────────────────────────────────────────
 
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{6,}$/;
+
     const errors = useMemo(() => {
         const e = {};
+
+        if (!form.nombre.trim()) {
+            e.nombre = "El nombre es obligatorio.";
+        }
+
         if (!form.email.trim()) {
             e.email = "El email es obligatorio.";
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
-            e.email = "El email no tiene un formato válido.";
+            e.email = "Formato de email no válido.";
         }
+
+        if (!editing) {
+            if (!form.password.trim()) {
+                e.password = "La contraseña es obligatoria al crear.";
+            } else if (!passwordRegex.test(form.password)) {
+                e.password = "Mínimo 6 caracteres con mayúscula, minúscula, número y carácter especial.";
+            }
+        } else if (form.password.trim()) {
+            if (!passwordRegex.test(form.password)) {
+                e.password = "Mínimo 6 caracteres con mayúscula, minúscula, número y carácter especial.";
+            }
+        }
+
         if (!form.rol) e.rol = "El rol es obligatorio.";
-        if (!editing && !form.password.trim()) e.password = "La contraseña es obligatoria al crear.";
         return e;
     }, [form, editing]);
 
@@ -131,7 +204,7 @@ export default function AdminUsuarios() {
 
     function abrirCrear() {
         setEditing(null);
-        setForm({ nombre: "", email: "", password: "", rol: "CLIENTE", activo: true });
+        setForm({ nombre: "", email: "", password: "", rol: "CLIENT", activo: true });
         setTouched({});
         setOpen(true);
     }
@@ -142,7 +215,7 @@ export default function AdminUsuarios() {
             nombre: u.nombre ?? "",
             email: u.email ?? "",
             password: "",
-            rol: u.rol ?? "CLIENTE",
+            rol: u.rol ?? "CLIENT",
             activo: u.activo ?? true,
         });
         setTouched({});
@@ -150,7 +223,7 @@ export default function AdminUsuarios() {
     }
 
     async function guardar() {
-        setTouched({ email: true, rol: true, password: true });
+        setTouched({ nombre: true, email: true, rol: true, password: true });
         if (!canSubmit) return;
 
         setLoadingGuardar(true);
@@ -230,12 +303,9 @@ export default function AdminUsuarios() {
 
             if (!res.ok) { setToast(await parseBackendError(res)); return; }
 
-            const actualizado = await res.json().catch(() => null);
             setUsuarios((prev) =>
                 prev.map((x) =>
-                    x.id === u.id
-                        ? actualizado ?? { ...x, activo: !isActivo }
-                        : x
+                    x.id === u.id ? { ...x, activo: !isActivo } : x
                 )
             );
 
@@ -355,50 +425,61 @@ export default function AdminUsuarios() {
 
                         <div className={s.modalBody}>
 
-                            {/* Nombre (opcional) */}
+                            {/* Nombre */}
                             <div className={s.field}>
                                 <input
-                                    className={`${s.input}`}
+                                    className={`${s.input} ${s.inputFull} ${touched.nombre && errors.nombre ? s.inputError : ""}`}
                                     value={form.nombre}
                                     onChange={(e) => setForm((p) => ({ ...p, nombre: e.target.value }))}
-                                    placeholder="Nombre (opcional)"
+                                    onBlur={() => setTouched((t) => ({ ...t, nombre: true }))}
+                                    placeholder="Nombre"
                                 />
-                            </div>
-
-                            {/* Email */}
-                            <div className={s.field}>
-                                <input
-                                    className={`${s.input} ${touched.email && errors.email ? s.inputError : ""}`}
-                                    value={form.email}
-                                    onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
-                                    onBlur={() => setTouched((t) => ({ ...t, email: true }))}
-                                    placeholder="Email"
-                                    type="email"
-                                />
-                                {touched.email && errors.email && (
-                                    <div className={s.helper}>⚠️ {errors.email}</div>
+                                {touched.nombre && errors.nombre && (
+                                    <div className={s.helper}>⚠️ {errors.nombre}</div>
                                 )}
                             </div>
 
-                            {/* Contraseña */}
-                            <div className={s.field}>
-                                <input
-                                    className={`${s.input} ${touched.password && errors.password ? s.inputError : ""}`}
-                                    value={form.password}
-                                    onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
-                                    onBlur={() => setTouched((t) => ({ ...t, password: true }))}
-                                    placeholder={editing ? "Nueva contraseña (opcional)" : "Contraseña"}
-                                    type="password"
-                                />
-                                {touched.password && errors.password && (
-                                    <div className={s.helper}>⚠️ {errors.password}</div>
-                                )}
-                            </div>
+                            {/* Email — solo al crear */}
+                            {!editing && (
+                                <div className={s.field}>
+                                    <input
+                                        className={`${s.input} ${s.inputFull} ${touched.email && errors.email ? s.inputError : ""}`}
+                                        value={form.email}
+                                        onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+                                        onBlur={() => setTouched((t) => ({ ...t, email: true }))}
+                                        placeholder="Email"
+                                        type="email"
+                                    />
+                                    {touched.email && errors.email && (
+                                        <div className={s.helper}>⚠️ {errors.email}</div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Contraseña — solo al crear */}
+                            {!editing && (
+                                <div className={s.field}>
+                                    <input
+                                        className={`${s.input} ${s.inputFull} ${touched.password && errors.password ? s.inputError : ""}`}
+                                        value={form.password}
+                                        onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
+                                        onBlur={() => setTouched((t) => ({ ...t, password: true }))}
+                                        placeholder="Contraseña"
+                                        type="password"
+                                    />
+                                    {form.password && (
+                                        <PasswordStrength password={form.password} />
+                                    )}
+                                    {touched.password && errors.password && (
+                                        <div className={s.helper}>⚠️ {errors.password}</div>
+                                    )}
+                                </div>
+                            )}
 
                             {/* Rol */}
                             <div className={s.field}>
                                 <select
-                                    className={`${s.select} ${touched.rol && errors.rol ? s.inputError : ""}`}
+                                    className={`${s.select} ${s.inputFull} ${touched.rol && errors.rol ? s.inputError : ""}`}
                                     value={form.rol}
                                     onChange={(e) => setForm((p) => ({ ...p, rol: e.target.value }))}
                                     onBlur={() => setTouched((t) => ({ ...t, rol: true }))}
@@ -410,7 +491,17 @@ export default function AdminUsuarios() {
                                 )}
                             </div>
 
-
+                            {/* Activo (solo en edición) */}
+                            {editing && (
+                                <label className={s.checkboxLabel}>
+                                    <input
+                                        type="checkbox"
+                                        checked={!!form.activo}
+                                        onChange={(e) => setForm((p) => ({ ...p, activo: e.target.checked }))}
+                                    />
+                                    Activo
+                                </label>
+                            )}
                         </div>
 
                         <div className={s.modalFooter}>
