@@ -1,9 +1,9 @@
 /* Contenedor principal */
 .container {
-    border: 1px solid #ddd;
+    border: 1px solid #3f3f44;
     border-radius: 12px;
     padding: 16px;
-    background: #fff;
+    background: #2a2a2d;
 }
 
 /* Header */
@@ -18,7 +18,8 @@
 .header h3 {
     margin: 0;
     font-size: 16px;
-    color: #111827;
+    color: #f0f0f0;
+    font-weight: 700;
 }
 
 .headerActions {
@@ -31,22 +32,22 @@
 .btn {
     padding: 8px 14px;
     border-radius: 8px;
-    border: 1px solid #e5e7eb;
-    background: #fff;
+    border: 1px solid #3f3f44;
+    background: #333336;
     cursor: pointer;
     font-size: 13px;
     font-weight: 500;
-    color: #111827;
+    color: #f0f0f0;
     transition: background 0.15s, border-color 0.15s;
 }
 
 .btn:hover:not(:disabled) {
-    background: #f3f4f6;
-    border-color: #d1d5db;
+    background: #3f3f44;
+    border-color: #55555a;
 }
 
 .btn:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
 }
 
@@ -54,20 +55,20 @@
     padding: 8px 14px;
     border-radius: 8px;
     border: none;
-    background: #111827;
-    color: #fff;
+    background: #f5c518;
+    color: #0d0d0d;
     cursor: pointer;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
     transition: background 0.15s;
 }
 
 .btnPrimary:hover:not(:disabled) {
-    background: #1f2937;
+    background: #e6b800;
 }
 
 .btnPrimary:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
 }
 
@@ -83,16 +84,21 @@
 .input {
     padding: 10px 12px;
     border-radius: 10px;
-    border: 1px solid #e5e7eb;
+    border: 1px solid #3f3f44;
     font-size: 13px;
-    color: #111827;
+    color: #f0f0f0;
+    background: #333336;
     outline: none;
     transition: border-color 0.15s;
     min-width: 260px;
 }
 
 .input:focus {
-    border-color: #9ca3af;
+    border-color: #f5c518;
+}
+
+.input::placeholder {
+    color: #6b7280;
 }
 
 .inputError {
@@ -102,16 +108,21 @@
 .inputSmall {
     padding: 10px 12px;
     border-radius: 10px;
-    border: 1px solid #e5e7eb;
+    border: 1px solid #3f3f44;
     font-size: 13px;
-    color: #111827;
+    color: #f0f0f0;
+    background: #333336;
     outline: none;
     width: 160px;
     transition: border-color 0.15s;
 }
 
 .inputSmall:focus {
-    border-color: #9ca3af;
+    border-color: #f5c518;
+}
+
+.inputSmall::placeholder {
+    color: #6b7280;
 }
 
 .inputFull {
@@ -120,7 +131,7 @@
 
 .contador {
     font-size: 12px;
-    color: #666;
+    color: #9ca3af;
 }
 
 /* Tabla */
@@ -136,24 +147,26 @@
 
 .th {
     padding: 10px;
-    font-size: 13px;
-    color: #111827;
+    font-size: 11px;
+    color: #9ca3af;
     text-align: left;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #3f3f44;
     font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
 }
 
 .td {
     padding: 10px;
     font-size: 13px;
-    color: #111827;
-    vertical-align: top;
-    border-bottom: 1px solid #f1f1f1;
+    color: #d1d5db;
+    vertical-align: middle;
+    border-bottom: 1px solid #3f3f44;
 }
 
 .emptyRow {
     padding: 12px;
-    color: #666;
+    color: #9ca3af;
     font-size: 13px;
 }
 
@@ -161,7 +174,7 @@
 .backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.35);
+    background: rgba(0, 0, 0, 0.6);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -171,10 +184,10 @@
 
 .modal {
     width: min(520px, 95vw);
-    background: #fff;
+    background: #2a2a2d;
     border-radius: 12px;
     padding: 16px;
-    border: 1px solid #ddd;
+    border: 1px solid #3f3f44;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -190,7 +203,7 @@
 .modalHeader h3 {
     margin: 0;
     font-size: 15px;
-    color: #111827;
+    color: #f0f0f0;
 }
 
 .btnClose {
@@ -198,12 +211,15 @@
     border: none;
     cursor: pointer;
     font-size: 16px;
-    color: #6b7280;
+    color: #9ca3af;
     padding: 4px;
+    border-radius: 6px;
+    transition: background 0.15s;
 }
 
 .btnClose:hover {
-    color: #111827;
+    background: #333336;
+    color: #f0f0f0;
 }
 
 .modalBody {
@@ -217,7 +233,6 @@
     gap: 8px;
 }
 
-/* Campo con helper */
 .field {
     display: grid;
     gap: 4px;
@@ -231,5 +246,5 @@
 
 .hint {
     font-size: 12px;
-    color: #666;
+    color: #9ca3af;
 }

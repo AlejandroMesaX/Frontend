@@ -8,6 +8,10 @@ import Toast from "../components/Toast";
 import TarifasPanel from "./TarifasPanel";
 import s from "./DeliveryPanel.module.css";
 
+function fmt(val) {
+    return `$${Number(val || 0).toLocaleString("es-CO")}`;
+}
+
 function toNumberMoney(val) {
     if (val == null) return 0;
     const n = Number(String(val).replace(/\./g, "").replace(/,/g, "."));
@@ -565,11 +569,23 @@ export default function DeliveryPanel() {
                         {finanzasFiltrado.map((p) => (
                             <div key={p.id} className={`${s.itemCard} ${s.itemCardClickable}`} onClick={() => setDetalle(p)} title="Click para ver detalle">
                                 <div className={s.itemInfo}>
-                                    <div><b>#{p.id}</b></div>
+                                    <div className={s.itemTitulo}>
+                                        <b>#{p.id}</b>
+                                        <span className={s.badge} style={{ background: "#ecfdf5", color: "#065f46" }}>🟢 ENTREGADO</span>
+                                    </div>
+                                    <div><b>Envía:</b> {p.clienteNombre ?? `#${p.clienteId}`} — {p.telefonoContactoRecogida}</div>
+                                    <div><b>Recoge:</b> {p.barrioRecogida} — {p.direccionRecogida}</div>
                                     <div><b>Entrega:</b> {p.barrioEntrega} — {p.direccionEntrega}</div>
-                                    <div><b>Costo:</b> ${toNumberMoney(p.costoServicio).toLocaleString("es-CO")}</div>
+                                    <div><b>Recibe:</b> {p.nombreQuienRecibe} — {p.telefonoQuienRecibe}</div>
                                 </div>
-                                <div className={s.itemMeta}>{p.fechaCreacion && <div>{yyyyMMddOf(p.fechaCreacion)}</div>}</div>
+                                <div className={s.itemFinanzas}>
+                                    <div className={s.itemTotal}>{fmt(toNumberMoney(p.costoServicio))}</div>
+                                    <div className={s.itemSub}>Empresa: {fmt(toNumberMoney(p.costoServicio) * 0.20)}</div>
+                                    <div className={s.itemSub}>Domi: {fmt(toNumberMoney(p.costoServicio) * 0.80)}</div>
+                                    {p.fechaCreacion && (
+                                        <div className={s.itemFecha}>{yyyyMMddOf(p.fechaCreacion)}</div>
+                                    )}
+                                </div>
                             </div>
                         ))}
                     </div>

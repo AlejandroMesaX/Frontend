@@ -5,10 +5,10 @@
 }
 
 .section {
-    border: 1px solid #ddd;
+    border: 1px solid #3f3f44;
     border-radius: 12px;
     padding: 14px;
-    background: #fff;
+    background: #2a2a2d;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -23,13 +23,14 @@
 .sectionHeader h3 {
     margin: 0;
     font-size: 15px;
-    color: #111827;
+    color: #f0f0f0;
+    font-weight: 700;
 }
 
 .descripcion {
     margin: 0;
     font-size: 13px;
-    color: #6b7280;
+    color: #9ca3af;
     line-height: 1.5;
 }
 
@@ -54,7 +55,7 @@
 .label {
     font-size: 13px;
     font-weight: 600;
-    color: #374151;
+    color: #d1d5db;
 }
 
 .helper {
@@ -66,9 +67,9 @@
 .aviso {
     padding: 10px 12px;
     border-radius: 8px;
-    background: #eff6ff;
-    border: 1px solid #93c5fd;
-    color: #1d4ed8;
+    background: #1a1f2e;
+    border: 1px solid #3b5bdb;
+    color: #93c5fd;
     font-size: 13px;
 }
 
@@ -80,21 +81,21 @@
 .btn {
     padding: 10px 16px;
     border-radius: 8px;
-    border: 1px solid #e5e7eb;
-    background: #fff;
+    border: 1px solid #3f3f44;
+    background: #333336;
     cursor: pointer;
     font-size: 13px;
     font-weight: 500;
-    color: #111827;
+    color: #f0f0f0;
     transition: background 0.15s;
 }
 
 .btn:hover:not(:disabled) {
-    background: #f3f4f6;
+    background: #3f3f44;
 }
 
 .btn:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
 }
 
@@ -102,20 +103,20 @@
     padding: 10px 20px;
     border-radius: 8px;
     border: none;
-    background: #111827;
-    color: #fff;
+    background: #f5c518;
+    color: #0d0d0d;
     cursor: pointer;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
     transition: background 0.15s;
 }
 
 .btnPrimary:hover:not(:disabled) {
-    background: #1f2937;
+    background: #e6b800;
 }
 
 .btnPrimary:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
 }
 
@@ -123,18 +124,18 @@
 .errorBox {
     padding: 12px 14px;
     border-radius: 10px;
-    background: #fef2f2;
-    border: 1px solid #fca5a5;
-    color: #991b1b;
+    background: #3d1a1a;
+    border: 1px solid #ef4444;
+    color: #fca5a5;
     font-size: 13px;
 }
 
 /* Resultado */
 .resultadoBox {
-    border: 1px solid #86efac;
+    border: 1px solid #f5c518;
     border-radius: 12px;
     padding: 20px;
-    background: #f0fdf4;
+    background: #2a2710;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -145,7 +146,7 @@
 .resultadoTitulo {
     font-size: 13px;
     font-weight: 600;
-    color: #065f46;
+    color: #f5c518;
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
@@ -161,27 +162,27 @@
 .rutaBarrio {
     padding: 6px 12px;
     border-radius: 8px;
-    background: #fff;
-    border: 1px solid #86efac;
+    background: #333336;
+    border: 1px solid #3f3f44;
     font-size: 13px;
     font-weight: 600;
-    color: #111827;
+    color: #f0f0f0;
 }
 
 .rutaFlecha {
     font-size: 18px;
-    color: #16a34a;
+    color: #f5c518;
     font-weight: 700;
 }
 
 .resultadoCosto {
     font-size: 36px;
     font-weight: 900;
-    color: #111827;
+    color: #f5c518;
     line-height: 1;
 }
 
 .resultadoNota {
     font-size: 12px;
-    color: #6b7280;
+    color: #9ca3af;
 }

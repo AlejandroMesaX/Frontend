@@ -1,3 +1,16 @@
+/* ── Paleta ──────────────────────────────────────────────────────────────────
+   bg-base:      #1c1c1e   (fondo principal)
+   bg-surface:   #2a2a2d   (cards, secciones)
+   bg-elevated:  #333336   (inputs, dropdowns)
+   border:       #3f3f44
+   accent:       #f5c518   (amarillo logo)
+   accent-hover: #e6b800
+   text-primary: #f0f0f0
+   text-muted:   #9ca3af
+   danger:       #ef4444
+   success:      #22c55e
+*/
+
 .container {
     max-width: 1100px;
     margin: 20px auto;
@@ -18,43 +31,45 @@
 .header h2 {
     margin: 0;
     font-size: 20px;
-    color: #111827;
+    color: #f0f0f0;
+    font-weight: 800;
+    letter-spacing: -0.02em;
 }
 
 .btnLogout {
     padding: 8px 14px;
     border-radius: 8px;
-    border: 1px solid #e5e7eb;
-    background: #fff;
-    color: #111827;
+    border: 1px solid #3f3f44;
+    background: #2a2a2d;
+    color: #f0f0f0;
     cursor: pointer;
     font-size: 13px;
     font-weight: 500;
-    transition: background 0.15s, border-color 0.15s;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .btnLogout:hover {
-    background: #fef2f2;
-    border-color: #fca5a5;
-    color: #991b1b;
+    background: #3d1a1a;
+    border-color: #ef4444;
+    color: #ef4444;
 }
 
 .nav {
     display: flex;
-    gap: 8px;
-    padding: 8px;
-    border: 1px solid #eee;
+    gap: 6px;
+    padding: 6px;
+    border: 1px solid #3f3f44;
     border-radius: 12px;
-    background: #fafafa;
+    background: #2a2a2d;
     flex-wrap: wrap;
 }
 
 .navBtn {
-    padding: 10px 14px;
-    border-radius: 10px;
-    border: 1px solid #ddd;
-    background: #fff;
-    color: #111827;
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #9ca3af;
     cursor: pointer;
     font-size: 13px;
     font-weight: 500;
@@ -62,14 +77,16 @@
 }
 
 .navBtn:hover:not(.navBtnActive) {
-    background: #f3f4f6;
-    border-color: #d1d5db;
+    background: #333336;
+    color: #f0f0f0;
+    border-color: #3f3f44;
 }
 
 .navBtnActive {
-    background: #111827;
-    color: #fff;
-    border-color: #111827;
+    background: #f5c518;
+    color: #0d0d0d;
+    border-color: #f5c518;
+    font-weight: 700;
 }
 
 .content {
@@ -79,11 +96,11 @@
 }
 
 .placeholder {
-    border: 1px solid #ddd;
+    border: 1px solid #3f3f44;
     border-radius: 12px;
     padding: 24px;
-    background: #fff;
-    color: #6b7280;
+    background: #2a2a2d;
+    color: #9ca3af;
     font-size: 14px;
     text-align: center;
 }

@@ -2,6 +2,8 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import { AuthProvider } from "./auth/AuthContext.jsx";
+import "./index.css";  // ← agregar
+import "./App.css";    // ← agregar
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

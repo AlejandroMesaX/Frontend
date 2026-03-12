@@ -7,10 +7,10 @@
 
 /* Sección */
 .section {
-    border: 1px solid #ddd;
+    border: 1px solid #3f3f44;
     border-radius: 12px;
     padding: 14px;
-    background: #fff;
+    background: #2a2a2d;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -27,7 +27,8 @@
 .sectionHeader h3 {
     margin: 0;
     font-size: 15px;
-    color: #111827;
+    color: #f0f0f0;
+    font-weight: 700;
 }
 
 /* Badge */
@@ -36,14 +37,14 @@
     border-radius: 999px;
     font-size: 12px;
     font-weight: 700;
-    border: 1px solid #e5e7eb;
+    border: 1px solid #3f3f44;
     white-space: nowrap;
 }
 
-/* Domiciliario viewer/select — dropdown colapsable */
+/* Domiciliario viewer/select */
 .domiVacio {
     font-size: 13px;
-    color: #6b7280;
+    color: #9ca3af;
 }
 
 .domiSelectContainer {
@@ -59,10 +60,10 @@
     gap: 8px;
     padding: 10px 12px;
     border-radius: 10px;
-    border: 1px solid #e5e7eb;
-    background: #fff;
+    border: 1px solid #3f3f44;
+    background: #333336;
     font-size: 13px;
-    color: #111827;
+    color: #f0f0f0;
     cursor: pointer;
     text-align: left;
     outline: none;
@@ -72,11 +73,11 @@
 
 .domiSelectTrigger:hover,
 .domiSelectTriggerOpen {
-    border-color: #9ca3af;
+    border-color: #f5c518;
 }
 
 .domiSelectValue {
-    color: #111827;
+    color: #f0f0f0;
     flex: 1;
 }
 
@@ -102,35 +103,39 @@
     top: calc(100% + 4px);
     left: 0;
     right: 0;
-    background: #fff;
-    border: 1px solid #e5e7eb;
+    background: #2a2a2d;
+    border: 1px solid #3f3f44;
     border-radius: 10px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     z-index: 1000;
     overflow: hidden;
 }
 
 .domiSearchWrap {
     padding: 8px 8px 4px 8px;
-    border-bottom: 1px solid #f3f4f6;
+    border-bottom: 1px solid #3f3f44;
 }
 
 .domiSearchInput {
     width: 100%;
     padding: 8px 10px;
     border-radius: 8px;
-    border: 1px solid #e5e7eb;
+    border: 1px solid #3f3f44;
     font-size: 13px;
-    color: #111827;
+    color: #f0f0f0;
     outline: none;
     box-sizing: border-box;
-    background: #fafafa;
+    background: #333336;
     transition: border-color 0.15s;
 }
 
 .domiSearchInput:focus {
-    border-color: #9ca3af;
-    background: #fff;
+    border-color: #f5c518;
+    background: #3a3a3e;
+}
+
+.domiSearchInput::placeholder {
+    color: #6b7280;
 }
 
 .domiList {
@@ -149,7 +154,7 @@
     font-size: 13px;
     cursor: default;
     transition: background 0.1s;
-    border-bottom: 1px solid #f9fafb;
+    border-bottom: 1px solid #3f3f44;
 }
 
 .domiListItem:last-child {
@@ -161,33 +166,33 @@
 }
 
 .domiListItemDisponible:hover {
-    background: #f0fdf4;
+    background: #2f2e1a;
 }
 
 .domiListItemOcupado {
-    background: #fafafa;
+    background: #2a2a2d;
 }
 
 .domiListItemDesconectado {
-    opacity: 0.55;
+    opacity: 0.45;
 }
 
 .domiListItemDisabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
 }
 
 .domiListItemSelected {
-    background: #f0fdf4;
+    background: #2f2e1a;
     font-weight: 600;
 }
 
 .domiListItemSelected:hover {
-    background: #dcfce7;
+    background: #3a391e;
 }
 
 .domiListItemNombre {
-    color: #111827;
+    color: #f0f0f0;
     font-weight: 500;
     flex: 1;
 }
@@ -200,7 +205,7 @@
 
 .domiCheck {
     font-size: 12px;
-    color: #16a34a;
+    color: #f5c518;
     font-weight: 700;
     margin-left: 6px;
     flex-shrink: 0;
@@ -222,23 +227,23 @@
 
 .vacio {
     font-size: 13px;
-    color: #6b7280;
+    color: #9ca3af;
     padding: 12px;
     text-align: center;
-    border: 1px dashed #ddd;
+    border: 1px dashed #3f3f44;
     border-radius: 10px;
 }
 
 /* Card pedido */
 .card {
-    border: 1px solid #ddd;
+    border: 1px solid #3f3f44;
     padding: 12px;
     border-radius: 10px;
-    background: #fff;
+    background: #333336;
     display: flex;
     justify-content: space-between;
     gap: 12px;
-    transition: box-shadow 0.15s;
+    transition: box-shadow 0.15s, border-color 0.15s;
 }
 
 .cardClickable {
@@ -246,8 +251,8 @@
 }
 
 .cardClickable:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    border-color: #d1d5db;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    border-color: #f5c518;
 }
 
 .cardInfo {
@@ -255,7 +260,7 @@
     flex-direction: column;
     gap: 4px;
     font-size: 13px;
-    color: #111827;
+    color: #d1d5db;
     flex: 1;
 }
 
@@ -264,14 +269,15 @@
     align-items: center;
     gap: 8px;
     flex-wrap: wrap;
+    color: #f0f0f0;
 }
 
 .incidenciaBox {
     padding: 8px 10px;
     border-radius: 8px;
-    background: #fff7ed;
-    border: 1px solid #f59e0b;
-    color: #92400e;
+    background: #2d1f0a;
+    border: 1px solid #b45309;
+    color: #fcd34d;
     font-size: 13px;
 }
 
@@ -286,21 +292,22 @@
 .btn {
     padding: 8px 14px;
     border-radius: 8px;
-    border: 1px solid #e5e7eb;
-    background: #fff;
+    border: 1px solid #3f3f44;
+    background: #333336;
     cursor: pointer;
     font-size: 13px;
     font-weight: 500;
-    color: #111827;
-    transition: background 0.15s;
+    color: #f0f0f0;
+    transition: background 0.15s, border-color 0.15s;
 }
 
 .btn:hover:not(:disabled) {
-    background: #f3f4f6;
+    background: #3f3f44;
+    border-color: #55555a;
 }
 
 .btn:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
 }
 
@@ -308,16 +315,16 @@
     padding: 8px 12px;
     border-radius: 8px;
     border: none;
-    background: #111827;
-    color: #fff;
+    background: #f5c518;
+    color: #0d0d0d;
     cursor: pointer;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
     transition: background 0.15s;
 }
 
 .btnPrimary:hover:not(:disabled) {
-    background: #1f2937;
+    background: #e6b800;
 }
 
 .btnPrimary:disabled {
@@ -328,9 +335,9 @@
 .btnDanger {
     padding: 8px 12px;
     border-radius: 8px;
-    border: 1px solid #d33;
-    background: #fff;
-    color: #d33;
+    border: 1px solid #ef4444;
+    background: transparent;
+    color: #ef4444;
     cursor: pointer;
     font-size: 13px;
     font-weight: 500;
@@ -338,11 +345,11 @@
 }
 
 .btnDanger:hover:not(:disabled) {
-    background: #fef2f2;
+    background: #3d1a1a;
 }
 
 .btnDanger:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
 }
 
@@ -350,7 +357,7 @@
 .backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.35);
+    background: rgba(0, 0, 0, 0.6);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -360,10 +367,10 @@
 
 .confirmModal {
     width: min(400px, 95vw);
-    background: #fff;
+    background: #2a2a2d;
     border-radius: 12px;
     padding: 20px;
-    border: 1px solid #ddd;
+    border: 1px solid #3f3f44;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -372,7 +379,7 @@
 .confirmModal p {
     margin: 0;
     font-size: 14px;
-    color: #374151;
+    color: #d1d5db;
     line-height: 1.5;
 }
 
@@ -385,9 +392,9 @@
 /* Assign modal */
 .assignModal {
     width: min(520px, 95vw);
-    background: #fff;
+    background: #2a2a2d;
     border-radius: 12px;
-    border: 1px solid #ddd;
+    border: 1px solid #3f3f44;
     display: flex;
     flex-direction: column;
     max-height: 90vh;
@@ -400,14 +407,14 @@
     align-items: center;
     gap: 12px;
     padding: 14px 16px;
-    border-bottom: 1px solid #f1f1f1;
+    border-bottom: 1px solid #3f3f44;
     flex-shrink: 0;
 }
 
 .assignHeader h3 {
     margin: 0;
     font-size: 15px;
-    color: #111827;
+    color: #f0f0f0;
 }
 
 .btnClose {
@@ -415,15 +422,15 @@
     border: none;
     cursor: pointer;
     font-size: 16px;
-    color: #6b7280;
+    color: #9ca3af;
     padding: 4px 6px;
     border-radius: 6px;
     transition: background 0.15s;
 }
 
 .btnClose:hover {
-    background: #f3f4f6;
-    color: #111827;
+    background: #333336;
+    color: #f0f0f0;
 }
 
 .assignBody {
@@ -437,70 +444,16 @@
 
 .assignFooter {
     padding: 12px 16px;
-    border-top: 1px solid #f1f1f1;
+    border-top: 1px solid #3f3f44;
     display: flex;
     justify-content: flex-end;
     gap: 8px;
     flex-shrink: 0;
 }
 
-/* Lista domiciliarios en assign modal */
-.assignList {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.assignItem {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 12px;
-    border-radius: 10px;
-    border: 1px solid #e5e7eb;
-    cursor: pointer;
-    transition: border-color 0.15s, background 0.15s;
-    background: #fff;
-}
-
-.assignItem:hover {
-    background: #f9fafb;
-    border-color: #d1d5db;
-}
-
-.assignItemSelected {
-    border: 2px solid #111827;
-    background: #f9fafb;
-}
-
-.assignItemInfo {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-
-.assignItemNombre {
-    font-size: 13px;
-    font-weight: 700;
-    color: #111827;
-}
-
-.assignItemMeta {
-    font-size: 12px;
-    color: #6b7280;
-}
-
-.assignCheck {
-    font-size: 14px;
-    color: #111827;
-    font-weight: 700;
-    flex-shrink: 0;
-}
-
 .assignVacio {
     font-size: 13px;
-    color: #6b7280;
+    color: #9ca3af;
     padding: 12px;
     text-align: center;
 }
@@ -508,7 +461,7 @@
 /* Ganancias hoy */
 .metricsGrid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 10px;
 }
 
@@ -519,23 +472,23 @@
 }
 
 .metric {
-    border: 1px solid #e5e7eb;
+    border: 1px solid #3f3f44;
     border-radius: 10px;
     padding: 12px;
-    background: #fafafa;
+    background: #333336;
     display: flex;
     flex-direction: column;
     gap: 4px;
 }
 
 .metricHighlight {
-    border-color: #86efac;
-    background: #f0fdf4;
+    border-color: #f5c518;
+    background: #2a2710;
 }
 
 .metricLabel {
     font-size: 11px;
-    color: #6b7280;
+    color: #9ca3af;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -544,5 +497,5 @@
 .metricValue {
     font-size: 20px;
     font-weight: 800;
-    color: #111827;
+    color: #f0f0f0;
 }

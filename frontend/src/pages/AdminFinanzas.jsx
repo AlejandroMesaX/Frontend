@@ -3,6 +3,7 @@ import { authFetch } from "../api/http";
 import { parseBackendError, errorFronted } from "../api/errors";
 import Toast from "../components/Toast";
 import s from "./AdminFinanzas.module.css";
+import PedidoDetalleModal from "../components/PedidoDetalleModal";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -38,6 +39,7 @@ export default function AdminFinanzas() {
     const [pedidos, setPedidos] = useState([]);
     const [loading, setLoading] = useState(false);
     const [toast, setToast] = useState(null);
+    const [detalle, setDetalle] = useState(null);
 
     // Filtros
     const todayISO = useMemo(() => {
@@ -265,7 +267,9 @@ export default function AdminFinanzas() {
                     )}
 
                     {pedidosFiltrados.map((p) => (
-                        <div key={p.id} className={s.itemCard}>
+                        <div key={p.id} className={`${s.itemCard} ${s.itemCardClickable}`}
+                            onClick={() => { console.log("click", p); setDetalle(p); }}
+                            title="Click para ver detalle">
                             <div className={s.itemInfo}>
                                 <div className={s.itemTitulo}>
                                     <b>#{p.id}</b>
@@ -289,7 +293,13 @@ export default function AdminFinanzas() {
                     ))}
                 </div>
             </div>
-
+            <PedidoDetalleModal
+                open={!!detalle}
+                pedido={detalle}
+                onClose={() => setDetalle(null)}
+                showCliente
+                showDomi
+            />
             {toast && <Toast error={toast} onClose={() => setToast(null)} />}
         </div>
     );

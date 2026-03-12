@@ -1,8 +1,7 @@
-/* Backdrop */
 .backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.6);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -10,26 +9,24 @@
     z-index: 9999;
 }
 
-/* Modal */
 .modal {
     width: min(560px, 95vw);
     max-height: 90vh;
-    background: #fff;
+    background: #2a2a2d;
     border-radius: 14px;
-    border: 1px solid #e5e7eb;
+    border: 1px solid #3f3f44;
     display: flex;
     flex-direction: column;
     overflow: hidden;
 }
 
-/* Header */
 .modalHeader {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 12px;
     padding: 14px 16px;
-    border-bottom: 1px solid #f1f1f1;
+    border-bottom: 1px solid #3f3f44;
     flex-shrink: 0;
 }
 
@@ -43,7 +40,7 @@
 .modalId {
     font-size: 16px;
     font-weight: 800;
-    color: #111827;
+    color: #f5c518;
 }
 
 .btnClose {
@@ -51,7 +48,7 @@
     border: none;
     cursor: pointer;
     font-size: 16px;
-    color: #6b7280;
+    color: #9ca3af;
     padding: 4px 6px;
     border-radius: 6px;
     flex-shrink: 0;
@@ -59,11 +56,10 @@
 }
 
 .btnClose:hover {
-    background: #f3f4f6;
-    color: #111827;
+    background: #333336;
+    color: #f0f0f0;
 }
 
-/* Body scrollable */
 .body {
     flex: 1;
     overflow-y: auto;
@@ -73,27 +69,24 @@
     gap: 12px;
 }
 
-/* Badge */
 .badge {
     padding: 4px 10px;
     border-radius: 999px;
     font-size: 12px;
     font-weight: 700;
-    border: 1px solid #e5e7eb;
+    border: 1px solid #3f3f44;
 }
 
-/* Incidencia */
 .incidenciaBox {
     padding: 10px 12px;
     border-radius: 10px;
-    background: #fff7ed;
-    border: 1px solid #f59e0b;
-    color: #92400e;
+    background: #2d1f0a;
+    border: 1px solid #b45309;
+    color: #fcd34d;
     font-size: 13px;
     line-height: 1.5;
 }
 
-/* Sección */
 .section {
     display: flex;
     flex-direction: column;
@@ -101,40 +94,38 @@
 }
 
 .sectionTitle {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
-    color: #6b7280;
+    color: #f5c518;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     padding-bottom: 4px;
-    border-bottom: 1px solid #f3f4f6;
+    border-bottom: 1px solid #3f3f44;
 }
 
-/* Fila de dato */
 .row {
     display: flex;
     gap: 8px;
     font-size: 13px;
-    color: #111827;
+    color: #d1d5db;
     align-items: baseline;
 }
 
 .rowLabel {
     font-weight: 600;
-    color: #6b7280;
+    color: #9ca3af;
     min-width: 90px;
     flex-shrink: 0;
 }
 
 .rowValue {
-    color: #111827;
+    color: #f0f0f0;
     word-break: break-word;
 }
 
-/* Footer acciones */
 .footer {
     padding: 12px 16px;
-    border-top: 1px solid #f1f1f1;
+    border-top: 1px solid #3f3f44;
     display: flex;
     justify-content: flex-end;
     gap: 8px;

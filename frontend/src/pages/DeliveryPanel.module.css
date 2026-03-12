@@ -333,6 +333,32 @@
     background: #fff;
 }
 
+.itemFinanzas {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+    flex-shrink: 0;
+    min-width: 120px;
+}
+
+.itemTotal {
+    font-size: 15px;
+    font-weight: 800;
+    color: #111827;
+}
+
+.itemSub {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.itemFecha {
+    font-size: 11px;
+    color: #9ca3af;
+    margin-top: 4px;
+}
+
 .itemCardClickable {
     cursor: pointer;
     transition: box-shadow 0.15s, border-color 0.15s;
