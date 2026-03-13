@@ -1,4 +1,3 @@
-/* Contenedor principal */
 .container {
     max-width: 900px;
     margin: 20px auto;
@@ -9,7 +8,6 @@
     gap: 12px;
 }
 
-/* Header */
 .header {
     display: flex;
     justify-content: space-between;
@@ -26,44 +24,45 @@
 .header h2 {
     margin: 0;
     font-size: 20px;
-    color: #111827;
+    color: #f0f0f0;
+    font-weight: 800;
+    letter-spacing: -0.02em;
 }
 
 .btnLogout {
     padding: 8px 14px;
     border-radius: 8px;
-    border: 1px solid #e5e7eb;
-    background: #fff;
-    color: #111827;
+    border: 1px solid #3f3f44;
+    background: #2a2a2d;
+    color: #f0f0f0;
     cursor: pointer;
     font-size: 13px;
     font-weight: 500;
-    transition: background 0.15s, border-color 0.15s;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .btnLogout:hover {
-    background: #fef2f2;
-    border-color: #fca5a5;
-    color: #991b1b;
+    background: #3d1a1a;
+    border-color: #ef4444;
+    color: #ef4444;
 }
 
-/* Navbar */
 .nav {
     display: flex;
-    gap: 8px;
-    padding: 8px;
-    border: 1px solid #eee;
+    gap: 6px;
+    padding: 6px;
+    border: 1px solid #3f3f44;
     border-radius: 12px;
-    background: #fafafa;
+    background: #2a2a2d;
     flex-wrap: wrap;
 }
 
 .navBtn {
-    padding: 10px 14px;
-    border-radius: 10px;
-    border: 1px solid #ddd;
-    background: #fff;
-    color: #111827;
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #9ca3af;
     cursor: pointer;
     font-size: 13px;
     font-weight: 500;
@@ -71,21 +70,23 @@
 }
 
 .navBtn:hover:not(.navBtnActive) {
-    background: #f3f4f6;
+    background: #333336;
+    color: #f0f0f0;
+    border-color: #3f3f44;
 }
 
 .navBtnActive {
-    background: #111827;
-    color: #fff;
-    border-color: #111827;
+    background: #f5c518;
+    color: #0d0d0d;
+    border-color: #f5c518;
+    font-weight: 700;
 }
 
-/* Sección */
 .section {
-    border: 1px solid #ddd;
+    border: 1px solid #3f3f44;
     border-radius: 12px;
     padding: 14px;
-    background: #fff;
+    background: #2a2a2d;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -102,38 +103,37 @@
 .sectionHeader h3 {
     margin: 0;
     font-size: 15px;
-    color: #111827;
+    color: #f0f0f0;
+    font-weight: 700;
 }
 
-/* Badge */
 .badge {
     padding: 4px 10px;
     border-radius: 999px;
     font-size: 12px;
     font-weight: 700;
-    border: 1px solid #e5e7eb;
+    border: 1px solid #3f3f44;
     white-space: nowrap;
 }
 
-/* Botones */
 .btn {
     padding: 8px 14px;
     border-radius: 8px;
-    border: 1px solid #e5e7eb;
-    background: #fff;
+    border: 1px solid #3f3f44;
+    background: #333336;
     cursor: pointer;
     font-size: 13px;
     font-weight: 500;
-    color: #111827;
+    color: #f0f0f0;
     transition: background 0.15s;
 }
 
 .btn:hover:not(:disabled) {
-    background: #f3f4f6;
+    background: #3f3f44;
 }
 
 .btn:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
 }
 
@@ -141,29 +141,29 @@
     padding: 8px 14px;
     border-radius: 8px;
     border: none;
-    background: #111827;
-    color: #fff;
+    background: #f5c518;
+    color: #0d0d0d;
     cursor: pointer;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
     transition: background 0.15s;
 }
 
 .btnPrimary:hover:not(:disabled) {
-    background: #1f2937;
+    background: #e6b800;
 }
 
 .btnPrimary:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
 }
 
 .btnWarning {
     padding: 8px 14px;
     border-radius: 8px;
-    border: 1px solid #f59e0b;
-    background: #fff;
-    color: #92400e;
+    border: 1px solid #b45309;
+    background: transparent;
+    color: #fcd34d;
     cursor: pointer;
     font-size: 13px;
     font-weight: 500;
@@ -171,21 +171,20 @@
 }
 
 .btnWarning:hover:not(:disabled) {
-    background: #fffbeb;
+    background: #2d1f0a;
 }
 
 .btnWarning:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
 }
 
-/* Disponibilidad */
 .btnDisponible {
     padding: 10px 16px;
     border-radius: 10px;
-    border: 1px solid #e5e7eb;
-    background: #fff;
-    color: #374151;
+    border: 1px solid #3f3f44;
+    background: #333336;
+    color: #d1d5db;
     cursor: pointer;
     font-size: 13px;
     font-weight: 600;
@@ -194,20 +193,20 @@
 }
 
 .btnDisponible:hover:not(:disabled) {
-    background: #f3f4f6;
+    background: #3f3f44;
 }
 
 .btnDisponible:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
 }
 
 .btnDisponibleActivo {
     padding: 10px 16px;
     border-radius: 10px;
-    border: 1px solid #16a34a;
-    background: #f0fdf4;
-    color: #166534;
+    border: 1px solid #22c55e;
+    background: #0f2e1a;
+    color: #22c55e;
     cursor: pointer;
     font-size: 13px;
     font-weight: 600;
@@ -216,20 +215,19 @@
 }
 
 .btnDisponibleActivo:hover:not(:disabled) {
-    background: #dcfce7;
+    background: #163d22;
 }
 
 .btnDisponibleActivo:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
 }
 
-/* Card pedido */
 .card {
-    border: 1px solid #ddd;
+    border: 1px solid #3f3f44;
     border-radius: 10px;
     padding: 12px;
-    background: #fff;
+    background: #333336;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -241,8 +239,8 @@
 }
 
 .cardClickable:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    border-color: #d1d5db;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    border-color: #f5c518;
 }
 
 .cardInfo {
@@ -250,7 +248,7 @@
     flex-direction: column;
     gap: 6px;
     font-size: 13px;
-    color: #111827;
+    color: #d1d5db;
 }
 
 .cardTitulo {
@@ -258,6 +256,7 @@
     align-items: center;
     gap: 8px;
     flex-wrap: wrap;
+    color: #f0f0f0;
 }
 
 .cardGrid {
@@ -276,7 +275,7 @@
 .cardSectionLabel {
     font-size: 11px;
     font-weight: 700;
-    color: #6b7280;
+    color: #f5c518;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     margin-bottom: 3px;
@@ -284,7 +283,7 @@
 
 .cardMeta {
     font-size: 12px;
-    color: #6b7280;
+    color: #9ca3af;
     margin-top: 2px;
 }
 
@@ -294,8 +293,9 @@
     flex-wrap: wrap;
     font-size: 13px;
     padding-top: 4px;
-    border-top: 1px solid #f3f4f6;
+    border-top: 1px solid #3f3f44;
     margin-top: 4px;
+    color: #d1d5db;
 }
 
 .cardAcciones {
@@ -304,18 +304,16 @@
     flex-wrap: wrap;
 }
 
-/* Incidencia */
 .incidenciaBox {
     padding: 8px 12px;
     border-radius: 8px;
-    background: #fff7ed;
-    border: 1px solid #f59e0b;
-    color: #92400e;
+    background: #2d1f0a;
+    border: 1px solid #b45309;
+    color: #fcd34d;
     font-size: 13px;
     line-height: 1.5;
 }
 
-/* Item de historial/finanzas */
 .lista {
     display: flex;
     flex-direction: column;
@@ -323,14 +321,14 @@
 }
 
 .itemCard {
-    border: 1px solid #eee;
+    border: 1px solid #3f3f44;
     border-radius: 10px;
     padding: 10px 12px;
     display: flex;
     justify-content: space-between;
     gap: 12px;
     font-size: 13px;
-    background: #fff;
+    background: #333336;
 }
 
 .itemFinanzas {
@@ -345,17 +343,17 @@
 .itemTotal {
     font-size: 15px;
     font-weight: 800;
-    color: #111827;
+    color: #f5c518;
 }
 
 .itemSub {
     font-size: 12px;
-    color: #6b7280;
+    color: #9ca3af;
 }
 
 .itemFecha {
     font-size: 11px;
-    color: #9ca3af;
+    color: #6b7280;
     margin-top: 4px;
 }
 
@@ -365,8 +363,8 @@
 }
 
 .itemCardClickable:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
-    border-color: #d1d5db;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    border-color: #f5c518;
 }
 
 .itemInfo {
@@ -374,17 +372,16 @@
     flex-direction: column;
     gap: 4px;
     flex: 1;
-    color: #111827;
+    color: #d1d5db;
 }
 
 .itemMeta {
     font-size: 12px;
-    color: #6b7280;
+    color: #9ca3af;
     text-align: right;
     white-space: nowrap;
 }
 
-/* Filtros */
 .filtros {
     display: flex;
     gap: 8px;
@@ -401,44 +398,44 @@
 .filtroLabel {
     font-size: 13px;
     font-weight: 600;
-    color: #374151;
+    color: #d1d5db;
 }
 
 .filtroLabelLight {
     font-size: 12px;
-    color: #6b7280;
+    color: #9ca3af;
 }
 
 .inputDate {
     padding: 8px 10px;
     border-radius: 10px;
-    border: 1px solid #e5e7eb;
+    border: 1px solid #3f3f44;
     font-size: 13px;
-    color: #111827;
+    color: #f0f0f0;
+    background: #333336;
     outline: none;
+    color-scheme: dark;
 }
 
 .inputDate:focus {
-    border-color: #9ca3af;
+    border-color: #f5c518;
 }
 
 .contador {
     font-size: 12px;
-    color: #6b7280;
+    color: #9ca3af;
 }
 
-/* Vacio */
 .vacio {
     font-size: 13px;
-    color: #6b7280;
+    color: #9ca3af;
 }
 
-/* Resumen finanzas */
 .resumenBox {
-    border: 1px solid #e5e7eb;
+    border: 1px solid #3f3f44;
     border-radius: 10px;
     padding: 12px;
-    background: #fafafa;
+    background: #333336;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -450,7 +447,7 @@
     align-items: center;
     font-size: 14px;
     font-weight: 700;
-    color: #111827;
+    color: #f0f0f0;
     flex-wrap: wrap;
     gap: 6px;
 }
@@ -467,35 +464,10 @@
     }
 }
 
-.metric {
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 10px;
-    background: #fff;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.metricLabel {
-    font-size: 11px;
-    color: #6b7280;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-}
-
-.metricValue {
-    font-size: 18px;
-    font-weight: 800;
-    color: #111827;
-}
-
-/* Modal */
 .backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.35);
+    background: rgba(0, 0, 0, 0.6);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -505,10 +477,10 @@
 
 .modal {
     width: min(480px, 95vw);
-    background: #fff;
+    background: #2a2a2d;
     border-radius: 12px;
     padding: 16px;
-    border: 1px solid #ddd;
+    border: 1px solid #3f3f44;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -526,7 +498,7 @@
 .modalHeader h3 {
     margin: 0;
     font-size: 15px;
-    color: #111827;
+    color: #f0f0f0;
 }
 
 .modalBody {
@@ -546,25 +518,25 @@
     border: none;
     cursor: pointer;
     font-size: 16px;
-    color: #6b7280;
+    color: #9ca3af;
     padding: 4px 6px;
     border-radius: 6px;
     transition: background 0.15s;
 }
 
 .btnClose:hover {
-    background: #f3f4f6;
-    color: #111827;
+    background: #333336;
+    color: #f0f0f0;
 }
 
-/* Textarea */
 .textarea {
     width: 100%;
     padding: 10px 12px;
     border-radius: 10px;
-    border: 1px solid #e5e7eb;
+    border: 1px solid #3f3f44;
     font-size: 13px;
-    color: #111827;
+    color: #f0f0f0;
+    background: #333336;
     outline: none;
     resize: vertical;
     box-sizing: border-box;
@@ -573,7 +545,11 @@
 }
 
 .textarea:focus {
-    border-color: #9ca3af;
+    border-color: #f5c518;
+}
+
+.textarea::placeholder {
+    color: #6b7280;
 }
 
 .inputError {
@@ -586,7 +562,6 @@
     font-weight: 700;
 }
 
-/* Ganancias hoy */
 .metricsGrid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -600,23 +575,23 @@
 }
 
 .metric {
-    border: 1px solid #e5e7eb;
+    border: 1px solid #3f3f44;
     border-radius: 10px;
     padding: 12px;
-    background: #fafafa;
+    background: #333336;
     display: flex;
     flex-direction: column;
     gap: 4px;
 }
 
 .metricHighlight {
-    border-color: #86efac;
-    background: #f0fdf4;
+    border-color: #f5c518;
+    background: #2a2710;
 }
 
 .metricLabel {
     font-size: 11px;
-    color: #6b7280;
+    color: #9ca3af;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -625,5 +600,9 @@
 .metricValue {
     font-size: 20px;
     font-weight: 800;
-    color: #111827;
+    color: #f0f0f0;
+}
+
+.tabContent {
+    width: 100%;
 }

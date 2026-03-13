@@ -1,18 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import s from "./SearchableSelect.module.css";
 
-/**
- * SearchableSelect — dropdown personalizado con buscador integrado.
- *
- * Props:
- *   value        {string}   — valor seleccionado actualmente
- *   onChange     {fn}       — fn(value) llamada al seleccionar
- *   onBlur       {fn}       — llamada al perder foco (para touched)
- *   options      {Array}    — [{value, label}]
- *   placeholder  {string}   — texto cuando no hay selección
- *   error        {boolean}  — si true, aplica borde rojo
- *   disabled     {boolean}
- */
 export default function SearchableSelect({
     value,
     onChange,
@@ -26,8 +14,6 @@ export default function SearchableSelect({
     const [q, setQ] = useState("");
     const containerRef = useRef(null);
     const searchRef = useRef(null);
-
-    // Normaliza para comparar sin importar mayúsculas ni espacios extra
     const normalize = (s) => String(s ?? "").trim().toLowerCase();
     const selected = options.find((o) => normalize(o.value) === normalize(value));
 
@@ -37,7 +23,6 @@ export default function SearchableSelect({
         return options.filter((o) => o.label.toLowerCase().includes(qq));
     }, [options, q]);
 
-    // Cerrar al hacer click fuera
     useEffect(() => {
         function handleClickOutside(e) {
             if (containerRef.current && !containerRef.current.contains(e.target)) {
@@ -50,7 +35,6 @@ export default function SearchableSelect({
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [onBlur]);
 
-    // Enfocar el input de búsqueda al abrir
     useEffect(() => {
         if (open) {
             setTimeout(() => searchRef.current?.focus(), 50);
@@ -80,7 +64,6 @@ export default function SearchableSelect({
             className={`${s.container} ${disabled ? s.disabled : ""}`}
             onKeyDown={handleKeyDown}
         >
-            {/* Trigger */}
             <button
                 type="button"
                 className={`${s.trigger} ${error ? s.triggerError : ""} ${open ? s.triggerOpen : ""}`}
@@ -94,11 +77,8 @@ export default function SearchableSelect({
                 </span>
                 <span className={`${s.arrow} ${open ? s.arrowUp : ""}`}>▾</span>
             </button>
-
-            {/* Dropdown */}
             {open && (
                 <div className={s.dropdown}>
-                    {/* Buscador */}
                     <div className={s.searchWrap}>
                         <input
                             ref={searchRef}
@@ -110,9 +90,7 @@ export default function SearchableSelect({
                         />
                     </div>
 
-                    {/* Lista */}
                     <ul className={s.list} role="listbox">
-                        {/* Opción vacía */}
                         {!value && (
                             <li
                                 className={`${s.option} ${s.optionPlaceholder}`}

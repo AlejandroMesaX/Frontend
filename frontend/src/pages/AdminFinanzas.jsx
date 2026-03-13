@@ -5,8 +5,6 @@ import Toast from "../components/Toast";
 import s from "./AdminFinanzas.module.css";
 import PedidoDetalleModal from "../components/PedidoDetalleModal";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
 function toNum(val) {
     if (val == null) return 0;
     const n = Number(String(val).replace(/\./g, "").replace(/,/g, "."));
@@ -22,8 +20,6 @@ function fmt(val) {
     return `$${Number(val || 0).toLocaleString("es-CO")}`;
 }
 
-// ── Metric card ───────────────────────────────────────────────────────────────
-
 function Metric({ label, value, highlight }) {
     return (
         <div className={`${s.metric} ${highlight ? s.metricHighlight : ""}`}>
@@ -33,15 +29,11 @@ function Metric({ label, value, highlight }) {
     );
 }
 
-// ── Componente principal ──────────────────────────────────────────────────────
-
 export default function AdminFinanzas() {
     const [pedidos, setPedidos] = useState([]);
     const [loading, setLoading] = useState(false);
     const [toast, setToast] = useState(null);
     const [detalle, setDetalle] = useState(null);
-
-    // Filtros
     const todayISO = useMemo(() => {
         const d = new Date();
         const yyyy = d.getFullYear();
@@ -53,8 +45,6 @@ export default function AdminFinanzas() {
     const [desde, setDesde] = useState("");
     const [hasta, setHasta] = useState("");
     const [filtroDomi, setFiltroDomi] = useState("");
-
-    // ── Carga ───────────────────────────────────────────────────────────────
 
     async function cargar() {
         setLoading(true);
@@ -72,12 +62,8 @@ export default function AdminFinanzas() {
 
     useEffect(() => { cargar(); }, []);
 
-    // ── Filtrado ────────────────────────────────────────────────────────────
-
     const pedidosFiltrados = useMemo(() => {
         let base = pedidos;
-
-        // Filtro por domiciliario (nombre o id)
         if (filtroDomi.trim()) {
             const q = filtroDomi.trim().toLowerCase();
             base = base.filter((p) =>
@@ -86,12 +72,10 @@ export default function AdminFinanzas() {
             );
         }
 
-        // Filtro por día
         if (diaFiltro) {
             return base.filter((p) => yyyyMMdd(p.fechaCreacion) === diaFiltro);
         }
 
-        // Filtro por rango
         if (desde || hasta) {
             const d = desde || "0000-01-01";
             const h = hasta || "9999-12-31";
@@ -104,7 +88,6 @@ export default function AdminFinanzas() {
         return base;
     }, [pedidos, diaFiltro, desde, hasta, filtroDomi]);
 
-    // ── Resumen global ──────────────────────────────────────────────────────
 
     const resumen = useMemo(() => {
         const totalBruto = pedidosFiltrados.reduce((acc, p) => acc + toNum(p.costoServicio), 0);
@@ -112,8 +95,6 @@ export default function AdminFinanzas() {
         const pagosDomis = totalBruto * 0.80;
         return { totalBruto, gananciaEmpresa, pagosDomis, pedidos: pedidosFiltrados.length };
     }, [pedidosFiltrados]);
-
-    // ── Resumen por domiciliario ────────────────────────────────────────────
 
     const porDomiciliario = useMemo(() => {
         const map = new Map();
@@ -136,12 +117,9 @@ export default function AdminFinanzas() {
             .sort((a, b) => b.bruto - a.bruto);
     }, [pedidosFiltrados]);
 
-    // ── Render ──────────────────────────────────────────────────────────────
 
     return (
         <div className={s.container}>
-
-            {/* Filtros */}
             <div className={s.section}>
                 <div className={s.sectionHeader}>
                     <h3>Finanzas</h3>
@@ -198,8 +176,6 @@ export default function AdminFinanzas() {
                     </div>
                 </div>
             </div>
-
-            {/* Resumen global */}
             <div className={s.section}>
                 <div className={s.sectionHeader}>
                     <h3>💰 Resumen global</h3>
@@ -210,8 +186,6 @@ export default function AdminFinanzas() {
 
                 </div>
             </div>
-
-            {/* Por domiciliario */}
             <div className={s.section}>
                 <div className={s.sectionHeader}>
                     <h3>Por domiciliario</h3>
@@ -222,7 +196,6 @@ export default function AdminFinanzas() {
                     <div className={s.vacio}>No hay pedidos entregados para el filtro seleccionado.</div>
                 ) : (
                     <div className={s.tabla}>
-                        {/* Header */}
                         <div className={`${s.tablaRow} ${s.tablaHeader}`}>
                             <div className={s.colNombre}>Domiciliario</div>
                             <div className={s.colNum}>Pedidos</div>
@@ -241,7 +214,6 @@ export default function AdminFinanzas() {
                             </div>
                         ))}
 
-                        {/* Totales */}
                         <div className={`${s.tablaRow} ${s.tablaTotal}`}>
                             <div className={s.colNombre}>Total</div>
                             <div className={s.colNum}>{resumen.pedidos}</div>
@@ -252,8 +224,6 @@ export default function AdminFinanzas() {
                     </div>
                 )}
             </div>
-
-            {/* Historial de pedidos */}
             <div className={s.section}>
                 <div className={s.sectionHeader}>
                     <h3>Historial de pedidos entregados</h3>

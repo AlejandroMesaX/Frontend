@@ -10,10 +10,8 @@ export function AuthProvider({ children }) {
         return raw ? JSON.parse(raw) : null;
     });
 
-    // ✅ rol
     const [rol, setRol] = useState(() => localStorage.getItem("rol") || null);
 
-    // ✅ userId plano
     const [userId, setUserId] = useState(() => {
         const v = localStorage.getItem("userId");
         return v ? Number(v) : null;

@@ -15,12 +15,10 @@ export function useDeliveryPedidosRealtime({ token, userId, onPedido }) {
             heartbeatOutgoing: 10000,
         });
 
-        // ✅ Después
         client.onConnect = () => {
             client.subscribe(`/topic/delivery/${userId}/pedidos`, (msg) => {
                 try {
                     const pedido = JSON.parse(msg.body);
-                    // Siempre pasar el pedido completo — el componente decide qué hacer
                     onPedido?.(pedido);
                 } catch { }
             });

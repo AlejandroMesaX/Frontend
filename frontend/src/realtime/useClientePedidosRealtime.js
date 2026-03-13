@@ -1,12 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Client } from "@stomp/stompjs";
 
-/**
- * Escucha actualizaciones de pedidos en tiempo real para el cliente.
- * Topic: /topic/cliente/{userId}/pedidos
- *
- * onPedido(pedido) — recibe el pedido actualizado
- */
 export function useClientePedidosRealtime({ token, userId, onPedido }) {
     const ref = useRef(null);
 
@@ -27,7 +21,6 @@ export function useClientePedidosRealtime({ token, userId, onPedido }) {
                     const pedido = JSON.parse(msg.body);
                     onPedido?.(pedido);
                 } catch {
-                    // mensaje malformado — no romper la UI
                 }
             });
         };

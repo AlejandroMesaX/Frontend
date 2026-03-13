@@ -25,7 +25,7 @@ function AdminTarifas() {
             try {
                 const res = await authFetch("/api/admin/barrios?includeInactivos=false");
                 if (res.ok) setBarrios(await res.json());
-            } catch { /* silencioso */ }
+            } catch { /* */ }
         })();
     }, []);
     return <TarifasPanel barrios={barrios} />;

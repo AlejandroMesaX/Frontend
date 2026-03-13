@@ -97,7 +97,6 @@ export default function AdminBarrios() {
         });
     }, [barrios, q, estado, comunaFiltro]);
 
-    // ✅ Sistema unificado de validación en tiempo real
     const errors = useMemo(() => {
         const e = {};
         if (!form.nombre.trim()) e.nombre = "El nombre del barrio es obligatorio.";
@@ -253,7 +252,6 @@ export default function AdminBarrios() {
                         </div>
 
                         <div className={s.modalBody}>
-                            {/* Nombre */}
                             <div className={s.field}>
                                 <input
                                     className={`${s.input} ${touched.nombre && errors.nombre ? s.inputError : ""}`}
@@ -267,7 +265,6 @@ export default function AdminBarrios() {
                                 )}
                             </div>
 
-                            {/* Comuna */}
                             <div className={s.field}>
                                 <select
                                     className={`${s.select} ${touched.comunaNumero && errors.comunaNumero ? s.inputError : ""}`}

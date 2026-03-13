@@ -8,8 +8,6 @@ import PedidoDetalleModal from "../components/PedidoDetalleModal";
 import Toast from "../components/Toast";
 import s from "./AdminPedidos.module.css";
 
-// ── Badges ────────────────────────────────────────────────────────────────────
-
 function EstadoPedidoBadge({ estado }) {
     const cfg = {
         CREADO: { bg: "#f3f4f6", color: "#374151", text: "⚪ CREADO" },
@@ -31,8 +29,6 @@ function EstadoDomiBadge({ estado }) {
     return <span className={s.badge} style={{ background: cfg.bg, color: cfg.color }}>{cfg.text}</span>;
 }
 
-
-// ── DomiciliarioViewer — dropdown colapsable solo lectura ────────────────────
 
 function DomiciliarioViewer({ domiciliarios }) {
     const [open, setOpen] = useState(false);
@@ -124,8 +120,6 @@ function DomiciliarioViewer({ domiciliarios }) {
         </div>
     );
 }
-
-// ── DomiciliarioSelect — dropdown seleccionable para asignación ───────────────
 
 function DomiciliarioSelect({ domiciliarios, value, onChange }) {
     const [open, setOpen] = useState(false);
@@ -226,8 +220,6 @@ function DomiciliarioSelect({ domiciliarios, value, onChange }) {
     );
 }
 
-// ── Modal confirmación cancelar ───────────────────────────────────────────────
-
 function ConfirmModal({ open, pedidoId, onConfirm, onCancel, loading }) {
     if (!open) return null;
     return (
@@ -245,8 +237,6 @@ function ConfirmModal({ open, pedidoId, onConfirm, onCancel, loading }) {
     );
 }
 
-// ── Modal asignar domiciliario ────────────────────────────────────────────────
-
 function AssignModal({ open, pedido, domiciliarios, onClose, onAssigned }) {
     const [selId, setSelId] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -256,7 +246,6 @@ function AssignModal({ open, pedido, domiciliarios, onClose, onAssigned }) {
         if (open) { setSelId(null); setToast(null); }
     }, [open]);
 
-    // Solo disponibles son seleccionables
     const disponibles = domiciliarios.filter((d) => d.estadoDelivery === "DISPONIBLE");
 
     async function confirmar() {
@@ -325,29 +314,21 @@ function AssignModal({ open, pedido, domiciliarios, onClose, onAssigned }) {
     );
 }
 
-// ── Constantes ────────────────────────────────────────────────────────────────
-
 const ESTADOS_VISIBLES = new Set(["CREADO", "ASIGNADO", "EN_CAMINO", "INCIDENCIA"]);
-
-// Orden de prioridad para la lista de domiciliarios
 const DOMI_ORDER = { DISPONIBLE: 0, POR_RECOGER: 1, POR_ENTREGAR: 2 };
-
-// ── Componente principal ──────────────────────────────────────────────────────
 
 export default function AdminPedidos() {
     const { token } = useAuth();
 
     const [pedidos, setPedidos] = useState([]);
-    const [domiciliarios, setDomiciliarios] = useState([]); // todos los delivery activos
+    const [domiciliarios, setDomiciliarios] = useState([]);
     const [toast, setToast] = useState(null);
     const [detalle, setDetalle] = useState(null);
     const [openAssign, setOpenAssign] = useState(false);
     const [pedidoSel, setPedidoSel] = useState(null);
     const [confirm, setConfirm] = useState({ open: false, pedidoId: null });
     const [loadingCancelar, setLoadingCancelar] = useState(false);
-    const [gananciasHoy, setGananciasHoy] = useState([]); // pedidos ENTREGADO del día
-
-    // ── Helper fecha local ───────────────────────────────────────────────────
+    const [gananciasHoy, setGananciasHoy] = useState([]);
 
     function todayLocal() {
         const d = new Date();
@@ -356,8 +337,6 @@ export default function AdminPedidos() {
         const dd = String(d.getDate()).padStart(2, "0");
         return `${yyyy}-${mm}-${dd}`;
     }
-
-    // ── Realtime ────────────────────────────────────────────────────────────
 
     useAdminPedidosRealtime({
         token,
@@ -370,7 +349,6 @@ export default function AdminPedidos() {
                 return copy;
             });
             setDetalle((d) => d?.id === pedido.id ? { ...d, ...pedido } : d);
-            // Acumular ganancias del día en tiempo real
             if (pedido.estado === "ENTREGADO") {
                 const fechaPedido = pedido.fechaCreacion
                     ? String(pedido.fechaCreacion).slice(0, 10)
@@ -398,8 +376,6 @@ export default function AdminPedidos() {
             });
         }, []),
     });
-
-    // ── Carga inicial ───────────────────────────────────────────────────────
 
     useEffect(() => {
         (async () => {
@@ -431,14 +407,13 @@ export default function AdminPedidos() {
                     );
                     setGananciasHoy(deHoy);
                 }
-            } catch { /* silencioso */ }
+            } catch { /* */ }
         })();
     }, []);
 
     useEffect(() => {
         (async () => {
             try {
-                // Traer todos los delivery activos (nombre + info base)
                 const [resUsuarios, resDisponibles] = await Promise.all([
                     authFetch("/api/admin/usuarios?rol=DELIVERY&activo=true"),
                     authFetch("/api/admin/domiciliarios/disponibles"),
@@ -446,7 +421,6 @@ export default function AdminPedidos() {
                 const usuarios = resUsuarios.ok ? await resUsuarios.json() : [];
                 const disponibles = resDisponibles.ok ? await resDisponibles.json() : [];
 
-                // Mergear: base desde UsuarioDTO, estado desde DeliveryDTO
                 const dispMap = new Map((Array.isArray(disponibles) ? disponibles : []).map((d) => [d.id, d]));
                 const merged = (Array.isArray(usuarios) ? usuarios : []).map((u) => ({
                     ...u,
@@ -454,24 +428,20 @@ export default function AdminPedidos() {
                     disponibleDesde: dispMap.get(u.id)?.disponibleDesde ?? null,
                 }));
                 setDomiciliarios(merged);
-            } catch { /* silencioso */ }
+            } catch { /* */ }
         })();
     }, []);
-
-    // ── Memos ───────────────────────────────────────────────────────────────
 
     const pedidosVisibles = useMemo(() =>
         pedidos.filter((p) => ESTADOS_VISIBLES.has(p.estado)).sort((a, b) => b.id - a.id),
         [pedidos]
     );
 
-    // Ordenar: DISPONIBLE primero (FIFO dentro de cada grupo), luego ocupados, luego sin estado
     const domiciliariosOrdenados = useMemo(() => {
         return [...domiciliarios].sort((a, b) => {
             const oa = DOMI_ORDER[a.estadoDelivery] ?? 3;
             const ob = DOMI_ORDER[b.estadoDelivery] ?? 3;
             if (oa !== ob) return oa - ob;
-            // FIFO dentro de DISPONIBLE
             if (a.estadoDelivery === "DISPONIBLE" && b.estadoDelivery === "DISPONIBLE") {
                 const ta = a.disponibleDesde ? new Date(a.disponibleDesde).getTime() : Infinity;
                 const tb = b.disponibleDesde ? new Date(b.disponibleDesde).getTime() : Infinity;
@@ -486,16 +456,12 @@ export default function AdminPedidos() {
         [domiciliarios]
     );
 
-    // ── Resumen ganancias hoy ───────────────────────────────────────────────
-
     const resumenHoy = useMemo(() => {
         const totalBruto = gananciasHoy.reduce((acc, p) => acc + (Number(p.costoServicio) || 0), 0);
         const gananciaEmpresa = totalBruto * 0.20;
         const pagosDomis = totalBruto * 0.80;
         return { totalBruto, gananciaEmpresa, pagosDomis, pedidos: gananciasHoy.length };
     }, [gananciasHoy]);
-
-    // ── Acciones ────────────────────────────────────────────────────────────
 
     function abrirDetalle(p, e) {
         if (e.target.closest("button")) return;
@@ -528,12 +494,8 @@ export default function AdminPedidos() {
         }
     }
 
-    // ── Render ──────────────────────────────────────────────────────────────
-
     return (
         <div className={s.container}>
-
-            {/* Ganancias del día */}
             <div className={s.section}>
                 <div className={s.sectionHeader}>
                     <h3>💰 Ganancias hoy — {new Date().toLocaleDateString("es-CO", { weekday: "long", day: "numeric", month: "long" })}</h3>
@@ -551,8 +513,6 @@ export default function AdminPedidos() {
 
                 </div>
             </div>
-
-            {/* Panel domiciliarios — visualizador colapsable */}
             <div className={s.section}>
                 <div className={s.sectionHeader}>
                     <h3>Domiciliarios activos</h3>
@@ -562,8 +522,6 @@ export default function AdminPedidos() {
                 </div>
                 <DomiciliarioViewer domiciliarios={domiciliariosOrdenados} />
             </div>
-
-            {/* Lista de pedidos activos */}
             <div className={s.section}>
                 <div className={s.sectionHeader}>
                     <h3>Pedidos activos — {pedidosVisibles.length}</h3>
@@ -632,8 +590,6 @@ export default function AdminPedidos() {
                     ))}
                 </div>
             </div>
-
-            {/* Modal detalle */}
             <PedidoDetalleModal
                 open={!!detalle}
                 pedido={detalle}
@@ -658,8 +614,6 @@ export default function AdminPedidos() {
                     </>
                 )}
             />
-
-            {/* Modal asignar */}
             <AssignModal
                 open={openAssign}
                 pedido={pedidoSel}
@@ -673,14 +627,11 @@ export default function AdminPedidos() {
                             prev.map((p) => p.id === pedidoSel.id ? { ...p, domiciliarioId, estado: "ASIGNADO" } : p)
                         );
                     }
-                    // Marcar domiciliario como ocupado localmente
                     setDomiciliarios((prev) =>
                         prev.map((d) => d.id === domiciliarioId ? { ...d, estadoDelivery: "POR_RECOGER" } : d)
                     );
                 }}
             />
-
-            {/* Modal cancelar */}
             <ConfirmModal
                 open={confirm.open}
                 pedidoId={confirm.pedidoId}

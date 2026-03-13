@@ -4,8 +4,6 @@ import { parseBackendError, errorFronted } from "../api/errors";
 import Toast from "../components/Toast";
 import s from "./AdminComunas.module.css";
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
-
 function onlyDigits(str) {
     return String(str ?? "").replace(/\D/g, "");
 }
@@ -52,26 +50,18 @@ function Helper({ show, text }) {
     return <div className={s.helper}>{text}</div>;
 }
 
-// ── Componente principal ─────────────────────────────────────────────────────
-
 export default function AdminComunas() {
     const [comunas, setComunas] = useState([]);
     const [loading, setLoading] = useState(false);
     const [loadingGuardar, setLoadingGuardar] = useState(false);
     const [toast, setToast] = useState(null);
-
-    // Filtros
     const [q, setQ] = useState("");
     const [minBase, setMinBase] = useState("");
     const [maxBase, setMaxBase] = useState("");
-
-    // Modal
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState(null);
     const [form, setForm] = useState({ numero: "", tarifaBase: "", recargoPorSalto: "" });
     const [touched, setTouched] = useState({});
-
-    // ── Carga ───────────────────────────────────────────────────────────────
 
     async function cargar() {
         setLoading(true);
@@ -94,8 +84,6 @@ export default function AdminComunas() {
     }
 
     useEffect(() => { cargar(); }, []);
-
-    // ── Memos ───────────────────────────────────────────────────────────────
 
     const numerosExistentes = useMemo(
         () => new Set(comunas.map((c) => Number(c.numero))),
@@ -123,8 +111,6 @@ export default function AdminComunas() {
         });
     }, [comunas, q, minBase, maxBase]);
 
-    // ── Modal ───────────────────────────────────────────────────────────────
-
     function abrirCrear() {
         setEditing(null);
         setForm({ numero: "", tarifaBase: "", recargoPorSalto: "" });
@@ -144,7 +130,6 @@ export default function AdminComunas() {
     }
 
     async function guardar() {
-        // Marcar todos los campos como tocados para mostrar errores
         setTouched({ numero: true, tarifaBase: true, recargoPorSalto: true });
         if (!canSubmit) return;
 
@@ -171,11 +156,8 @@ export default function AdminComunas() {
 
             if (!res.ok) {
                 const error = await parseBackendError(res);
-                // Si el error tiene field lo mostramos como error de campo
                 if (error.field) {
                     setTouched((t) => ({ ...t, [error.field]: true }));
-                    // Forzamos el error en el campo correspondiente via toast
-                    // ya que errors viene de getErrors (frontend)
                     setToast(error);
                 } else {
                     setToast(error);
@@ -193,12 +175,8 @@ export default function AdminComunas() {
         }
     }
 
-    // ── Render ──────────────────────────────────────────────────────────────
-
     return (
         <div className={s.container}>
-
-            {/* Header */}
             <div className={s.header}>
                 <h3>Comunas</h3>
                 <div className={s.headerActions}>
@@ -210,8 +188,6 @@ export default function AdminComunas() {
                     </button>
                 </div>
             </div>
-
-            {/* Filtros */}
             <div className={s.filtros}>
                 <input
                     className={s.input}
@@ -237,8 +213,6 @@ export default function AdminComunas() {
                     Mostrando: <b>{filtradas.length}</b> / {comunas.length}
                 </span>
             </div>
-
-            {/* Tabla */}
             <div className={s.tableWrap}>
                 <table className={s.table}>
                     <thead>
@@ -279,8 +253,6 @@ export default function AdminComunas() {
                     </tbody>
                 </table>
             </div>
-
-            {/* Modal */}
             {open && (
                 <div className={s.backdrop}>
                     <div className={s.modal}>
@@ -292,8 +264,6 @@ export default function AdminComunas() {
                         </div>
 
                         <div className={s.modalBody}>
-
-                            {/* Número */}
                             <div className={s.field}>
                                 <input
                                     className={`${s.input} ${touched.numero && errors.numero ? s.inputError : ""}`}
@@ -314,8 +284,6 @@ export default function AdminComunas() {
                                 />
                                 <Helper show={touched.numero} text={errors.numero} />
                             </div>
-
-                            {/* Tarifa base */}
                             <div className={s.field}>
                                 <input
                                     className={`${s.input} ${touched.tarifaBase && errors.tarifaBase ? s.inputError : ""}`}
@@ -337,8 +305,6 @@ export default function AdminComunas() {
                                 </div>
                                 <Helper show={touched.tarifaBase} text={errors.tarifaBase} />
                             </div>
-
-                            {/* Recargo por salto */}
                             <div className={s.field}>
                                 <input
                                     className={`${s.input} ${touched.recargoPorSalto && errors.recargoPorSalto ? s.inputError : ""}`}

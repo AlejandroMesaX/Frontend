@@ -13,9 +13,6 @@ export default function Login() {
 
     const { login } = useAuth();
     const nav = useNavigate();
-
-    // ── Validación en tiempo real ───────────────────────────────────────────
-
     const errors = useMemo(() => {
         const e = {};
         if (!email.trim()) {
@@ -28,8 +25,6 @@ export default function Login() {
     }, [email, password]);
 
     const canSubmit = Object.keys(errors).length === 0;
-
-    // ── Submit ──────────────────────────────────────────────────────────────
 
     async function handleSubmit(e) {
         e.preventDefault();
@@ -60,15 +55,11 @@ export default function Login() {
         }
     }
 
-    // ── Render ──────────────────────────────────────────────────────────────
-
     return (
         <div className={s.container}>
             <h2>GoFast — Iniciar sesión</h2>
 
             <form className={s.form} onSubmit={handleSubmit} noValidate>
-
-                {/* Email */}
                 <div className={s.field}>
                     <label className={s.label}>Email</label>
                     <input
@@ -84,8 +75,6 @@ export default function Login() {
                         <div className={s.helper}>⚠️ {errors.email}</div>
                     )}
                 </div>
-
-                {/* Contraseña */}
                 <div className={s.field}>
                     <label className={s.label}>Contraseña</label>
                     <input
@@ -101,8 +90,6 @@ export default function Login() {
                         <div className={s.helper}>⚠️ {errors.password}</div>
                     )}
                 </div>
-
-                {/* Error general de credenciales */}
                 {err && <div className={s.errorBox}>⛔ {err}</div>}
 
                 <button className={s.btnSubmit} type="submit" disabled={loading}>

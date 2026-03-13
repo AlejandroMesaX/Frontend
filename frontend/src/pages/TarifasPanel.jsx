@@ -71,7 +71,6 @@ export default function TarifasPanel({ barrios = [] }) {
                 </p>
 
                 <div className={s.grid}>
-                    {/* Recogida */}
                     <div className={s.field}>
                         <label className={s.label}>📦 Barrio de recogida</label>
                         <SearchableSelect
@@ -86,8 +85,6 @@ export default function TarifasPanel({ barrios = [] }) {
                             <div className={s.helper}>⚠️ {errors.recogida}</div>
                         )}
                     </div>
-
-                    {/* Entrega */}
                     <div className={s.field}>
                         <label className={s.label}>🏠 Barrio de entrega</label>
                         <SearchableSelect
@@ -124,14 +121,11 @@ export default function TarifasPanel({ barrios = [] }) {
                 </div>
             </div>
 
-            {/* Error */}
             {error && (
                 <div className={s.errorBox}>
                     ⛔ {error}
                 </div>
             )}
-
-            {/* Resultado */}
             {resultado && (
                 <div className={s.resultadoBox}>
                     <div className={s.resultadoTitulo}>💰 Tarifa estimada</div>

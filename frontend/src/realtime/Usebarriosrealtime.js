@@ -1,12 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Client } from "@stomp/stompjs";
 
-/**
- * Escucha actualizaciones de barrios en tiempo real.
- * Topic: /topic/barrios
- *
- * onBarrio(barrio) — recibe el barrio actualizado (con activo: true/false)
- */
 export function useBarriosRealtime({ token, onBarrio }) {
     const ref = useRef(null);
 
@@ -27,7 +21,6 @@ export function useBarriosRealtime({ token, onBarrio }) {
                     const barrio = JSON.parse(msg.body);
                     onBarrio?.(barrio);
                 } catch {
-                    // mensaje malformado — no romper la UI
                 }
             });
         };

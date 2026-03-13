@@ -28,7 +28,7 @@ export default function App() {
         <Route
           path="/domiciliario"
           element={
-            <ProtectedRoute role="DELIVERY">  {/* ✅ DELIVERY no DOMICILIARIO */}
+            <ProtectedRoute role="DELIVERY">
               <DeliveryPanel />
             </ProtectedRoute>
           }

@@ -28,7 +28,6 @@
     font-weight: 700;
 }
 
-/* Filtros */
 .filtrosGroup {
     display: flex;
     flex-direction: column;
@@ -92,7 +91,6 @@
     color: #9ca3af;
 }
 
-/* Botones */
 .btn {
     padding: 8px 14px;
     border-radius: 8px;
@@ -114,7 +112,6 @@
     cursor: not-allowed;
 }
 
-/* Métricas */
 .metricsGrid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -156,7 +153,6 @@
     color: #f0f0f0;
 }
 
-/* Tabla por domiciliario */
 .tabla {
     border: 1px solid #3f3f44;
     border-radius: 10px;
@@ -204,7 +200,6 @@
     white-space: nowrap;
 }
 
-/* Lista historial */
 .lista {
     display: flex;
     flex-direction: column;

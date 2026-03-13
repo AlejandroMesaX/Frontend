@@ -8,11 +8,6 @@ import s from "./AdminUsuarios.module.css";
 
 const ROLES = ["ADMIN", "CLIENT", "DELIVERY"];
 
-
-// ── Badges ───────────────────────────────────────────────────────────────────
-
-
-
 function ActivoBadge({ activo }) {
     return (
         <span className={`${s.badge} ${activo ? s.badgeActivo : s.badgeInactivo}`}>
@@ -35,7 +30,6 @@ function RolBadge({ rol }) {
     );
 }
 
-// ── Indicador fortaleza contraseña ───────────────────────────────────────────
 
 function PasswordStrength({ password }) {
     const checks = [
@@ -70,8 +64,6 @@ function PasswordStrength({ password }) {
     );
 }
 
-// ── Modal confirmación toggle ─────────────────────────────────────────────────
-
 function ConfirmModal({ open, mensaje, onConfirm, onCancel, loading }) {
     if (!open) return null;
     return (
@@ -91,8 +83,6 @@ function ConfirmModal({ open, mensaje, onConfirm, onCancel, loading }) {
     );
 }
 
-// ── Componente principal ──────────────────────────────────────────────────────
-
 export default function AdminUsuarios() {
     const { token } = useAuth();
     const [usuarios, setUsuarios] = useState([]);
@@ -100,22 +90,14 @@ export default function AdminUsuarios() {
     const [loadingGuardar, setLoadingGuardar] = useState(false);
     const [loadingToggle, setLoadingToggle] = useState(false);
     const [toast, setToast] = useState(null);
-
-    // Filtros
     const [q, setQ] = useState("");
     const [rol, setRol] = useState("");
     const [estado, setEstado] = useState("");
-
-    // Modal crear/editar
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState(null);
     const [form, setForm] = useState({ nombre: "", email: "", password: "", rol: "CLIENT", activo: true });
     const [touched, setTouched] = useState({});
-
-    // Modal confirmación toggle
     const [confirm, setConfirm] = useState({ open: false, usuario: null });
-
-    // ── Carga ───────────────────────────────────────────────────────────────
 
     async function cargarUsuarios() {
         setLoading(true);
@@ -133,7 +115,7 @@ export default function AdminUsuarios() {
 
     useEffect(() => { cargarUsuarios(); }, []);
 
-    useAdminUsuariosRealtime({  // ← y aquí
+    useAdminUsuariosRealtime({
         token,
         onUsuario: useCallback((usuario) => {
             setUsuarios((prev) => {
@@ -145,8 +127,6 @@ export default function AdminUsuarios() {
             });
         }, []),
     });
-
-    // ── Memos ───────────────────────────────────────────────────────────────
 
     const filtrados = useMemo(() => {
         const qq = q.trim().toLowerCase();
@@ -164,8 +144,6 @@ export default function AdminUsuarios() {
             return matchQ && matchRol && matchEstado;
         });
     }, [usuarios, q, rol, estado]);
-
-    // ── Validación en tiempo real ───────────────────────────────────────────
 
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{6,}$/;
 
@@ -199,8 +177,6 @@ export default function AdminUsuarios() {
     }, [form, editing]);
 
     const canSubmit = Object.keys(errors).length === 0;
-
-    // ── Modal crear/editar ──────────────────────────────────────────────────
 
     function abrirCrear() {
         setEditing(null);
@@ -279,8 +255,6 @@ export default function AdminUsuarios() {
         }
     }
 
-    // ── Toggle activo ───────────────────────────────────────────────────────
-
     function pedirConfirmToggle(u) {
         if (String(u.rol) === "ADMIN") {
             setToast(errorFronted("No se puede deshabilitar un usuario con rol ADMIN."));
@@ -317,12 +291,8 @@ export default function AdminUsuarios() {
         }
     }
 
-    // ── Render ──────────────────────────────────────────────────────────────
-
     return (
         <div className={s.container}>
-
-            {/* Header */}
             <div className={s.header}>
                 <h3>Usuarios</h3>
                 <div className={s.headerActions}>
@@ -334,8 +304,6 @@ export default function AdminUsuarios() {
                     </button>
                 </div>
             </div>
-
-            {/* Filtros */}
             <div className={s.filtros}>
                 <input
                     className={`${s.input} ${s.inputSearch}`}
@@ -356,8 +324,6 @@ export default function AdminUsuarios() {
                     Mostrando: <b>{filtrados.length}</b> / {usuarios.length}
                 </span>
             </div>
-
-            {/* Tabla */}
             <div className={s.tableWrap}>
                 <table className={s.table}>
                     <thead>
@@ -413,8 +379,6 @@ export default function AdminUsuarios() {
                     </tbody>
                 </table>
             </div>
-
-            {/* Modal crear/editar */}
             {open && (
                 <div className={s.backdrop}>
                     <div className={s.modal}>
@@ -424,8 +388,6 @@ export default function AdminUsuarios() {
                         </div>
 
                         <div className={s.modalBody}>
-
-                            {/* Nombre */}
                             <div className={s.field}>
                                 <input
                                     className={`${s.input} ${s.inputFull} ${touched.nombre && errors.nombre ? s.inputError : ""}`}
@@ -438,8 +400,6 @@ export default function AdminUsuarios() {
                                     <div className={s.helper}>⚠️ {errors.nombre}</div>
                                 )}
                             </div>
-
-                            {/* Email — solo al crear */}
                             {!editing && (
                                 <div className={s.field}>
                                     <input
@@ -455,8 +415,6 @@ export default function AdminUsuarios() {
                                     )}
                                 </div>
                             )}
-
-                            {/* Contraseña — solo al crear */}
                             {!editing && (
                                 <div className={s.field}>
                                     <input
@@ -475,8 +433,6 @@ export default function AdminUsuarios() {
                                     )}
                                 </div>
                             )}
-
-                            {/* Rol */}
                             <div className={s.field}>
                                 <select
                                     className={`${s.select} ${s.inputFull} ${touched.rol && errors.rol ? s.inputError : ""}`}
@@ -490,8 +446,6 @@ export default function AdminUsuarios() {
                                     <div className={s.helper}>⚠️ {errors.rol}</div>
                                 )}
                             </div>
-
-                            {/* Activo (solo en edición) */}
                             {editing && (
                                 <label className={s.checkboxLabel}>
                                     <input
@@ -515,8 +469,6 @@ export default function AdminUsuarios() {
                     </div>
                 </div>
             )}
-
-            {/* Modal confirmación toggle */}
             <ConfirmModal
                 open={confirm.open}
                 mensaje={

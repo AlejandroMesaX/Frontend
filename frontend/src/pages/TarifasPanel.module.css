@@ -120,7 +120,6 @@
     cursor: not-allowed;
 }
 
-/* Error */
 .errorBox {
     padding: 12px 14px;
     border-radius: 10px;
@@ -130,7 +129,6 @@
     font-size: 13px;
 }
 
-/* Resultado */
 .resultadoBox {
     border: 1px solid #f5c518;
     border-radius: 12px;

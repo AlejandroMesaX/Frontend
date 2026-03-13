@@ -112,19 +112,15 @@ export default function DeliveryPanel() {
     const [finDesde, setFinDesde] = useState("");
     const [finHasta, setFinHasta] = useState("");
 
-    // ── Realtime ────────────────────────────────────────────────────────────
-
     useDeliveryPedidosRealtime({
         token, userId,
         onPedido: (pedido) => {
-            // Limpiar pedido actual si terminó
             if (!pedido || pedido.estado === "ENTREGADO" || pedido.estado === "CANCELADO") {
                 setPedidoActual(null);
             } else {
                 setPedidoActual(pedido);
             }
             setDetalle((d) => d?.id === pedido?.id ? (pedido ? { ...d, ...pedido } : null) : d);
-            // Acumular ganancias del día cuando se entrega
             if (pedido?.estado === "ENTREGADO") {
                 const d = new Date();
                 const hoy = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -136,8 +132,6 @@ export default function DeliveryPanel() {
         },
     });
 
-    // ── Derivados ───────────────────────────────────────────────────────────
-
     const tienePedidoActivo = pedidoActual &&
         (pedidoActual.estado === "ASIGNADO" || pedidoActual.estado === "EN_CAMINO");
 
@@ -148,8 +142,6 @@ export default function DeliveryPanel() {
         : pedidoActual?.estado === "EN_CAMINO"
             ? { label: "✅ Finalizar entrega", estado: "ENTREGADO" }
             : null;
-
-    // ── Acciones ────────────────────────────────────────────────────────────
 
     async function toggleDisponible() {
         if (tienePedidoActivo) {
@@ -219,12 +211,9 @@ export default function DeliveryPanel() {
         }
     }
 
-    // ── Carga estado inicial al montar ──────────────────────────────────────
-
     useEffect(() => {
         (async () => {
             try {
-                // Cargar pedido activo (persiste tras recarga)
                 const resPedido = await authFetch("/api/domiciliario/pedidos/me/activo");
                 if (resPedido.ok) {
                     const pedido = await resPedido.json().catch(() => null);
@@ -232,18 +221,14 @@ export default function DeliveryPanel() {
                         setPedidoActual(pedido);
                     }
                 }
-
-                // Cargar disponibilidad actual
                 const resMe = await authFetch("/api/delivery/me");
                 if (resMe.ok) {
                     const me = await resMe.json().catch(() => null);
                     if (me?.disponible != null) setDisponible(me.disponible);
                 }
-
-                // Cargar barrios para tarifas
                 const resBarrios = await authFetch("/api/admin/barrios?includeInactivos=false");
                 if (resBarrios.ok) setBarrios(await resBarrios.json());
-            } catch { /* silencioso */ }
+            } catch { /**/ }
         })();
     }, []);
 
@@ -260,7 +245,7 @@ export default function DeliveryPanel() {
                     );
                     setGananciasHoy(deHoy);
                 }
-            } catch { /* silencioso */ }
+            } catch { /**/ }
         })();
     }, []);
 
@@ -284,10 +269,7 @@ export default function DeliveryPanel() {
             if (!finDia && !finDesde && !finHasta) setFinDia(todayISO);
             cargarHistorial();
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tab]);
-
-    // ── Memos ───────────────────────────────────────────────────────────────
 
     const historialFiltrado = useMemo(() => {
         if (!diaFiltro) return historial;
@@ -309,14 +291,11 @@ export default function DeliveryPanel() {
         return { total, comisionEmpresa, netoDelivery: total - comisionEmpresa, pedidos: finanzasFiltrado.length };
     }, [finanzasFiltrado]);
 
-    // ── Resumen ganancias hoy ───────────────────────────────────────────────
 
     const resumenHoy = useMemo(() => {
         const bruto = gananciasHoy.reduce((acc, p) => acc + (Number(p.costoServicio) || 0), 0);
         return { bruto, neto: bruto * 0.80, comision: bruto * 0.20, pedidos: gananciasHoy.length };
     }, [gananciasHoy]);
-
-    // ── Render ──────────────────────────────────────────────────────────────
 
     const estadoBadgeStyle = {
         background: tienePedidoActivo ? "#fff7ed" : disponible ? "#ecfdf5" : "#f3f4f6",
@@ -331,8 +310,6 @@ export default function DeliveryPanel() {
 
     return (
         <div className={s.container}>
-
-            {/* Header */}
             <div className={s.header}>
                 <div className={s.headerLeft}>
                     <h2>GoFast</h2>
@@ -345,8 +322,6 @@ export default function DeliveryPanel() {
                 </div>
                 <button className={s.btnLogout} onClick={logout}>Cerrar sesión</button>
             </div>
-
-            {/* Navbar */}
             <nav className={s.nav}>
                 {TABS.map(({ key, label }) => (
                     <button
@@ -359,10 +334,8 @@ export default function DeliveryPanel() {
                 ))}
             </nav>
 
-            {/* ── INICIO ── */}
             {tab === "inicio" && (
                 <>
-                    {/* Disponibilidad */}
                     <div className={s.section}>
                         <div className={s.sectionHeader}>
                             <h3>Disponibilidad</h3>
@@ -381,7 +354,6 @@ export default function DeliveryPanel() {
                         </div>
                     </div>
 
-                    {/* Ganancias del día */}
                     <div className={s.section}>
                         <div className={s.sectionHeader}>
                             <h3>💰 Tus ganancias hoy</h3>
@@ -403,7 +375,6 @@ export default function DeliveryPanel() {
                         </div>
                     </div>
 
-                    {/* Pedido actual */}
                     <div className={s.section}>
                         <div className={s.sectionHeader}>
                             <h3>Pedido actual</h3>
@@ -480,7 +451,6 @@ export default function DeliveryPanel() {
                 </>
             )}
 
-            {/* ── HISTORIAL ── */}
             {tab === "historial" && (
                 <div className={s.section}>
                     <div className={s.sectionHeader}>
@@ -521,7 +491,6 @@ export default function DeliveryPanel() {
                 </div>
             )}
 
-            {/* ── FINANZAS ── */}
             {tab === "tarifas" && <div className={s.tabContent}><TarifasPanel barrios={barrios} /></div>}
             {tab === "finanzas" && (
                 <div className={s.section}>
@@ -592,7 +561,6 @@ export default function DeliveryPanel() {
                 </div>
             )}
 
-            {/* Modal detalle */}
             <PedidoDetalleModal
                 open={!!detalle}
                 pedido={detalle}
@@ -620,8 +588,6 @@ export default function DeliveryPanel() {
                     </>
                 )}
             />
-
-            {/* Modal incidencia */}
             <IncidenciaModal open={openIncidencia} onConfirm={confirmarAyuda} onCancel={() => setOpenIncidencia(false)} loading={loadingAyuda} />
 
             {toast && <Toast error={toast} onClose={() => setToast(null)} />}

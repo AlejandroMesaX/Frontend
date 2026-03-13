@@ -61,7 +61,6 @@
     transform: rotate(180deg);
 }
 
-/* Dropdown */
 .dropdown {
     position: absolute;
     top: calc(100% + 4px);
