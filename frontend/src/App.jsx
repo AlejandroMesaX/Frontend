@@ -1,20 +1,18 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Login from "./pages/Login";
+import AuthPage from "./pages/AuthPage";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import DeliveryPanel from "./pages/DeliveryPanel";
 import AdminPanel from "./pages/AdminPanel";
 import ClientePanel from "./pages/ClientePanel";
-
-
-function Placeholder({ title }) {
-  return <h2 style={{ fontFamily: "sans-serif", margin: 20 }}>{title}</h2>;
-}
+import { useAuth } from "./auth/AuthContext";
 
 export default function App() {
+  const { login } = useAuth();
+
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<Login />} />
+        <Route path="/login" element={<AuthPage onLogin={login} />} />
 
         <Route
           path="/admin"
