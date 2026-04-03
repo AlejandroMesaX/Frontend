@@ -2,13 +2,13 @@ import s from "./PedidoDetalleModal.module.css";
 
 function EstadoBadge({ estado }) {
     const cfg = {
-        CREADO: { bg: "#f3f4f6", color: "#374151", text: "⚪ CREADO" },
-        ASIGNADO: { bg: "#eff6ff", color: "#1d4ed8", text: "🔵 ASIGNADO" },
-        EN_CAMINO: { bg: "#eef2ff", color: "#4338ca", text: "🟣 EN CAMINO" },
-        ENTREGADO: { bg: "#ecfdf5", color: "#065f46", text: "🟢 ENTREGADO" },
-        CANCELADO: { bg: "#fef2f2", color: "#991b1b", text: "🔴 CANCELADO" },
-        INCIDENCIA: { bg: "#fff7ed", color: "#92400e", text: "🆘 INCIDENCIA" },
-    }[estado] || { bg: "#f3f4f6", color: "#374151", text: estado };
+        CREADO: { bg: "#2a2a2d", color: "#d1d5db", text: "⚪ CREADO" },
+        ASIGNADO: { bg: "#1a1f2e", color: "#93c5fd", text: "🔵 ASIGNADO" },
+        EN_CAMINO: { bg: "#1e1a2e", color: "#a5b4fc", text: "🟣 EN CAMINO" },
+        ENTREGADO: { bg: "#0f2e1a", color: "#22c55e", text: "🟢 ENTREGADO" },
+        CANCELADO: { bg: "#3d1a1a", color: "#ef4444", text: "🔴 CANCELADO" },
+        INCIDENCIA: { bg: "#2d1f0a", color: "#fcd34d", text: "🆘 INCIDENCIA" },
+    }[estado] || { bg: "#2a2a2d", color: "#d1d5db", text: estado };
 
     return (
         <span className={s.badge} style={{ background: cfg.bg, color: cfg.color }}>
@@ -99,11 +99,7 @@ export default function PedidoDetalleModal({
                     )}
                 </div>
 
-                {actions && (
-                    <div className={s.footer}>
-                        {actions}
-                    </div>
-                )}
+
             </div>
         </div>
     );

@@ -1,58 +1,64 @@
 .container {
     max-width: 1100px;
-    margin: 20px auto;
-    font-family: sans-serif;
-    padding: 0 12px;
+    margin: 0 auto;
+    padding: 12px;
     display: flex;
     flex-direction: column;
     gap: 12px;
+    min-height: 100vh;
+    box-sizing: border-box;
 }
 
-.header {
+/* ── Barra superior ────────────────────────────────────────────────────────── */
+
+.topBar {
+    border: 1px solid #3f3f44;
+    border-radius: 12px;
+    background: #2a2a2d;
+    padding: 10px 14px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 10px;
+    position: sticky;
+    top: 8px;
+    z-index: 200;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
 }
 
-.header h2 {
-    margin: 0;
-    font-size: 20px;
-    color: #f0f0f0;
+.brand {
+    font-size: 18px;
     font-weight: 800;
+    color: #f5c518;
     letter-spacing: -0.02em;
+    white-space: nowrap;
 }
 
-.btnLogout {
-    padding: 8px 14px;
-    border-radius: 8px;
-    border: 1px solid #3f3f44;
-    background: #2a2a2d;
-    color: #f0f0f0;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 500;
-    transition: background 0.15s, border-color 0.15s, color 0.15s;
+.topBarRight {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.btnLogout:hover {
-    background: #3d1a1a;
-    border-color: #ef4444;
-    color: #ef4444;
-}
+/* ── Nav desktop ───────────────────────────────────────────────────────────── */
 
 .nav {
     display: flex;
-    gap: 6px;
-    padding: 6px;
-    border: 1px solid #3f3f44;
-    border-radius: 12px;
-    background: #2a2a2d;
-    flex-wrap: wrap;
+    gap: 4px;
+    flex: 1;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav::-webkit-scrollbar {
+    display: none;
 }
 
 .navBtn {
-    padding: 10px 16px;
+    padding: 8px 14px;
     border-radius: 8px;
     border: 1px solid transparent;
     background: transparent;
@@ -61,6 +67,8 @@
     font-size: 13px;
     font-weight: 500;
     transition: background 0.15s, color 0.15s, border-color 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .navBtn:hover:not(.navBtnActive) {
@@ -76,18 +84,222 @@
     font-weight: 700;
 }
 
+/* ── Hamburger button — solo visible en móvil ──────────────────────────────── */
+
+.hamburger {
+    display: none;
+    background: none;
+    border: 1px solid #3f3f44;
+    border-radius: 8px;
+    padding: 7px 10px;
+    cursor: pointer;
+    color: #f0f0f0;
+    font-size: 18px;
+    line-height: 1;
+    transition: background 0.15s;
+    flex-shrink: 0;
+}
+
+.hamburger:hover {
+    background: #333336;
+}
+
+/* ── Menú desplegable móvil ────────────────────────────────────────────────── */
+
+.mobileMenu {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+}
+
+.mobileMenuOverlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.mobileMenuPanel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 260px;
+    background: #2a2a2d;
+    border-right: 1px solid #3f3f44;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 12px;
+    gap: 4px;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
+    animation: slideIn 0.2s ease;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(-100%);
+    }
+
+    to {
+        transform: translateX(0);
+    }
+}
+
+.mobileMenuHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #3f3f44;
+    margin-bottom: 8px;
+}
+
+.mobileMenuBrand {
+    font-size: 18px;
+    font-weight: 800;
+    color: #f5c518;
+    margin: 0;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.mobileMenuClose {
+    background: none;
+    border: none;
+    color: #9ca3af;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    line-height: 1;
+    margin-left: auto;
+}
+
+.mobileMenuClose:hover {
+    background: #333336;
+    color: #f0f0f0;
+}
+
+.mobileNavBtn {
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #9ca3af;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+    transition: background 0.15s, color 0.15s;
+    width: 100%;
+}
+
+.mobileNavBtn:hover:not(.mobileNavBtnActive) {
+    background: #333336;
+    color: #f0f0f0;
+}
+
+.mobileNavBtnActive {
+    background: #f5c518;
+    color: #0d0d0d;
+    font-weight: 700;
+    border-color: #f5c518;
+}
+
+.mobileMenuFooter {
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid #3f3f44;
+}
+
+/* ── Logout ────────────────────────────────────────────────────────────────── */
+
+.btnLogout {
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid #3f3f44;
+    background: #2a2a2d;
+    color: #f0f0f0;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.btnLogout:hover {
+    background: #3d1a1a;
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+.btnLogoutMobile {
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid #3f3f44;
+    background: #2a2a2d;
+    color: #f0f0f0;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.btnLogoutMobile:hover {
+    background: #3d1a1a;
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+/* ── Content ───────────────────────────────────────────────────────────────── */
+
 .content {
     display: flex;
     flex-direction: column;
     gap: 0;
 }
 
-.placeholder {
-    border: 1px solid #3f3f44;
-    border-radius: 12px;
-    padding: 24px;
-    background: #2a2a2d;
-    color: #9ca3af;
-    font-size: 14px;
-    text-align: center;
+/* ── Responsive breakpoints ────────────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+    .nav {
+        display: none;
+    }
+
+    .btnLogout {
+        display: none;
+    }
+
+    .hamburger {
+        display: flex;
+    }
+
+    .mobileMenu {
+        display: block;
+    }
+
+    .container {
+        padding: 8px;
+        gap: 8px;
+    }
+
+    .topBar {
+        padding: 8px 12px;
+        top: 4px;
+        border-radius: 10px;
+    }
+
+    .brand {
+        font-size: 16px;
+    }
+}
+
+@media (min-width: 901px) {
+    .mobileMenu {
+        display: none !important;
+    }
 }

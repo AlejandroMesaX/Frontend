@@ -8,9 +8,7 @@ import Toast from "../components/Toast";
 import TarifasPanel from "./TarifasPanel";
 import s from "./DeliveryPanel.module.css";
 
-function fmt(val) {
-    return `$${Number(val || 0).toLocaleString("es-CO")}`;
-}
+function fmt(val) { return `$${Number(val || 0).toLocaleString("es-CO")}`; }
 
 function toNumberMoney(val) {
     if (val == null) return 0;
@@ -23,9 +21,9 @@ function yyyyMMddOf(fecha) {
     return String(fecha).slice(0, 10);
 }
 
-function Metric({ label, value }) {
+function Metric({ label, value, highlight }) {
     return (
-        <div className={s.metric}>
+        <div className={`${s.metric} ${highlight ? s.metricHighlight : ""}`}>
             <div className={s.metricLabel}>{label}</div>
             <div className={s.metricValue}>${Number(value || 0).toLocaleString("es-CO")}</div>
         </div>
@@ -36,9 +34,7 @@ function IncidenciaModal({ open, onConfirm, onCancel, loading }) {
     const [motivo, setMotivo] = useState("");
     const [touched, setTouched] = useState(false);
 
-    useEffect(() => {
-        if (open) { setMotivo(""); setTouched(false); }
-    }, [open]);
+    useEffect(() => { if (open) { setMotivo(""); setTouched(false); } }, [open]);
 
     if (!open) return null;
     const hasError = touched && !motivo.trim();
@@ -77,10 +73,10 @@ function IncidenciaModal({ open, onConfirm, onCancel, loading }) {
 }
 
 const TABS = [
-    { key: "inicio", label: "Inicio" },
-    { key: "historial", label: "Historial" },
-    { key: "finanzas", label: "Finanzas" },
-    { key: "tarifas", label: "Tarifas" },
+    { key: "inicio", label: "📦 Pedidos" },
+    { key: "historial", label: "🗓️ Historial" },
+    { key: "finanzas", label: "💰 Finanzas" },
+    { key: "tarifas", label: "🧮 Tarifas" },
 ];
 
 export default function DeliveryPanel() {
@@ -97,20 +93,39 @@ export default function DeliveryPanel() {
     const [detalle, setDetalle] = useState(null);
     const [gananciasHoy, setGananciasHoy] = useState([]);
     const [barrios, setBarrios] = useState([]);
-
     const [historial, setHistorial] = useState([]);
     const [loadingHist, setLoadingHist] = useState(false);
     const [diaFiltro, setDiaFiltro] = useState("");
-    const todayISO = useMemo(() => {
-        const d = new Date();
-        const yyyy = d.getFullYear();
-        const mm = String(d.getMonth() + 1).padStart(2, "0");
-        const dd = String(d.getDate()).padStart(2, "0");
-        return `${yyyy}-${mm}-${dd}`;
-    }, []);
     const [finDia, setFinDia] = useState("");
     const [finDesde, setFinDesde] = useState("");
     const [finHasta, setFinHasta] = useState("");
+    const [menuOpen, setMenuOpen] = useState(false);
+
+    // Cerrar menú al cambiar tab
+    function selectTab(key) {
+        setTab(key);
+        setMenuOpen(false);
+    }
+
+    // Cerrar menú con Escape
+    useEffect(() => {
+        function onKey(e) { if (e.key === "Escape") setMenuOpen(false); }
+        document.addEventListener("keydown", onKey);
+        return () => document.removeEventListener("keydown", onKey);
+    }, []);
+
+    // Bloquear scroll del body cuando el menú está abierto
+    useEffect(() => {
+        document.body.style.overflow = menuOpen ? "hidden" : "";
+        return () => { document.body.style.overflow = ""; };
+    }, [menuOpen]);
+
+    const todayISO = useMemo(() => {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    }, []);
+
+    // ── Realtime ──────────────────────────────────────────────────────────────
 
     useDeliveryPedidosRealtime({
         token, userId,
@@ -125,16 +140,13 @@ export default function DeliveryPanel() {
                 const d = new Date();
                 const hoy = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
                 const fechaPedido = pedido.fechaCreacion ? String(pedido.fechaCreacion).slice(0, 10) : hoy;
-                if (fechaPedido === hoy) {
+                if (fechaPedido === hoy)
                     setGananciasHoy((prev) => prev.find((p) => p.id === pedido.id) ? prev : [...prev, pedido]);
-                }
             }
         },
     });
 
-    const tienePedidoActivo = pedidoActual &&
-        (pedidoActual.estado === "ASIGNADO" || pedidoActual.estado === "EN_CAMINO");
-
+    const tienePedidoActivo = pedidoActual && (pedidoActual.estado === "ASIGNADO" || pedidoActual.estado === "EN_CAMINO");
     const puedeAyuda = pedidoActual?.estado === "EN_CAMINO";
 
     const btnAvance = pedidoActual?.estado === "ASIGNADO"
@@ -143,11 +155,10 @@ export default function DeliveryPanel() {
             ? { label: "✅ Finalizar entrega", estado: "ENTREGADO" }
             : null;
 
+    // ── Acciones ──────────────────────────────────────────────────────────────
+
     async function toggleDisponible() {
-        if (tienePedidoActivo) {
-            setToast(errorFronted("No puedes cambiar disponibilidad mientras tengas un pedido activo."));
-            return;
-        }
+        if (tienePedidoActivo) { setToast(errorFronted("No puedes cambiar disponibilidad mientras tengas un pedido activo.")); return; }
         setLoadingDisponible(true);
         try {
             const next = !disponible;
@@ -158,11 +169,8 @@ export default function DeliveryPanel() {
             });
             if (!res.ok) { setToast(await parseBackendError(res)); return; }
             setDisponible(next);
-        } catch {
-            setToast(errorFronted("No se pudo conectar con el servidor."));
-        } finally {
-            setLoadingDisponible(false);
-        }
+        } catch { setToast(errorFronted("No se pudo conectar con el servidor.")); }
+        finally { setLoadingDisponible(false); }
     }
 
     async function avanzarEstado(nuevoEstado) {
@@ -178,17 +186,11 @@ export default function DeliveryPanel() {
             let actualizado = null;
             try { actualizado = await res.json(); } catch { }
             if (nuevoEstado === "ENTREGADO") {
-                setPedidoActual(null);
-                setDetalle(null);
-                setDisponible(true);
-                return;
+                setPedidoActual(null); setDetalle(null); setDisponible(true); return;
             }
             setPedidoActual((prev) => prev ? (actualizado ?? { ...prev, estado: nuevoEstado }) : prev);
-        } catch {
-            setToast(errorFronted("No se pudo conectar con el servidor."));
-        } finally {
-            setLoadingAvanzar(false);
-        }
+        } catch { setToast(errorFronted("No se pudo conectar con el servidor.")); }
+        finally { setLoadingAvanzar(false); }
     }
 
     async function confirmarAyuda(motivo) {
@@ -201,31 +203,20 @@ export default function DeliveryPanel() {
                 body: JSON.stringify({ motivo }),
             });
             if (!res.ok) { setToast(await parseBackendError(res)); return; }
-            setOpenIncidencia(false);
-            setPedidoActual(null);
-            setDisponible(true);
-        } catch {
-            setToast(errorFronted("No se pudo conectar con el servidor."));
-        } finally {
-            setLoadingAyuda(false);
-        }
+            setOpenIncidencia(false); setPedidoActual(null); setDisponible(true);
+        } catch { setToast(errorFronted("No se pudo conectar con el servidor.")); }
+        finally { setLoadingAyuda(false); }
     }
+
+    // ── Carga inicial ─────────────────────────────────────────────────────────
 
     useEffect(() => {
         (async () => {
             try {
                 const resPedido = await authFetch("/api/domiciliario/pedidos/me/activo");
-                if (resPedido.ok) {
-                    const pedido = await resPedido.json().catch(() => null);
-                    if (pedido?.id) {
-                        setPedidoActual(pedido);
-                    }
-                }
+                if (resPedido.ok) { const p = await resPedido.json().catch(() => null); if (p?.id) setPedidoActual(p); }
                 const resMe = await authFetch("/api/delivery/me");
-                if (resMe.ok) {
-                    const me = await resMe.json().catch(() => null);
-                    if (me?.disponible != null) setDisponible(me.disponible);
-                }
+                if (resMe.ok) { const me = await resMe.json().catch(() => null); if (me?.disponible != null) setDisponible(me.disponible); }
                 const resBarrios = await authFetch("/api/admin/barrios?includeInactivos=false");
                 if (resBarrios.ok) setBarrios(await resBarrios.json());
             } catch { /**/ }
@@ -240,10 +231,7 @@ export default function DeliveryPanel() {
                     const data = await res.json();
                     const d = new Date();
                     const hoy = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-                    const deHoy = (Array.isArray(data) ? data : []).filter(
-                        (p) => String(p.fechaCreacion ?? "").slice(0, 10) === hoy
-                    );
-                    setGananciasHoy(deHoy);
+                    setGananciasHoy((Array.isArray(data) ? data : []).filter((p) => String(p.fechaCreacion ?? "").slice(0, 10) === hoy));
                 }
             } catch { /**/ }
         })();
@@ -256,20 +244,16 @@ export default function DeliveryPanel() {
             if (!res.ok) { setToast(await parseBackendError(res)); return; }
             const data = await res.json();
             setHistorial(Array.isArray(data) ? data : []);
-        } catch {
-            setToast(errorFronted("No se pudo conectar con el servidor."));
-        } finally {
-            setLoadingHist(false);
-        }
+        } catch { setToast(errorFronted("No se pudo conectar con el servidor.")); }
+        finally { setLoadingHist(false); }
     }
 
     useEffect(() => {
         if (tab === "historial") cargarHistorial();
-        if (tab === "finanzas") {
-            if (!finDia && !finDesde && !finHasta) setFinDia(todayISO);
-            cargarHistorial();
-        }
+        if (tab === "finanzas") { if (!finDia && !finDesde && !finHasta) setFinDia(todayISO); cargarHistorial(); }
     }, [tab]);
+
+    // ── Memos ─────────────────────────────────────────────────────────────────
 
     const historialFiltrado = useMemo(() => {
         if (!diaFiltro) return historial;
@@ -287,94 +271,92 @@ export default function DeliveryPanel() {
 
     const finResumen = useMemo(() => {
         const total = finanzasFiltrado.reduce((acc, p) => acc + toNumberMoney(p.costoServicio), 0);
-        const comisionEmpresa = total * 0.2;
-        return { total, comisionEmpresa, netoDelivery: total - comisionEmpresa, pedidos: finanzasFiltrado.length };
+        return { total, comisionEmpresa: total * 0.2, netoDelivery: total * 0.8, pedidos: finanzasFiltrado.length };
     }, [finanzasFiltrado]);
-
 
     const resumenHoy = useMemo(() => {
         const bruto = gananciasHoy.reduce((acc, p) => acc + (Number(p.costoServicio) || 0), 0);
         return { bruto, neto: bruto * 0.80, comision: bruto * 0.20, pedidos: gananciasHoy.length };
     }, [gananciasHoy]);
 
+    // ── Badge styles ──────────────────────────────────────────────────────────
+
     const estadoBadgeStyle = {
-        background: tienePedidoActivo ? "#fff7ed" : disponible ? "#ecfdf5" : "#f3f4f6",
-        color: tienePedidoActivo ? "#9a3412" : disponible ? "#065f46" : "#374151",
+        background: tienePedidoActivo ? "#2d1f0a" : disponible ? "#0f2e1a" : "#2a2a2d",
+        color: tienePedidoActivo ? "#fcd34d" : disponible ? "#22c55e" : "#9ca3af",
     };
     const estadoBadgeText = tienePedidoActivo ? "🟠 Pedido activo" : disponible ? "🟢 Disponible" : "⚪ Desconectado";
 
     const pedidoEstadoStyle = {
-        background: pedidoActual?.estado === "ASIGNADO" ? "#eff6ff" : "#eef2ff",
-        color: pedidoActual?.estado === "ASIGNADO" ? "#1d4ed8" : "#4338ca",
+        background: pedidoActual?.estado === "ASIGNADO" ? "#1a1f2e" : "#1e1a2e",
+        color: pedidoActual?.estado === "ASIGNADO" ? "#93c5fd" : "#a5b4fc",
     };
+
+    // ── Render ────────────────────────────────────────────────────────────────
 
     return (
         <div className={s.container}>
-            <div className={s.header}>
-                <div className={s.headerLeft}>
-                    <h2>GoFast</h2>
-                    <span className={s.badge} style={estadoBadgeStyle}>{estadoBadgeText}</span>
-                    {pedidoActual?.estado && (
-                        <span className={s.badge} style={pedidoEstadoStyle}>
-                            {pedidoActual.estado === "ASIGNADO" ? "🔵 ASIGNADO" : "🟣 EN CAMINO"}
-                        </span>
-                    )}
-                </div>
-                <button className={s.btnLogout} onClick={logout}>Cerrar sesión</button>
-            </div>
-            <nav className={s.nav}>
-                {TABS.map(({ key, label }) => (
-                    <button
-                        key={key}
-                        className={`${s.navBtn} ${tab === key ? s.navBtnActive : ""}`}
-                        onClick={() => setTab(key)}
-                    >
-                        {label}
-                    </button>
-                ))}
-            </nav>
 
+            {/* Header */}
+            <div className={s.topBar}>
+                {/* Hamburger — solo visible en móvil */}
+                <button className={s.hamburger} onClick={() => setMenuOpen(true)} aria-label="Abrir menú">
+                    ☰
+                </button>
+                <span className={s.brand}>GoFast</span>
+
+                {/* Nav */}
+                <nav className={s.nav}>
+                    {TABS.map(({ key, label }) => (
+                        <button
+                            key={key}
+                            className={`${s.navBtn} ${tab === key ? s.navBtnActive : ""}`}
+                            onClick={() => setTab(key)}
+                        >
+                            {label}
+                        </button>
+                    ))}
+                </nav>
+
+                <div className={s.topBarRight}>
+
+                    <button className={s.btnLogout} onClick={logout}>Salir</button>
+                </div>
+
+
+            </div>
+
+            <button
+                className={disponible ? s.btnDisponibleActivo : s.btnDisponible}
+                onClick={toggleDisponible}
+                disabled={tienePedidoActivo || loadingDisponible}
+                title={tienePedidoActivo ? "No puedes cambiar disponibilidad con un pedido activo" : ""}
+            >
+                {loadingDisponible
+                    ? "Actualizando..."
+                    : disponible
+                        ? "✅ Conectado"
+                        : "⛔ Desconectado"}
+            </button>
+
+
+            {/* ── INICIO ── */}
             {tab === "inicio" && (
                 <>
-                    <div className={s.section}>
-                        <div className={s.sectionHeader}>
-                            <h3>Disponibilidad</h3>
-                            <button
-                                className={disponible ? s.btnDisponibleActivo : s.btnDisponible}
-                                onClick={toggleDisponible}
-                                disabled={tienePedidoActivo || loadingDisponible}
-                                title={tienePedidoActivo ? "No puedes cambiar disponibilidad con un pedido activo" : ""}
-                            >
-                                {loadingDisponible
-                                    ? "Actualizando..."
-                                    : disponible
-                                        ? "✅ Disponible — click para desconectarse"
-                                        : "⛔ Desconectado — click para conectarse"}
-                            </button>
-                        </div>
-                    </div>
-
+                    {/* Ganancias hoy */}
                     <div className={s.section}>
                         <div className={s.sectionHeader}>
                             <h3>💰 Tus ganancias hoy</h3>
-                            <span style={{ fontSize: 12, color: "#6b7280" }}>{resumenHoy.pedidos} pedidos entregados</span>
+                            <span style={{ fontSize: 12, color: "#6b7280" }}>{resumenHoy.pedidos} entregados</span>
                         </div>
                         <div className={s.metricsGrid}>
-                            <div className={s.metric}>
-                                <div className={s.metricLabel}>Total facturado</div>
-                                <div className={s.metricValue}>${resumenHoy.bruto.toLocaleString("es-CO")}</div>
-                            </div>
-                            <div className={`${s.metric} ${s.metricHighlight}`}>
-                                <div className={s.metricLabel}>Tu ganancia (80%)</div>
-                                <div className={s.metricValue}>${resumenHoy.neto.toLocaleString("es-CO")}</div>
-                            </div>
-                            <div className={s.metric}>
-                                <div className={s.metricLabel}>A pagar a la empresa (20%)</div>
-                                <div className={s.metricValue}>${resumenHoy.comision.toLocaleString("es-CO")}</div>
-                            </div>
+                            <Metric label="Total facturado" value={resumenHoy.bruto} />
+                            <Metric label="Tu ganancia (80%)" value={resumenHoy.neto} highlight />
+                            <Metric label="Empresa (20%)" value={resumenHoy.comision} />
                         </div>
                     </div>
 
+                    {/* Pedido actual */}
                     <div className={s.section}>
                         <div className={s.sectionHeader}>
                             <h3>Pedido actual</h3>
@@ -383,11 +365,9 @@ export default function DeliveryPanel() {
                         {!pedidoActual ? (
                             <div className={s.vacio}>Aún no tienes pedidos asignados. Mantente disponible.</div>
                         ) : (
-                            <div
-                                className={`${s.card} ${s.cardClickable}`}
+                            <div className={`${s.card} ${s.cardClickable}`}
                                 onClick={(e) => { if (!e.target.closest("button")) setDetalle(pedidoActual); }}
-                                title="Click para ver detalle"
-                            >
+                                title="Click para ver detalle">
                                 <div className={s.cardInfo}>
                                     <div className={s.cardTitulo}>
                                         <b>#{pedidoActual.id}</b>
@@ -397,9 +377,7 @@ export default function DeliveryPanel() {
                                     </div>
 
                                     {pedidoActual.motivoIncidencia && (
-                                        <div className={s.incidenciaBox}>
-                                            <b>🆘 Incidencia:</b> {pedidoActual.motivoIncidencia}
-                                        </div>
+                                        <div className={s.incidenciaBox}><b>🆘 Incidencia:</b> {pedidoActual.motivoIncidencia}</div>
                                     )}
 
                                     <div className={s.cardGrid}>
@@ -411,36 +389,24 @@ export default function DeliveryPanel() {
                                         <div>
                                             <div className={s.cardSectionLabel}>🏠 Entrega</div>
                                             <div>{pedidoActual.barrioEntrega} — {pedidoActual.direccionEntrega}</div>
-                                            <div className={s.cardMeta}>
-                                                {pedidoActual.nombreQuienRecibe} · {pedidoActual.telefonoQuienRecibe}
-                                            </div>
+                                            <div className={s.cardMeta}>{pedidoActual.nombreQuienRecibe} · {pedidoActual.telefonoQuienRecibe}</div>
                                         </div>
                                     </div>
 
                                     <div className={s.cardFooterRow}>
-                                        {pedidoActual.clienteId && (
-                                            <span><b>Cliente:</b> {pedidoActual.clienteNombre ?? `#${pedidoActual.clienteId}`}</span>
-                                        )}
+                                        {pedidoActual.clienteId && <span><b>Cliente:</b> {pedidoActual.clienteNombre ?? `#${pedidoActual.clienteId}`}</span>}
                                         <span><b>Costo:</b> ${toNumberMoney(pedidoActual.costoServicio).toLocaleString("es-CO")}</span>
                                     </div>
                                 </div>
 
                                 <div className={s.cardAcciones}>
                                     {btnAvance && (
-                                        <button
-                                            className={s.btnPrimary}
-                                            onClick={() => avanzarEstado(btnAvance.estado)}
-                                            disabled={loadingAvanzar}
-                                        >
+                                        <button className={s.btnPrimary} onClick={() => avanzarEstado(btnAvance.estado)} disabled={loadingAvanzar}>
                                             {loadingAvanzar ? "Procesando..." : btnAvance.label}
                                         </button>
                                     )}
                                     {puedeAyuda && (
-                                        <button
-                                            className={s.btnWarning}
-                                            onClick={() => setOpenIncidencia(true)}
-                                            disabled={loadingAvanzar}
-                                        >
+                                        <button className={s.btnWarning} onClick={() => setOpenIncidencia(true)} disabled={loadingAvanzar}>
                                             🆘 Reportar incidencia
                                         </button>
                                     )}
@@ -451,37 +417,35 @@ export default function DeliveryPanel() {
                 </>
             )}
 
+            {/* ── HISTORIAL ── */}
             {tab === "historial" && (
                 <div className={s.section}>
                     <div className={s.sectionHeader}>
-                        <h3>Historial (entregados)</h3>
+                        <h3>Historial</h3>
                         <button className={s.btn} onClick={cargarHistorial} disabled={loadingHist}>
                             {loadingHist ? "Cargando..." : "Recargar"}
                         </button>
                     </div>
-
                     <div className={s.filtros}>
-                        <span className={s.filtroLabel}>Filtrar por día:</span>
+                        <span className={s.filtroLabel}>Por día:</span>
                         <input type="date" className={s.inputDate} value={diaFiltro} onChange={(e) => setDiaFiltro(e.target.value)} />
-                        <button className={s.btn} onClick={() => setDiaFiltro("")} disabled={!diaFiltro}>Quitar filtro</button>
+                        <button className={s.btn} onClick={() => setDiaFiltro("")} disabled={!diaFiltro}>Quitar</button>
                         <span className={s.contador}>Mostrando: <b>{historialFiltrado.length}</b> / {historial.length}</span>
                     </div>
-
                     <div className={s.lista}>
                         {loadingHist && <div className={s.vacio}>Cargando historial…</div>}
                         {!loadingHist && historialFiltrado.length === 0 && (
-                            <div className={s.vacio}>
-                                {diaFiltro ? "No hay pedidos entregados para ese día." : "Aún no tienes pedidos entregados."}
-                            </div>
+                            <div className={s.vacio}>{diaFiltro ? "No hay pedidos entregados para ese día." : "Aún no tienes pedidos entregados."}</div>
                         )}
                         {historialFiltrado.map((p) => (
                             <div key={p.id} className={`${s.itemCard} ${s.itemCardClickable}`} onClick={() => setDetalle(p)} title="Click para ver detalle">
                                 <div className={s.itemInfo}>
                                     <div className={s.cardTitulo}>
                                         <b>#{p.id}</b>
-                                        <span className={s.badge} style={{ background: "#ecfdf5", color: "#065f46" }}>🟢 ENTREGADO</span>
+                                        <span className={s.badge} style={{ background: "#0f2e1a", color: "#22c55e" }}>🟢 ENTREGADO</span>
                                     </div>
-                                    <div><b>Entrega:</b> {p.barrioEntrega} — {p.direccionEntrega}</div>
+                                    <div><b>Barrio:</b> {p.barrioEntrega}</div>
+                                    <div><b>Direccion:</b>{p.direccionEntrega}</div>
                                     <div><b>Costo:</b> ${toNumberMoney(p.costoServicio).toLocaleString("es-CO")}</div>
                                 </div>
                                 <div className={s.itemMeta}>{p.fechaCreacion && <div>{yyyyMMddOf(p.fechaCreacion)}</div>}</div>
@@ -491,7 +455,10 @@ export default function DeliveryPanel() {
                 </div>
             )}
 
+            {/* ── TARIFAS ── */}
             {tab === "tarifas" && <div className={s.tabContent}><TarifasPanel barrios={barrios} /></div>}
+
+            {/* ── FINANZAS ── */}
             {tab === "finanzas" && (
                 <div className={s.section}>
                     <div className={s.sectionHeader}>
@@ -503,13 +470,13 @@ export default function DeliveryPanel() {
 
                     <div className={s.resumenBox}>
                         <div className={s.resumenTitulo}>
-                            <span>💰 Ganancias (según filtro)</span>
+                            <span>💰 Ganancias</span>
                             <span className={s.contador}>Pedidos: <b>{finResumen.pedidos}</b></span>
                         </div>
                         <div className={s.resumenMetrics}>
                             <Metric label="Total" value={finResumen.total} />
-                            <Metric label="Comisión empresa (20%)" value={finResumen.comisionEmpresa} />
-                            <Metric label="Tu neto (80%)" value={finResumen.netoDelivery} />
+                            <Metric label="Empresa (20%)" value={finResumen.comisionEmpresa} />
+                            <Metric label="Tu neto (80%)" value={finResumen.netoDelivery} highlight />
                         </div>
                     </div>
 
@@ -532,28 +499,24 @@ export default function DeliveryPanel() {
 
                     <div className={s.lista}>
                         {loadingHist && <div className={s.vacio}>Cargando…</div>}
-                        {!loadingHist && finanzasFiltrado.length === 0 && (
-                            <div className={s.vacio}>No hay pedidos entregados para el filtro seleccionado.</div>
-                        )}
+                        {!loadingHist && finanzasFiltrado.length === 0 && <div className={s.vacio}>No hay pedidos para el filtro seleccionado.</div>}
                         {finanzasFiltrado.map((p) => (
                             <div key={p.id} className={`${s.itemCard} ${s.itemCardClickable}`} onClick={() => setDetalle(p)} title="Click para ver detalle">
                                 <div className={s.itemInfo}>
                                     <div className={s.itemTitulo}>
                                         <b>#{p.id}</b>
-                                        <span className={s.badge} style={{ background: "#ecfdf5", color: "#065f46" }}>🟢 ENTREGADO</span>
+                                        <span className={s.badge} style={{ background: "#0f2e1a", color: "#22c55e" }}>🟢 ENTREGADO</span>
                                     </div>
-                                    <div><b>Envía:</b> {p.clienteNombre ?? `#${p.clienteId}`} — {p.telefonoContactoRecogida}</div>
-                                    <div><b>Recoge:</b> {p.barrioRecogida} — {p.direccionRecogida}</div>
+                                    <div><b>Cliente:</b> {p.clienteNombre ?? `#${p.clienteId}`} — {p.telefonoContactoRecogida}</div>
+                                    <div><b>Recogida:</b> {p.barrioRecogida} — {p.direccionRecogida}</div>
                                     <div><b>Entrega:</b> {p.barrioEntrega} — {p.direccionEntrega}</div>
                                     <div><b>Recibe:</b> {p.nombreQuienRecibe} — {p.telefonoQuienRecibe}</div>
                                 </div>
                                 <div className={s.itemFinanzas}>
                                     <div className={s.itemTotal}>{fmt(toNumberMoney(p.costoServicio))}</div>
                                     <div className={s.itemSub}>Empresa: {fmt(toNumberMoney(p.costoServicio) * 0.20)}</div>
-                                    <div className={s.itemSub}>Domi: {fmt(toNumberMoney(p.costoServicio) * 0.80)}</div>
-                                    {p.fechaCreacion && (
-                                        <div className={s.itemFecha}>{yyyyMMddOf(p.fechaCreacion)}</div>
-                                    )}
+                                    <div className={s.itemSub}>Tú: {fmt(toNumberMoney(p.costoServicio) * 0.80)}</div>
+
                                 </div>
                             </div>
                         ))}
@@ -561,12 +524,10 @@ export default function DeliveryPanel() {
                 </div>
             )}
 
+            {/* Modales */}
             <PedidoDetalleModal
-                open={!!detalle}
-                pedido={detalle}
-                onClose={() => setDetalle(null)}
-                showCliente={true}
-                showDomi={false}
+                open={!!detalle} pedido={detalle} onClose={() => setDetalle(null)}
+                showCliente={true} showDomi={false}
                 actions={detalle && (
                     <>
                         {detalle.estado === "ASIGNADO" && (
@@ -588,9 +549,38 @@ export default function DeliveryPanel() {
                     </>
                 )}
             />
-            <IncidenciaModal open={openIncidencia} onConfirm={confirmarAyuda} onCancel={() => setOpenIncidencia(false)} loading={loadingAyuda} />
 
+            <IncidenciaModal open={openIncidencia} onConfirm={confirmarAyuda} onCancel={() => setOpenIncidencia(false)} loading={loadingAyuda} />
             {toast && <Toast error={toast} onClose={() => setToast(null)} />}
+
+            {/* ── Menú móvil ── */}
+            {menuOpen && (
+                <div className={s.mobileMenu}>
+                    <div className={s.mobileMenuOverlay} onClick={() => setMenuOpen(false)} />
+                    <div className={s.mobileMenuPanel}>
+                        <div className={s.mobileMenuHeader}>
+                            <span className={s.mobileMenuBrand}>GoFast</span>
+                            <button className={s.mobileMenuClose} onClick={() => setMenuOpen(false)}>✕</button>
+                        </div>
+
+                        {TABS.map(({ key, label }) => (
+                            <button
+                                key={key}
+                                className={`${s.mobileNavBtn} ${tab === key ? s.mobileNavBtnActive : ""}`}
+                                onClick={() => selectTab(key)}
+                            >
+                                {label}
+                            </button>
+                        ))}
+
+                        <div className={s.mobileMenuFooter}>
+                            <button className={s.btnLogoutMobile} onClick={logout} style={{ width: "100%" }}>
+                                Cerrar sesión
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

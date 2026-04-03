@@ -1,32 +1,56 @@
 .container {
     max-width: 900px;
-    margin: 20px auto;
-    font-family: sans-serif;
-    padding: 0 12px;
+    margin: 0 auto;
+    padding: 12px;
     display: flex;
     flex-direction: column;
     gap: 12px;
+    box-sizing: border-box;
+    min-height: 100vh;
 }
+
+/* ── Header ────────────────────────────────────────────────────────────────── */
 
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    background: #2a2a2d;
+    border: 1px solid #3f3f44;
+    border-radius: 12px;
+    padding: 10px 14px;
+    position: sticky;
+    top: 8px;
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .headerLeft {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     flex-wrap: wrap;
+    flex: 1;
+    min-width: 0;
+}
+
+.brand {
+    font-size: 18px;
+    font-weight: 800;
+    color: #f5c518;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
 }
 
 .header h2 {
     margin: 0;
-    font-size: 20px;
-    color: #f0f0f0;
+    font-size: 18px;
+    color: #f5c518;
     font-weight: 800;
     letter-spacing: -0.02em;
+    white-space: nowrap;
 }
 
 .btnLogout {
@@ -39,6 +63,8 @@
     font-size: 13px;
     font-weight: 500;
     transition: background 0.15s, border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .btnLogout:hover {
@@ -47,18 +73,40 @@
     color: #ef4444;
 }
 
-.nav {
-    display: flex;
-    gap: 6px;
-    padding: 6px;
+.topBar {
     border: 1px solid #3f3f44;
     border-radius: 12px;
     background: #2a2a2d;
-    flex-wrap: wrap;
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    position: sticky;
+    top: 8px;
+    z-index: 200;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+}
+
+/* ── Nav ───────────────────────────────────────────────────────────────────── */
+
+.nav {
+    display: flex;
+    gap: 4px;
+    flex: 1;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav::-webkit-scrollbar {
+    display: none;
 }
 
 .navBtn {
-    padding: 10px 16px;
+    padding: 9px 14px;
     border-radius: 8px;
     border: 1px solid transparent;
     background: transparent;
@@ -67,6 +115,8 @@
     font-size: 13px;
     font-weight: 500;
     transition: background 0.15s, color 0.15s, border-color 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .navBtn:hover:not(.navBtnActive) {
@@ -81,6 +131,14 @@
     border-color: #f5c518;
     font-weight: 700;
 }
+
+.topBarRight {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ── Section ───────────────────────────────────────────────────────────────── */
 
 .section {
     border: 1px solid #3f3f44;
@@ -107,6 +165,8 @@
     font-weight: 700;
 }
 
+/* ── Badge ─────────────────────────────────────────────────────────────────── */
+
 .badge {
     padding: 4px 10px;
     border-radius: 999px;
@@ -115,6 +175,8 @@
     border: 1px solid #3f3f44;
     white-space: nowrap;
 }
+
+/* ── Buttons ───────────────────────────────────────────────────────────────── */
 
 .btn {
     padding: 8px 14px;
@@ -126,6 +188,7 @@
     font-weight: 500;
     color: #f0f0f0;
     transition: background 0.15s;
+    white-space: nowrap;
 }
 
 .btn:hover:not(:disabled) {
@@ -137,8 +200,28 @@
     cursor: not-allowed;
 }
 
-.btnPrimary {
+.btnLogout {
     padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid #3f3f44;
+    background: #2a2a2d;
+    color: #f0f0f0;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.btnLogout:hover {
+    background: #3d1a1a;
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+.btnPrimary {
+    padding: 10px 16px;
     border-radius: 8px;
     border: none;
     background: #f5c518;
@@ -147,6 +230,7 @@
     font-size: 13px;
     font-weight: 700;
     transition: background 0.15s;
+    white-space: nowrap;
 }
 
 .btnPrimary:hover:not(:disabled) {
@@ -159,7 +243,7 @@
 }
 
 .btnWarning {
-    padding: 8px 14px;
+    padding: 10px 16px;
     border-radius: 8px;
     border: 1px solid #b45309;
     background: transparent;
@@ -168,6 +252,7 @@
     font-size: 13px;
     font-weight: 500;
     transition: background 0.15s;
+    white-space: nowrap;
 }
 
 .btnWarning:hover:not(:disabled) {
@@ -179,21 +264,154 @@
     cursor: not-allowed;
 }
 
-.btnDisponible {
-    padding: 10px 16px;
-    border-radius: 10px;
+/* ── Hamburger button — solo visible en móvil ──────────────────────────────── */
+
+.hamburger {
+    display: none;
+    background: none;
     border: 1px solid #3f3f44;
-    background: #333336;
-    color: #d1d5db;
+    border-radius: 8px;
+    padding: 7px 10px;
     cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-    transition: background 0.15s, border-color 0.15s;
+    color: #f0f0f0;
+    font-size: 18px;
+    line-height: 1;
+    transition: background 0.15s;
+    flex-shrink: 0;
+}
+
+.hamburger:hover {
+    background: #333336;
+}
+
+/* ── Menú desplegable móvil ────────────────────────────────────────────────── */
+
+.mobileMenu {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+}
+
+.mobileMenuOverlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.mobileMenuPanel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 260px;
+    background: #2a2a2d;
+    border-right: 1px solid #3f3f44;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 12px;
+    gap: 4px;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
+    animation: slideIn 0.2s ease;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(-100%);
+    }
+
+    to {
+        transform: translateX(0);
+    }
+}
+
+.mobileMenuHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #3f3f44;
+    margin-bottom: 8px;
+}
+
+.mobileMenuBrand {
+    font-size: 18px;
+    font-weight: 800;
+    color: #f5c518;
+    margin: 0;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.mobileMenuClose {
+    background: none;
+    border: none;
+    color: #9ca3af;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    line-height: 1;
+    margin-left: auto;
+}
+
+.mobileMenuClose:hover {
+    background: #333336;
+    color: #f0f0f0;
+}
+
+.mobileNavBtn {
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #9ca3af;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+    transition: background 0.15s, color 0.15s;
     width: 100%;
 }
 
+.mobileNavBtn:hover:not(.mobileNavBtnActive) {
+    background: #333336;
+    color: #f0f0f0;
+}
+
+.mobileNavBtnActive {
+    background: #f5c518;
+    color: #0d0d0d;
+    font-weight: 700;
+    border-color: #f5c518;
+}
+
+.mobileMenuFooter {
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid #3f3f44;
+}
+
+.btnDisponible {
+    display: inline-flex;
+    width: fit-content;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid #3f3f44;
+    background: #3d1a1a;
+    border-color: #ef4444;
+    color: #ef4444;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 0.15s, border-color 0.15s;
+    text-align: center;
+}
+
+
 .btnDisponible:hover:not(:disabled) {
-    background: #3f3f44;
+    background: #6e1f1f;
 }
 
 .btnDisponible:disabled {
@@ -202,16 +420,19 @@
 }
 
 .btnDisponibleActivo {
-    padding: 10px 16px;
-    border-radius: 10px;
+    display: inline-flex;
+    width: fit-content;
+    padding: 8px 14px;
+    border-radius: 8px;
     border: 1px solid #22c55e;
     background: #0f2e1a;
+    border-color: #22c55e;
     color: #22c55e;
     cursor: pointer;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
     transition: background 0.15s, border-color 0.15s;
-    width: 100%;
+    text-align: center;
 }
 
 .btnDisponibleActivo:hover:not(:disabled) {
@@ -223,14 +444,16 @@
     cursor: not-allowed;
 }
 
+/* ── Card pedido actual ────────────────────────────────────────────────────── */
+
 .card {
     border: 1px solid #3f3f44;
     border-radius: 10px;
-    padding: 12px;
+    padding: 14px;
     background: #333336;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
 }
 
 .cardClickable {
@@ -246,7 +469,7 @@
 .cardInfo {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
     font-size: 13px;
     color: #d1d5db;
 }
@@ -262,14 +485,8 @@
 .cardGrid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    gap: 12px;
     margin-top: 4px;
-}
-
-@media (max-width: 540px) {
-    .cardGrid {
-        grid-template-columns: 1fr;
-    }
 }
 
 .cardSectionLabel {
@@ -292,9 +509,8 @@
     gap: 16px;
     flex-wrap: wrap;
     font-size: 13px;
-    padding-top: 4px;
+    padding-top: 8px;
     border-top: 1px solid #3f3f44;
-    margin-top: 4px;
     color: #d1d5db;
 }
 
@@ -303,6 +519,13 @@
     gap: 8px;
     flex-wrap: wrap;
 }
+
+.cardAcciones button {
+    flex: 1;
+    min-width: 140px;
+}
+
+/* ── Incidencia ────────────────────────────────────────────────────────────── */
 
 .incidenciaBox {
     padding: 8px 12px;
@@ -313,6 +536,8 @@
     font-size: 13px;
     line-height: 1.5;
 }
+
+/* ── Lista items ───────────────────────────────────────────────────────────── */
 
 .lista {
     display: flex;
@@ -329,32 +554,7 @@
     gap: 12px;
     font-size: 13px;
     background: #333336;
-}
-
-.itemFinanzas {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 3px;
-    flex-shrink: 0;
-    min-width: 120px;
-}
-
-.itemTotal {
-    font-size: 15px;
-    font-weight: 800;
-    color: #f5c518;
-}
-
-.itemSub {
-    font-size: 12px;
-    color: #9ca3af;
-}
-
-.itemFecha {
-    font-size: 11px;
-    color: #6b7280;
-    margin-top: 4px;
+    flex-wrap: wrap;
 }
 
 .itemCardClickable {
@@ -373,6 +573,43 @@
     gap: 4px;
     flex: 1;
     color: #d1d5db;
+    min-width: 0;
+}
+
+.itemTitulo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    color: #f0f0f0;
+    margin-bottom: 2px;
+}
+
+.itemFinanzas {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    flex-shrink: 0;
+    min-width: 110px;
+}
+
+.itemTotal {
+    font-size: 15px;
+    font-weight: 800;
+    color: #f5c518;
+}
+
+.itemSub {
+    font-size: 15px;
+    color: #9ca3af;
+}
+
+.itemFecha {
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 4px;
 }
 
 .itemMeta {
@@ -380,7 +617,10 @@
     color: #9ca3af;
     text-align: right;
     white-space: nowrap;
+    flex-shrink: 0;
 }
+
+/* ── Filtros ───────────────────────────────────────────────────────────────── */
 
 .filtros {
     display: flex;
@@ -399,11 +639,20 @@
     font-size: 13px;
     font-weight: 600;
     color: #d1d5db;
+    white-space: nowrap;
 }
 
 .filtroLabelLight {
     font-size: 12px;
     color: #9ca3af;
+    white-space: nowrap;
+}
+
+.contador {
+    font-size: 12px;
+    color: #9ca3af;
+    white-space: nowrap;
+
 }
 
 .inputDate {
@@ -415,21 +664,25 @@
     background: #333336;
     outline: none;
     color-scheme: dark;
+    box-sizing: border-box;
 }
 
 .inputDate:focus {
     border-color: #f5c518;
 }
 
-.contador {
-    font-size: 12px;
-    color: #9ca3af;
-}
+/* ── Vacio ─────────────────────────────────────────────────────────────────── */
 
 .vacio {
     font-size: 13px;
     color: #9ca3af;
+    padding: 12px;
+    text-align: center;
+    border: 1px dashed #3f3f44;
+    border-radius: 10px;
 }
+
+/* ── Resumen finanzas ──────────────────────────────────────────────────────── */
 
 .resumenBox {
     border: 1px solid #3f3f44;
@@ -458,11 +711,47 @@
     gap: 10px;
 }
 
-@media (max-width: 540px) {
-    .resumenMetrics {
-        grid-template-columns: 1fr;
-    }
+/* ── Métricas ──────────────────────────────────────────────────────────────── */
+
+.metricsGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
 }
+
+.metric {
+    border: 1px solid #3f3f44;
+    border-radius: 10px;
+    padding: 12px;
+    background: #333336;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+}
+
+.metricHighlight {
+    border-color: #f5c518;
+    background: #2a2710;
+}
+
+.metricLabel {
+    font-size: 11px;
+    color: #9ca3af;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.metricValue {
+    font-size: 18px;
+    font-weight: 800;
+    color: #f0f0f0;
+}
+
+/* ── Modal ─────────────────────────────────────────────────────────────────── */
 
 .backdrop {
     position: fixed;
@@ -471,19 +760,19 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 12px;
+    padding: 16px;
     z-index: 9999;
 }
 
 .modal {
     width: min(480px, 95vw);
     background: #2a2a2d;
-    border-radius: 12px;
-    padding: 16px;
+    border-radius: 14px;
+    padding: 20px;
     border: 1px solid #3f3f44;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
     max-height: 90vh;
     overflow-y: auto;
 }
@@ -499,6 +788,7 @@
     margin: 0;
     font-size: 15px;
     color: #f0f0f0;
+    font-weight: 700;
 }
 
 .modalBody {
@@ -511,17 +801,19 @@
     display: flex;
     justify-content: flex-end;
     gap: 8px;
+    flex-wrap: wrap;
 }
 
 .btnClose {
     background: none;
     border: none;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 18px;
     color: #9ca3af;
     padding: 4px 6px;
     border-radius: 6px;
     transition: background 0.15s;
+    line-height: 1;
 }
 
 .btnClose:hover {
@@ -542,6 +834,7 @@
     box-sizing: border-box;
     transition: border-color 0.15s;
     font-family: sans-serif;
+    min-height: 100px;
 }
 
 .textarea:focus {
@@ -559,50 +852,163 @@
 .helper {
     font-size: 12px;
     color: #ef4444;
-    font-weight: 700;
-}
-
-.metricsGrid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-}
-
-@media (max-width: 480px) {
-    .metricsGrid {
-        grid-template-columns: 1fr;
-    }
-}
-
-.metric {
-    border: 1px solid #3f3f44;
-    border-radius: 10px;
-    padding: 12px;
-    background: #333336;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.metricHighlight {
-    border-color: #f5c518;
-    background: #2a2710;
-}
-
-.metricLabel {
-    font-size: 11px;
-    color: #9ca3af;
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-}
-
-.metricValue {
-    font-size: 20px;
-    font-weight: 800;
-    color: #f0f0f0;
 }
 
 .tabContent {
     width: 100%;
+}
+
+.btnLogoutMobile {
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid #3f3f44;
+    background: #2a2a2d;
+    color: #f0f0f0;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.btnLogoutMobile:hover {
+    background: #3d1a1a;
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+/* ── Responsive ────────────────────────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+    .container {
+        padding: 8px;
+        gap: 8px;
+    }
+
+    .header {
+        padding: 8px 10px;
+        top: 4px;
+        border-radius: 10px;
+    }
+
+    .header h2 {
+        font-size: 16px;
+    }
+
+    /* Nav scrollable horizontal en móvil */
+    .nav {
+        padding: 4px;
+        gap: 3px;
+    }
+
+    .navBtn {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+
+
+
+    /* Card pedido — acciones en columna */
+    .cardGrid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .cardAcciones {
+        flex-direction: column;
+    }
+
+    .cardAcciones button {
+        min-width: unset;
+        width: 100%;
+    }
+
+    /* Items finanzas — precio debajo */
+    .itemFinanzas {
+        align-items: flex-start;
+        min-width: unset;
+        width: 100%;
+        border-top: 1px solid #3f3f44;
+        padding-top: 8px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    /* Filtros en columna */
+    .filtros {
+        gap: 6px;
+    }
+
+    .inputDate {
+        width: 100%;
+    }
+
+
+}
+
+@media (max-width: 600px) {
+    .metricsGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .resumenMetrics {
+        grid-template-columns: 1fr;
+    }
+
+    .badge {
+        font-size: 11px;
+        padding: 3px 8px;
+    }
+}
+
+@media (max-width: 900px) {
+    .nav {
+        display: none;
+    }
+
+    .btnDisponible {
+        font-size: 9px;
+        padding: 8px 14px;
+    }
+
+    .btnDisponibleActivo {
+        font-size: 9px;
+        padding: 8px 14px;
+    }
+
+    .btnLogout {
+        display: none;
+    }
+
+    .hamburger {
+        display: flex;
+    }
+
+    .mobileMenu {
+        display: block;
+    }
+
+    .container {
+        padding: 8px;
+        gap: 8px;
+    }
+
+    .topBar {
+        padding: 8px 12px;
+        top: 4px;
+        border-radius: 10px;
+    }
+
+    .brand {
+        font-size: 16px;
+    }
+}
+
+@media (min-width: 901px) {
+    .mobileMenu {
+        display: none !important;
+    }
 }

@@ -1,11 +1,59 @@
 .container {
-    max-width: 900px;
-    margin: 20px auto;
-    font-family: sans-serif;
-    padding: 0 12px;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 12px;
     display: flex;
     flex-direction: column;
     gap: 12px;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+.hamburger {
+    display: none;
+    background: none;
+    border: 1px solid #3f3f44;
+    border-radius: 8px;
+    padding: 7px 10px;
+    cursor: pointer;
+    color: #f0f0f0;
+    font-size: 18px;
+    line-height: 1;
+    transition: background 0.15s;
+    flex-shrink: 0;
+}
+
+.hamburger:hover {
+    background: #333336;
+}
+
+.topBar {
+    border: 1px solid #3f3f44;
+    border-radius: 12px;
+    background: #2a2a2d;
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    position: sticky;
+    top: 8px;
+    z-index: 200;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+}
+
+.brand {
+    font-size: 18px;
+    font-weight: 800;
+    color: #f5c518;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+}
+
+.topBarRight {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .header {
@@ -39,6 +87,8 @@
     font-size: 13px;
     font-weight: 500;
     transition: background 0.15s, border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .btnLogout:hover {
@@ -47,18 +97,43 @@
     color: #ef4444;
 }
 
+.btnLogoutMobile {
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid #3f3f44;
+    background: #2a2a2d;
+    color: #f0f0f0;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.btnLogoutMobile:hover {
+    background: #3d1a1a;
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
 .nav {
     display: flex;
-    gap: 6px;
-    padding: 6px;
-    border: 1px solid #3f3f44;
-    border-radius: 12px;
-    background: #2a2a2d;
-    flex-wrap: wrap;
+    gap: 4px;
+    flex: 1;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav::-webkit-scrollbar {
+    display: none;
 }
 
 .navBtn {
-    padding: 10px 16px;
+    padding: 8px 14px;
     border-radius: 8px;
     border: 1px solid transparent;
     background: transparent;
@@ -67,6 +142,8 @@
     font-size: 13px;
     font-weight: 500;
     transition: background 0.15s, color 0.15s, border-color 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .navBtn:hover:not(.navBtnActive) {
@@ -92,6 +169,115 @@
     gap: 12px;
 }
 
+/* ── Menú desplegable móvil ────────────────────────────────────────────────── */
+
+.mobileMenu {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+}
+
+.mobileMenuOverlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.mobileMenuPanel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 260px;
+    background: #2a2a2d;
+    border-right: 1px solid #3f3f44;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 12px;
+    gap: 4px;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
+    animation: slideIn 0.2s ease;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(-100%);
+    }
+
+    to {
+        transform: translateX(0);
+    }
+}
+
+.mobileMenuHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #3f3f44;
+    margin-bottom: 8px;
+}
+
+.mobileMenuBrand {
+    font-size: 18px;
+    font-weight: 800;
+    color: #f5c518;
+    margin: 0;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.mobileMenuClose {
+    background: none;
+    border: none;
+    color: #9ca3af;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    line-height: 1;
+    margin-left: auto;
+}
+
+.mobileMenuClose:hover {
+    background: #333336;
+    color: #f0f0f0;
+}
+
+.mobileNavBtn {
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #9ca3af;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+    transition: background 0.15s, color 0.15s;
+    width: 100%;
+}
+
+.mobileNavBtn:hover:not(.mobileNavBtnActive) {
+    background: #333336;
+    color: #f0f0f0;
+}
+
+.mobileNavBtnActive {
+    background: #f5c518;
+    color: #0d0d0d;
+    font-weight: 700;
+    border-color: #f5c518;
+}
+
+.mobileMenuFooter {
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid #3f3f44;
+}
+
 .sectionHeader {
     display: flex;
     justify-content: space-between;
@@ -106,6 +292,8 @@
     color: #f0f0f0;
     font-weight: 700;
 }
+
+
 
 .badge {
     padding: 4px 10px;
@@ -126,6 +314,7 @@
     font-weight: 500;
     color: #f0f0f0;
     transition: background 0.15s;
+    white-space: nowrap;
 }
 
 .btn:hover:not(:disabled) {
@@ -138,6 +327,8 @@
 }
 
 .btnPrimary {
+    display: inline-flex;
+    width: fit-content;
     padding: 8px 14px;
     border-radius: 8px;
     border: none;
@@ -355,6 +546,7 @@
     font-size: 13px;
     font-weight: 600;
     color: #d1d5db;
+    white-space: nowrap;
 }
 
 .filtroLabelLight {
@@ -371,6 +563,7 @@
     background: #333336;
     outline: none;
     color-scheme: dark;
+    box-sizing: border-box;
 }
 
 .inputDate:focus {
@@ -380,6 +573,7 @@
 .contador {
     font-size: 12px;
     color: #9ca3af;
+    white-space: nowrap;
 }
 
 .vacio {
@@ -560,6 +754,8 @@
 }
 
 .btnSolicitar {
+    display: inline-flex;
+    width: fit-content;
     padding: 12px 20px;
     border-radius: 10px;
     border: none;
@@ -569,7 +765,6 @@
     font-size: 14px;
     font-weight: 700;
     transition: background 0.15s;
-    width: 100%;
 }
 
 .btnSolicitar:hover {
@@ -733,6 +928,19 @@
     flex-wrap: wrap;
 }
 
+@media (max-width: 600px) {
+    .dirCard {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .dirAcciones {
+        align-self: stretch;
+        display: flex;
+        justify-content: flex-end;
+    }
+}
+
 .dirInfo {
     display: flex;
     flex-direction: column;
@@ -744,6 +952,8 @@
 
 .dirAcciones {
     display: flex;
+    justify-content: center;
+    align-items: center;
     gap: 8px;
     flex-shrink: 0;
 }
@@ -779,4 +989,53 @@
     border: 1px solid #ef4444;
     color: #fca5a5;
     font-size: 13px;
+}
+
+@media (max-width: 900px) {
+    .nav {
+        display: none;
+    }
+
+    .btnLogout {
+        display: none;
+    }
+
+    .hamburger {
+        display: flex;
+    }
+
+    .mobileMenu {
+        display: block;
+    }
+
+    .container {
+        padding: 8px;
+        gap: 8px;
+    }
+
+    .topBar {
+        padding: 8px 12px;
+        top: 4px;
+        border-radius: 10px;
+    }
+
+    .brand {
+        font-size: 16px;
+    }
+}
+
+@media (min-width: 901px) {
+    .mobileMenu {
+        display: none !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .filtros {
+        gap: 6px;
+    }
+
+    .inputDate {
+        width: 100%;
+    }
 }

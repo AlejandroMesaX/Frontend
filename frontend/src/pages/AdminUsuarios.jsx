@@ -19,43 +19,32 @@ function ActivoBadge({ activo }) {
 function RolBadge({ rol }) {
     const cfg = {
         ADMIN: { bg: "#111827", color: "#fff", text: "👑 ADMIN" },
-        DELIVERY: { bg: "#eff6ff", color: "#1d4ed8", text: "🚴 DELIVERY" },
-        CLIENTE: { bg: "#f3f4f6", color: "#374151", text: "🧑‍💼 CLIENTE" },
-    }[rol] || { bg: "#f3f4f6", color: "#374151", text: rol || "—" };
-
-    return (
-        <span className={s.badge} style={{ background: cfg.bg, color: cfg.color }}>
-            {cfg.text}
-        </span>
-    );
+        DELIVERY: { bg: "#1a1f2e", color: "#93c5fd", text: "🚴 DELIVERY" },
+        CLIENT: { bg: "#2a2a2d", color: "#d1d5db", text: "🧑 CLIENT" },
+    }[rol] || { bg: "#2a2a2d", color: "#d1d5db", text: rol || "—" };
+    return <span className={s.badge} style={{ background: cfg.bg, color: cfg.color }}>{cfg.text}</span>;
 }
-
 
 function PasswordStrength({ password }) {
     const checks = [
-        { label: "Mínimo 6 caracteres", ok: password.length >= 6 },
-        { label: "Letra mayúscula", ok: /[A-Z]/.test(password) },
-        { label: "Letra minúscula", ok: /[a-z]/.test(password) },
+        { label: "6+ caracteres", ok: password.length >= 6 },
+        { label: "Mayúscula", ok: /[A-Z]/.test(password) },
+        { label: "Minúscula", ok: /[a-z]/.test(password) },
         { label: "Número", ok: /\d/.test(password) },
-        { label: "Carácter especial", ok: /[^a-zA-Z\d]/.test(password) },
+        { label: "Especial", ok: /[^a-zA-Z\d]/.test(password) },
     ];
     const passed = checks.filter((c) => c.ok).length;
-    const color = passed <= 2 ? "#ef4444" : passed <= 3 ? "#f59e0b" : "#16a34a";
-
+    const color = passed <= 2 ? "#ef4444" : passed <= 3 ? "#f59e0b" : "#22c55e";
     return (
         <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 3 }}>
             <div style={{ display: "flex", gap: 4 }}>
                 {checks.map((_, i) => (
-                    <div key={i} style={{
-                        flex: 1, height: 4, borderRadius: 2,
-                        background: i < passed ? color : "#e5e7eb",
-                        transition: "background 0.2s"
-                    }} />
+                    <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: i < passed ? color : "#3f3f44", transition: "background 0.2s" }} />
                 ))}
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 10px", marginTop: 2 }}>
                 {checks.map((c) => (
-                    <span key={c.label} style={{ fontSize: 11, color: c.ok ? "#16a34a" : "#9ca3af" }}>
+                    <span key={c.label} style={{ fontSize: 11, color: c.ok ? "#22c55e" : "#9ca3af" }}>
                         {c.ok ? "✓" : "○"} {c.label}
                     </span>
                 ))}
@@ -71,9 +60,7 @@ function ConfirmModal({ open, mensaje, onConfirm, onCancel, loading }) {
             <div className={s.confirmModal}>
                 <p>{mensaje}</p>
                 <div className={s.confirmFooter}>
-                    <button className={s.btn} onClick={onCancel} disabled={loading}>
-                        Cancelar
-                    </button>
+                    <button className={s.btn} onClick={onCancel} disabled={loading}>Cancelar</button>
                     <button className={s.btnDanger} onClick={onConfirm} disabled={loading}>
                         {loading ? "Procesando..." : "Confirmar"}
                     </button>
@@ -108,9 +95,7 @@ export default function AdminUsuarios() {
             setUsuarios(Array.isArray(data) ? data : []);
         } catch {
             setToast(errorFronted("No se pudo conectar con el servidor."));
-        } finally {
-            setLoading(false);
-        }
+        } finally { setLoading(false); }
     }
 
     useEffect(() => { cargarUsuarios(); }, []);
@@ -121,9 +106,7 @@ export default function AdminUsuarios() {
             setUsuarios((prev) => {
                 const idx = prev.findIndex((u) => u.id === usuario.id);
                 if (idx === -1) return [usuario, ...prev];
-                const copy = [...prev];
-                copy[idx] = { ...copy[idx], ...usuario };
-                return copy;
+                const copy = [...prev]; copy[idx] = { ...copy[idx], ...usuario }; return copy;
             });
         }, []),
     });
@@ -131,16 +114,10 @@ export default function AdminUsuarios() {
     const filtrados = useMemo(() => {
         const qq = q.trim().toLowerCase();
         return usuarios.filter((u) => {
-            const matchQ =
-                !qq ||
-                String(u.nombre ?? "").toLowerCase().includes(qq) ||
-                String(u.email ?? "").toLowerCase().includes(qq);
+            const matchQ = !qq || String(u.nombre ?? "").toLowerCase().includes(qq) || String(u.email ?? "").toLowerCase().includes(qq);
             const matchRol = !rol || String(u.rol) === rol;
             const isActivo = u.activo !== false;
-            const matchEstado =
-                !estado ||
-                (estado === "ACTIVO" && isActivo) ||
-                (estado === "INACTIVO" && !isActivo);
+            const matchEstado = !estado || (estado === "ACTIVO" && isActivo) || (estado === "INACTIVO" && !isActivo);
             return matchQ && matchRol && matchEstado;
         });
     }, [usuarios, q, rol, estado]);
@@ -149,146 +126,67 @@ export default function AdminUsuarios() {
 
     const errors = useMemo(() => {
         const e = {};
-
-        if (!form.nombre.trim()) {
-            e.nombre = "El nombre es obligatorio.";
-        }
-
-        if (!form.email.trim()) {
-            e.email = "El email es obligatorio.";
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
-            e.email = "Formato de email no válido.";
-        }
-
+        if (!form.nombre.trim()) e.nombre = "El nombre es obligatorio.";
+        if (!form.email.trim()) e.email = "El email es obligatorio.";
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) e.email = "Formato de email no válido.";
         if (!editing) {
-            if (!form.password.trim()) {
-                e.password = "La contraseña es obligatoria al crear.";
-            } else if (!passwordRegex.test(form.password)) {
-                e.password = "Mínimo 6 caracteres con mayúscula, minúscula, número y carácter especial.";
-            }
-        } else if (form.password.trim()) {
-            if (!passwordRegex.test(form.password)) {
-                e.password = "Mínimo 6 caracteres con mayúscula, minúscula, número y carácter especial.";
-            }
+            if (!form.password.trim()) e.password = "La contraseña es obligatoria al crear.";
+            else if (!passwordRegex.test(form.password)) e.password = "Mínimo 6 caracteres con mayúscula, minúscula, número y carácter especial.";
+        } else if (form.password.trim() && !passwordRegex.test(form.password)) {
+            e.password = "Mínimo 6 caracteres con mayúscula, minúscula, número y carácter especial.";
         }
-
         if (!form.rol) e.rol = "El rol es obligatorio.";
         return e;
     }, [form, editing]);
 
-    const canSubmit = Object.keys(errors).length === 0;
-
     function abrirCrear() {
         setEditing(null);
         setForm({ nombre: "", email: "", password: "", rol: "CLIENT", activo: true });
-        setTouched({});
-        setOpen(true);
+        setTouched({}); setOpen(true);
     }
 
     function abrirEditar(u) {
         setEditing(u);
-        setForm({
-            nombre: u.nombre ?? "",
-            email: u.email ?? "",
-            password: "",
-            rol: u.rol ?? "CLIENT",
-            activo: u.activo ?? true,
-        });
-        setTouched({});
-        setOpen(true);
+        setForm({ nombre: u.nombre ?? "", email: u.email ?? "", password: "", rol: u.rol ?? "CLIENT", activo: u.activo ?? true });
+        setTouched({}); setOpen(true);
     }
 
     async function guardar() {
         setTouched({ nombre: true, email: true, rol: true, password: true });
-        if (!canSubmit) return;
-
-        setLoadingGuardar(true);
-        setToast(null);
-
+        if (Object.keys(errors).length > 0) return;
+        setLoadingGuardar(true); setToast(null);
         try {
             const url = editing ? `/api/admin/usuarios/${editing.id}` : "/api/admin/usuarios";
             const method = editing ? "PATCH" : "POST";
             const body = editing
-                ? {
-                    nombre: form.nombre?.trim() || null,
-                    email: form.email.trim(),
-                    rol: form.rol,
-                    activo: !!form.activo,
-                    ...(form.password ? { password: form.password } : {}),
-                }
-                : {
-                    nombre: form.nombre?.trim() || null,
-                    email: form.email.trim(),
-                    password: form.password,
-                    rol: form.rol,
-                };
-
-            const res = await authFetch(url, {
-                method,
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body),
-            });
-
-            if (!res.ok) {
-                const error = await parseBackendError(res);
-                setToast(error);
-                return;
-            }
-
+                ? { nombre: form.nombre?.trim() || null, email: form.email.trim(), rol: form.rol, activo: !!form.activo, ...(form.password ? { password: form.password } : {}) }
+                : { nombre: form.nombre?.trim() || null, email: form.email.trim(), password: form.password, rol: form.rol };
+            const res = await authFetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+            if (!res.ok) { setToast(await parseBackendError(res)); return; }
             const resultado = await res.json().catch(() => null);
-
-            if (editing) {
-                setUsuarios((prev) =>
-                    resultado ? prev.map((x) => x.id === resultado.id ? resultado : x) : prev
-                );
-            } else {
-                if (resultado) setUsuarios((prev) => [resultado, ...prev]);
-                else await cargarUsuarios();
-            }
-
+            if (editing) setUsuarios((prev) => resultado ? prev.map((x) => x.id === resultado.id ? resultado : x) : prev);
+            else { if (resultado) setUsuarios((prev) => [resultado, ...prev]); else await cargarUsuarios(); }
             setOpen(false);
-
-        } catch {
-            setToast(errorFronted("No se pudo conectar con el servidor."));
-        } finally {
-            setLoadingGuardar(false);
-        }
+        } catch { setToast(errorFronted("No se pudo conectar con el servidor.")); }
+        finally { setLoadingGuardar(false); }
     }
 
     function pedirConfirmToggle(u) {
-        if (String(u.rol) === "ADMIN") {
-            setToast(errorFronted("No se puede deshabilitar un usuario con rol ADMIN."));
-            return;
-        }
+        if (String(u.rol) === "ADMIN") { setToast(errorFronted("No se puede deshabilitar un usuario ADMIN.")); return; }
         setConfirm({ open: true, usuario: u });
     }
 
     async function confirmarToggle() {
         const u = confirm.usuario;
         const isActivo = u.activo !== false;
-
         setLoadingToggle(true);
         try {
-            const url = isActivo
-                ? `/api/admin/usuarios/${u.id}/desactivar`
-                : `/api/admin/usuarios/${u.id}/reactivar`;
-
+            const url = isActivo ? `/api/admin/usuarios/${u.id}/desactivar` : `/api/admin/usuarios/${u.id}/reactivar`;
             const res = await authFetch(url, { method: "PATCH" });
-
             if (!res.ok) { setToast(await parseBackendError(res)); return; }
-
-            setUsuarios((prev) =>
-                prev.map((x) =>
-                    x.id === u.id ? { ...x, activo: !isActivo } : x
-                )
-            );
-
-        } catch {
-            setToast(errorFronted("No se pudo conectar con el servidor."));
-        } finally {
-            setLoadingToggle(false);
-            setConfirm({ open: false, usuario: null });
-        }
+            setUsuarios((prev) => prev.map((x) => x.id === u.id ? { ...x, activo: !isActivo } : x));
+        } catch { setToast(errorFronted("No se pudo conectar con el servidor.")); }
+        finally { setLoadingToggle(false); setConfirm({ open: false, usuario: null }); }
     }
 
     return (
@@ -296,21 +194,13 @@ export default function AdminUsuarios() {
             <div className={s.header}>
                 <h3>Usuarios</h3>
                 <div className={s.headerActions}>
-                    <button className={s.btn} onClick={cargarUsuarios} disabled={loading}>
-                        {loading ? "Cargando..." : "Recargar"}
-                    </button>
-                    <button className={s.btnPrimary} onClick={abrirCrear}>
-                        + Crear usuario
-                    </button>
+                    <button className={s.btn} onClick={cargarUsuarios} disabled={loading}>{loading ? "Cargando..." : "Recargar"}</button>
+                    <button className={s.btnPrimary} onClick={abrirCrear}>+ Crear usuario</button>
                 </div>
             </div>
+
             <div className={s.filtros}>
-                <input
-                    className={`${s.input} ${s.inputSearch}`}
-                    value={q}
-                    onChange={(e) => setQ(e.target.value)}
-                    placeholder="Buscar por nombre o email..."
-                />
+                <input className={`${s.input} ${s.inputSearch}`} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por nombre o email..." />
                 <select className={s.select} value={rol} onChange={(e) => setRol(e.target.value)}>
                     <option value="">Todos los roles</option>
                     {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
@@ -320,10 +210,10 @@ export default function AdminUsuarios() {
                     <option value="ACTIVO">Activos</option>
                     <option value="INACTIVO">Inactivos</option>
                 </select>
-                <span className={s.contador}>
-                    Mostrando: <b>{filtrados.length}</b> / {usuarios.length}
-                </span>
+                <span className={s.contador}>Mostrando: <b>{filtrados.length}</b> / {usuarios.length}</span>
             </div>
+
+            {/* ── Tabla desktop ── */}
             <div className={s.tableWrap}>
                 <table className={s.table}>
                     <thead>
@@ -349,17 +239,11 @@ export default function AdminUsuarios() {
                                     <td className={s.td}><ActivoBadge activo={!inactivo} /></td>
                                     <td className={s.td}>
                                         <div className={s.tdAcciones}>
-                                            <button className={s.btn} onClick={() => abrirEditar(u)}>
-                                                Editar
-                                            </button>
+                                            <button className={s.btn} onClick={() => abrirEditar(u)}>Editar</button>
                                             <button
-                                                className={
-                                                    esAdmin ? s.btnDisabled :
-                                                        inactivo ? s.btnSuccess : s.btnDanger
-                                                }
+                                                className={esAdmin ? s.btnDisabled : inactivo ? s.btnSuccess : s.btnDanger}
                                                 onClick={() => pedirConfirmToggle(u)}
                                                 disabled={esAdmin}
-                                                title={esAdmin ? "No se puede deshabilitar un ADMIN" : ""}
                                             >
                                                 {inactivo ? "Reactivar" : "Deshabilitar"}
                                             </button>
@@ -368,17 +252,50 @@ export default function AdminUsuarios() {
                                 </tr>
                             );
                         })}
-
                         {!loading && filtrados.length === 0 && (
-                            <tr>
-                                <td className={s.emptyRow} colSpan={6}>
-                                    No hay usuarios con ese filtro.
-                                </td>
-                            </tr>
+                            <tr><td className={s.emptyRow} colSpan={6}>No hay usuarios con ese filtro.</td></tr>
                         )}
                     </tbody>
                 </table>
             </div>
+
+            {/* ── Cards móvil ── */}
+            <div className={s.cardList}>
+                {filtrados.length === 0 && !loading && (
+                    <div className={s.vacio}>No hay usuarios con ese filtro.</div>
+                )}
+                {filtrados.map((u) => {
+                    const esAdmin = String(u.rol) === "ADMIN";
+                    const inactivo = u.activo === false;
+                    return (
+                        <div key={u.id} className={s.cardItem}>
+                            <div className={s.cardItemRow}>
+                                <div>
+                                    <div style={{ fontWeight: 700, color: "#f0f0f0" }}>{u.nombre ?? "—"}</div>
+                                    <div style={{ fontSize: 12, color: "#9ca3af" }}>{u.email}</div>
+                                </div>
+                                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+                                    <RolBadge rol={u.rol} />
+                                    <ActivoBadge activo={!inactivo} />
+                                </div>
+                            </div>
+                            <div style={{ fontSize: 12, color: "#6b7280" }}>ID #{u.id}</div>
+                            <div className={s.cardItemActions}>
+                                <button className={s.btn} onClick={() => abrirEditar(u)}>Editar</button>
+                                <button
+                                    className={esAdmin ? s.btnDisabled : inactivo ? s.btnSuccess : s.btnDanger}
+                                    onClick={() => pedirConfirmToggle(u)}
+                                    disabled={esAdmin}
+                                >
+                                    {inactivo ? "Reactivar" : "Deshabilitar"}
+                                </button>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* ── Modal crear/editar ── */}
             {open && (
                 <div className={s.backdrop}>
                     <div className={s.modal}>
@@ -386,7 +303,6 @@ export default function AdminUsuarios() {
                             <h3>{editing ? `Editar usuario #${editing.id}` : "Crear usuario"}</h3>
                             <button className={s.btnClose} onClick={() => setOpen(false)}>✕</button>
                         </div>
-
                         <div className={s.modalBody}>
                             <div className={s.field}>
                                 <input
@@ -396,9 +312,7 @@ export default function AdminUsuarios() {
                                     onBlur={() => setTouched((t) => ({ ...t, nombre: true }))}
                                     placeholder="Nombre"
                                 />
-                                {touched.nombre && errors.nombre && (
-                                    <div className={s.helper}>⚠️ {errors.nombre}</div>
-                                )}
+                                {touched.nombre && errors.nombre && <div className={s.helper}>⚠️ {errors.nombre}</div>}
                             </div>
                             {!editing && (
                                 <div className={s.field}>
@@ -407,12 +321,9 @@ export default function AdminUsuarios() {
                                         value={form.email}
                                         onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
                                         onBlur={() => setTouched((t) => ({ ...t, email: true }))}
-                                        placeholder="Email"
-                                        type="email"
+                                        placeholder="Email" type="email"
                                     />
-                                    {touched.email && errors.email && (
-                                        <div className={s.helper}>⚠️ {errors.email}</div>
-                                    )}
+                                    {touched.email && errors.email && <div className={s.helper}>⚠️ {errors.email}</div>}
                                 </div>
                             )}
                             {!editing && (
@@ -422,15 +333,10 @@ export default function AdminUsuarios() {
                                         value={form.password}
                                         onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
                                         onBlur={() => setTouched((t) => ({ ...t, password: true }))}
-                                        placeholder="Contraseña"
-                                        type="password"
+                                        placeholder="Contraseña" type="password"
                                     />
-                                    {form.password && (
-                                        <PasswordStrength password={form.password} />
-                                    )}
-                                    {touched.password && errors.password && (
-                                        <div className={s.helper}>⚠️ {errors.password}</div>
-                                    )}
+                                    {form.password && <PasswordStrength password={form.password} />}
+                                    {touched.password && errors.password && <div className={s.helper}>⚠️ {errors.password}</div>}
                                 </div>
                             )}
                             <div className={s.field}>
@@ -442,11 +348,9 @@ export default function AdminUsuarios() {
                                 >
                                     {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
                                 </select>
-                                {touched.rol && errors.rol && (
-                                    <div className={s.helper}>⚠️ {errors.rol}</div>
-                                )}
+                                {touched.rol && errors.rol && <div className={s.helper}>⚠️ {errors.rol}</div>}
                             </div>
-                            {editing && (
+                            {editing && editing.rol !== "ADMIN" && (
                                 <label className={s.checkboxLabel}>
                                     <input
                                         type="checkbox"
@@ -457,11 +361,8 @@ export default function AdminUsuarios() {
                                 </label>
                             )}
                         </div>
-
                         <div className={s.modalFooter}>
-                            <button className={s.btn} onClick={() => setOpen(false)} disabled={loadingGuardar}>
-                                Cancelar
-                            </button>
+                            <button className={s.btn} onClick={() => setOpen(false)} disabled={loadingGuardar}>Cancelar</button>
                             <button className={s.btnPrimary} onClick={guardar} disabled={loadingGuardar}>
                                 {loadingGuardar ? "Guardando..." : editing ? "Guardar cambios" : "Crear"}
                             </button>
@@ -469,18 +370,14 @@ export default function AdminUsuarios() {
                     </div>
                 </div>
             )}
+
             <ConfirmModal
                 open={confirm.open}
-                mensaje={
-                    confirm.usuario?.activo !== false
-                        ? `¿Deshabilitar el usuario "${confirm.usuario?.email}"?`
-                        : `¿Reactivar el usuario "${confirm.usuario?.email}"?`
-                }
+                mensaje={confirm.usuario?.activo !== false ? `¿Deshabilitar "${confirm.usuario?.email}"?` : `¿Reactivar "${confirm.usuario?.email}"?`}
                 onConfirm={confirmarToggle}
                 onCancel={() => setConfirm({ open: false, usuario: null })}
                 loading={loadingToggle}
             />
-
             {toast && <Toast error={toast} onClose={() => setToast(null)} />}
         </div>
     );

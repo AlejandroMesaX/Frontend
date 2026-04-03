@@ -33,6 +33,7 @@
 .modalTitulo {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 10px;
     flex-wrap: wrap;
 }
@@ -56,8 +57,9 @@
 }
 
 .btnClose:hover {
-    background: #333336;
-    color: #f0f0f0;
+    background: #3d1a1a;
+    border-color: #ef4444;
+    color: #ef4444;
 }
 
 .body {

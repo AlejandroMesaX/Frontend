@@ -36,16 +36,13 @@ export default function AdminBarrios() {
     const [loadingGuardar, setLoadingGuardar] = useState(false);
     const [loadingToggle, setLoadingToggle] = useState(false);
     const [toast, setToast] = useState(null);
-
     const [q, setQ] = useState("");
     const [estado, setEstado] = useState("");
     const [comunaFiltro, setComunaFiltro] = useState("");
-
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState(null);
     const [form, setForm] = useState({ nombre: "", comunaNumero: "" });
     const [touched, setTouched] = useState({});
-
     const [confirm, setConfirm] = useState({ open: false, barrio: null });
 
     async function cargarBarrios() {
@@ -55,11 +52,8 @@ export default function AdminBarrios() {
             if (!res.ok) { setToast(await parseBackendError(res)); return; }
             const data = await res.json();
             setBarrios(Array.isArray(data) ? data : []);
-        } catch {
-            setToast(errorFronted("No se pudo conectar con el servidor."));
-        } finally {
-            setLoading(false);
-        }
+        } catch { setToast(errorFronted("No se pudo conectar con el servidor.")); }
+        finally { setLoading(false); }
     }
 
     async function cargarComunas() {
@@ -67,15 +61,13 @@ export default function AdminBarrios() {
             const res = await authFetch("/api/admin/comunas");
             if (!res.ok) return;
             const data = await res.json();
-            const arr = Array.isArray(data) ? data : [];
             setComunas(
-                arr.filter((c) => c && c.numero != null)
-                    .map((c) => ({ id: c.id, numero: Number(c.numero), tarifaBase: c.tarifaBase, recargoPorSalto: c.recargoPorSalto }))
+                (Array.isArray(data) ? data : [])
+                    .filter((c) => c && c.numero != null)
+                    .map((c) => ({ id: c.id, numero: Number(c.numero) }))
                     .sort((a, b) => a.numero - b.numero)
             );
-        } catch {
-            setToast(errorFronted("No se pudieron cargar las comunas."));
-        }
+        } catch { setToast(errorFronted("No se pudieron cargar las comunas.")); }
     }
 
     useEffect(() => { cargarBarrios(); cargarComunas(); }, []);
@@ -104,62 +96,43 @@ export default function AdminBarrios() {
         return e;
     }, [form]);
 
-    const canSubmit = Object.keys(errors).length === 0;
-
     function abrirCrear() {
-        setEditing(null);
-        setForm({ nombre: "", comunaNumero: "" });
-        setTouched({});
-        setOpen(true);
+        setEditing(null); setForm({ nombre: "", comunaNumero: "" }); setTouched({}); setOpen(true);
     }
 
     function abrirEditar(b) {
         setEditing(b);
-        setForm({ nombre: b.nombre ?? "", comunaNumero: b.comuna != null ? String(b.comuna) : "" });
-        setTouched({});
-        setOpen(true);
+        setForm({
+            nombre: b.nombre ?? "",
+            comunaNumero: b.comuna != null ? String(b.comuna) : "",
+            activo: b.activo !== false,
+        });
+        setTouched({}); setOpen(true);
     }
 
     async function guardar() {
         setTouched({ nombre: true, comunaNumero: true });
-        if (!canSubmit) return;
-
-        setLoadingGuardar(true);
-        setToast(null);
-
+        if (Object.keys(errors).length > 0) return;
+        setLoadingGuardar(true); setToast(null);
         try {
             const url = editing ? `/api/admin/barrios/${editing.id}` : "/api/admin/barrios";
-            const method = editing ? "PUT" : "POST";
-
             const res = await authFetch(url, {
-                method,
+                method: editing ? "PUT" : "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ nombre: form.nombre.trim(), comunaNumero: Number(form.comunaNumero) }),
+                body: JSON.stringify({
+                    nombre: form.nombre.trim(),
+                    comunaNumero: Number(form.comunaNumero),
+                    activo: form.activo
+                }),
             });
-
-            if (!res.ok) {
-                const error = await parseBackendError(res);
-                setToast(error);
-                return;
-            }
-
+            if (!res.ok) { setToast(await parseBackendError(res)); return; }
             const resultado = await res.json().catch(() => null);
-            if (editing) {
-                setBarrios((prev) => resultado ? prev.map((x) => x.id === resultado.id ? resultado : x) : prev);
-            } else {
-                if (resultado) setBarrios((prev) => [resultado, ...prev]);
-                else await cargarBarrios();
-            }
+            if (editing) setBarrios((prev) => resultado ? prev.map((x) => x.id === resultado.id ? resultado : x) : prev);
+            else { if (resultado) setBarrios((prev) => [resultado, ...prev]); else await cargarBarrios(); }
             setOpen(false);
-
-        } catch {
-            setToast(errorFronted("No se pudo conectar con el servidor."));
-        } finally {
-            setLoadingGuardar(false);
-        }
+        } catch { setToast(errorFronted("No se pudo conectar con el servidor.")); }
+        finally { setLoadingGuardar(false); }
     }
-
-    function pedirConfirmToggle(b) { setConfirm({ open: true, barrio: b }); }
 
     async function confirmarToggle() {
         const b = confirm.barrio;
@@ -170,12 +143,8 @@ export default function AdminBarrios() {
             const res = await authFetch(url, { method: "PATCH" });
             if (!res.ok) { setToast(await parseBackendError(res)); return; }
             setBarrios((prev) => prev.map((x) => x.id === b.id ? { ...x, activo: !isActivo } : x));
-        } catch {
-            setToast(errorFronted("No se pudo conectar con el servidor."));
-        } finally {
-            setLoadingToggle(false);
-            setConfirm({ open: false, barrio: null });
-        }
+        } catch { setToast(errorFronted("No se pudo conectar con el servidor.")); }
+        finally { setLoadingToggle(false); setConfirm({ open: false, barrio: null }); }
     }
 
     return (
@@ -183,9 +152,7 @@ export default function AdminBarrios() {
             <div className={s.header}>
                 <h3>Barrios</h3>
                 <div className={s.headerActions}>
-                    <button className={s.btn} onClick={() => { cargarBarrios(); cargarComunas(); }} disabled={loading}>
-                        {loading ? "Cargando..." : "Recargar"}
-                    </button>
+                    <button className={s.btn} onClick={() => { cargarBarrios(); cargarComunas(); }} disabled={loading}>{loading ? "Cargando..." : "Recargar"}</button>
                     <button className={s.btnPrimary} onClick={abrirCrear}>+ Crear barrio</button>
                 </div>
             </div>
@@ -204,6 +171,7 @@ export default function AdminBarrios() {
                 <span className={s.contador}>Mostrando: <b>{filtrados.length}</b> / {barrios.length}</span>
             </div>
 
+            {/* ── Tabla desktop ── */}
             <div className={s.tableWrap}>
                 <table className={s.table}>
                     <thead>
@@ -228,7 +196,7 @@ export default function AdminBarrios() {
                                     <td className={s.td}>
                                         <div className={s.tdAcciones}>
                                             <button className={s.btn} onClick={() => abrirEditar(b)}>Editar</button>
-                                            <button className={inactivo ? s.btnSuccess : s.btnDanger} onClick={() => pedirConfirmToggle(b)}>
+                                            <button className={inactivo ? s.btnSuccess : s.btnDanger} onClick={() => setConfirm({ open: true, barrio: b })}>
                                                 {inactivo ? "Reactivar" : "Deshabilitar"}
                                             </button>
                                         </div>
@@ -243,6 +211,33 @@ export default function AdminBarrios() {
                 </table>
             </div>
 
+            {/* ── Cards móvil ── */}
+            <div className={s.cardList}>
+                {filtrados.length === 0 && !loading && <div className={s.vacio}>No hay barrios con ese filtro.</div>}
+                {filtrados.map((b) => {
+                    const inactivo = b.activo === false;
+                    const comunaNombre = comunaLabelByNumero.get(Number(b.comuna)) ?? `Comuna #${b.comuna ?? "—"}`;
+                    return (
+                        <div key={b.id} className={s.cardItem}>
+                            <div className={s.cardItemRow}>
+                                <div>
+                                    <div style={{ fontWeight: 700, color: "#f0f0f0" }}>{b.nombre}</div>
+                                    <div style={{ fontSize: 12, color: "#9ca3af" }}>{comunaNombre} · ID #{b.id}</div>
+                                </div>
+                                <ActivoBadge activo={!inactivo} />
+                            </div>
+                            <div className={s.cardItemActions}>
+                                <button className={s.btn} onClick={() => abrirEditar(b)}>Editar</button>
+                                <button className={inactivo ? s.btnSuccess : s.btnDanger} onClick={() => setConfirm({ open: true, barrio: b })}>
+                                    {inactivo ? "Reactivar" : "Deshabilitar"}
+                                </button>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* ── Modal ── */}
             {open && (
                 <div className={s.backdrop}>
                     <div className={s.modal}>
@@ -250,24 +245,20 @@ export default function AdminBarrios() {
                             <h3>{editing ? `Editar barrio #${editing.id}` : "Crear barrio"}</h3>
                             <button className={s.btnClose} onClick={() => setOpen(false)}>✕</button>
                         </div>
-
                         <div className={s.modalBody}>
                             <div className={s.field}>
                                 <input
-                                    className={`${s.input} ${touched.nombre && errors.nombre ? s.inputError : ""}`}
+                                    className={`${s.input} ${s.inputFull} ${touched.nombre && errors.nombre ? s.inputError : ""}`}
                                     value={form.nombre}
                                     onChange={(e) => setForm((p) => ({ ...p, nombre: e.target.value }))}
                                     onBlur={() => setTouched((t) => ({ ...t, nombre: true }))}
                                     placeholder="Nombre del barrio"
                                 />
-                                {touched.nombre && errors.nombre && (
-                                    <div className={s.helper}> {errors.nombre}</div>
-                                )}
+                                {touched.nombre && errors.nombre && <div className={s.helper}>⚠️ {errors.nombre}</div>}
                             </div>
-
                             <div className={s.field}>
                                 <select
-                                    className={`${s.select} ${touched.comunaNumero && errors.comunaNumero ? s.inputError : ""}`}
+                                    className={`${s.select} ${s.inputFull} ${touched.comunaNumero && errors.comunaNumero ? s.inputError : ""}`}
                                     value={form.comunaNumero}
                                     onChange={(e) => setForm((p) => ({ ...p, comunaNumero: e.target.value }))}
                                     onBlur={() => setTouched((t) => ({ ...t, comunaNumero: true }))}
@@ -275,23 +266,19 @@ export default function AdminBarrios() {
                                     <option value="">-- Selecciona comuna --</option>
                                     {comunas.map((c) => <option key={c.numero} value={c.numero}>Comuna {c.numero}</option>)}
                                 </select>
-                                {touched.comunaNumero && errors.comunaNumero && (
-                                    <div className={s.helper}> {errors.comunaNumero}</div>
-                                )}
+                                {touched.comunaNumero && errors.comunaNumero && <div className={s.helper}>⚠️ {errors.comunaNumero}</div>}
                             </div>
-
                             {editing && (
                                 <label className={s.checkboxLabel}>
                                     <input
                                         type="checkbox"
-                                        checked={!!form.activo}
+                                        checked={form.activo ?? true}
                                         onChange={(e) => setForm((p) => ({ ...p, activo: e.target.checked }))}
                                     />
                                     Activo
                                 </label>
                             )}
                         </div>
-
                         <div className={s.modalFooter}>
                             <button className={s.btn} onClick={() => setOpen(false)} disabled={loadingGuardar}>Cancelar</button>
                             <button className={s.btnPrimary} onClick={guardar} disabled={loadingGuardar}>
@@ -309,7 +296,6 @@ export default function AdminBarrios() {
                 onCancel={() => setConfirm({ open: false, barrio: null })}
                 loading={loadingToggle}
             />
-
             {toast && <Toast error={toast} onClose={() => setToast(null)} />}
         </div>
     );

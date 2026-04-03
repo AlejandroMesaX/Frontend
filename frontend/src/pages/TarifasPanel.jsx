@@ -67,7 +67,7 @@ export default function TarifasPanel({ barrios = [] }) {
                 </div>
 
                 <p className={s.descripcion}>
-                    Selecciona el barrio de recogida y el barrio de entrega para conocer el costo estimado del servicio.
+                    Selecciona el barrio de recogida y el barrio de entrega para conocer el costo del servicio.
                 </p>
 
                 <div className={s.grid}>
@@ -128,7 +128,7 @@ export default function TarifasPanel({ barrios = [] }) {
             )}
             {resultado && (
                 <div className={s.resultadoBox}>
-                    <div className={s.resultadoTitulo}>💰 Tarifa estimada</div>
+                    <div className={s.resultadoTitulo}>💰 Tarifa</div>
                     <div className={s.resultadoRuta}>
                         <span className={s.rutaBarrio}>{resultado.barrioRecogida}</span>
                         <span className={s.rutaFlecha}>→</span>
@@ -138,7 +138,7 @@ export default function TarifasPanel({ barrios = [] }) {
                         ${Number(resultado.costo).toLocaleString("es-CO")}
                     </div>
                     <div className={s.resultadoNota}>
-                        Precio estimado del servicio de domicilio
+                        Precio del servicio de domicilio
                     </div>
                 </div>
             )}

@@ -284,10 +284,21 @@ function DireccionModal({ open, onClose, onSaved, editing, barriosOptions }) {
         setLoading(true); setToast(null);
         try {
             const url = editing ? `/api/cliente/direcciones/${editing.id}` : "/api/cliente/direcciones";
+
+            // ── agregar esto ──
+            const barrioSeleccionado = barriosOptions.find(
+                (o) => o.value === form.barrio.trim()
+            );
+
             const res = await authFetch(url, {
-                method: editing ? "PUT" : "POST",
+                method: editing ? "PATCH" : "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ direccionRecogida: form.direccionRecogida.trim(), barrio: form.barrio.trim(), telefonoContacto: form.telefonoContacto.trim() }),
+                body: JSON.stringify({
+                    barrioId: barrioSeleccionado?.id ?? null,  // ← para editar
+                    direccionRecogida: form.direccionRecogida.trim(),
+                    barrio: form.barrio.trim(),                // ← para crear
+                    telefonoContacto: form.telefonoContacto.trim(),
+                }),
             });
             if (!res.ok) { setToast(await parseBackendError(res)); return; }
             const resultado = await res.json().catch(() => null);
@@ -362,10 +373,10 @@ function DireccionModal({ open, onClose, onSaved, editing, barriosOptions }) {
 }
 
 const TABS = [
-    { key: "inicio", label: "Inicio" },
-    { key: "direcciones", label: "Direcciones" },
-    { key: "historial", label: "Historial" },
-    { key: "tarifas", label: "Tarifas" },
+    { key: "inicio", label: "📦 Pedidos" },
+    { key: "direcciones", label: "📍 Direcciones" },
+    { key: "historial", label: "🗓️ Historial" },
+    { key: "tarifas", label: "🧮 Tarifas" },
 ];
 
 const ESTADOS_ACTIVOS = new Set(["CREADO", "ASIGNADO", "EN_CAMINO", "INCIDENCIA"]);
@@ -380,7 +391,8 @@ export default function ClientePanel() {
     const [direcciones, setDirecciones] = useState([]);
     const [loadingDirecciones, setLoadingDirecciones] = useState(false);
     const [barrios, setBarrios] = useState([]);
-    const barriosOptions = useMemo(() => barrios.map((b) => ({ value: b.nombre, label: b.nombre })), [barrios]);
+    const barriosOptions = useMemo(
+        () => barrios.map((b) => ({ value: b.nombre, label: b.nombre, id: b.id })), [barrios]);
     const [openSolicitar, setOpenSolicitar] = useState(false);
     const [openDireccion, setOpenDireccion] = useState(false);
     const [editingDireccion, setEditingDireccion] = useState(null);
@@ -389,6 +401,26 @@ export default function ClientePanel() {
     const [confirmDir, setConfirmDir] = useState({ open: false, direccionId: null });
     const [loadingEliminarDir, setLoadingEliminarDir] = useState(false);
     const [detalle, setDetalle] = useState(null);
+    const [menuOpen, setMenuOpen] = useState(false);
+
+    // Cerrar menú al cambiar tab
+    function selectTab(key) {
+        setTab(key);
+        setMenuOpen(false);
+    }
+
+    // Cerrar menú con Escape
+    useEffect(() => {
+        function onKey(e) { if (e.key === "Escape") setMenuOpen(false); }
+        document.addEventListener("keydown", onKey);
+        return () => document.removeEventListener("keydown", onKey);
+    }, []);
+
+    // Bloquear scroll del body cuando el menú está abierto
+    useEffect(() => {
+        document.body.style.overflow = menuOpen ? "hidden" : "";
+        return () => { document.body.style.overflow = ""; };
+    }, [menuOpen]);
 
     const onPedidoRealtime = useCallback((pedido) => {
         setPedidos((prev) => {
@@ -482,23 +514,38 @@ export default function ClientePanel() {
     return (
         <div className={s.container}>
 
-            <div className={s.header}>
-                <h2>GoFast</h2>
-                <button className={s.btnLogout} onClick={logout}>Cerrar sesión</button>
+            <div className={s.topBar}>
+                {/* Hamburger — solo visible en móvil */}
+                <button className={s.hamburger} onClick={() => setMenuOpen(true)} aria-label="Abrir menú">
+                    ☰
+                </button>
+
+                <span className={s.brand}>GoFast</span>
+
+                <nav className={s.nav}>
+                    {TABS.map(({ key, label }) => (
+                        <button
+                            key={key}
+                            className={`${s.navBtn} ${tab === key ? s.navBtnActive : ""}`}
+                            onClick={() => setTab(key)}
+                        >
+                            {label}
+                        </button>
+                    ))}
+                </nav>
+
+                {/* Logout */}
+                <div className={s.topBarRight}>
+                    <button className={s.btnLogout} onClick={logout}>Salir</button>
+                </div>
             </div>
 
-            <nav className={s.nav}>
-                {TABS.map(({ key, label }) => (
-                    <button key={key} className={`${s.navBtn} ${tab === key ? s.navBtnActive : ""}`} onClick={() => setTab(key)}>
-                        {label}
-                    </button>
-                ))}
-            </nav>
+            <button className={s.btnSolicitar} onClick={() => setOpenSolicitar(true)}>
+                Solicitar servicio
+            </button>
+
             {tab === "inicio" && (
                 <>
-                    <button className={s.btnSolicitar} onClick={() => setOpenSolicitar(true)}>
-                        + Solicitar servicio
-                    </button>
 
                     <div className={s.section}>
                         <div className={s.sectionHeader}>
@@ -545,15 +592,14 @@ export default function ClientePanel() {
                 <div className={s.section}>
                     <div className={s.sectionHeader}>
                         <h3>Mis direcciones</h3>
-                        <div className={s.headerActions}>
-                            <button className={s.btn} onClick={cargarDirecciones} disabled={loadingDirecciones}>
-                                {loadingDirecciones ? "Cargando..." : "Recargar"}
-                            </button>
-                            <button className={s.btnPrimary} onClick={() => { setEditingDireccion(null); setOpenDireccion(true); }}>
-                                + Nueva dirección
-                            </button>
-                        </div>
+
+                        <button className={s.btn} onClick={cargarDirecciones} disabled={loadingDirecciones}>
+                            {loadingDirecciones ? "Cargando..." : "Recargar"}
+                        </button>
                     </div>
+                    <button className={s.btnPrimary} onClick={() => { setEditingDireccion(null); setOpenDireccion(true); }}>
+                        + Nueva dirección
+                    </button>
 
                     <div className={s.direccionesList}>
                         {direcciones.length === 0 && <div className={s.vacio}>Aún no tienes direcciones guardadas.</div>}
@@ -561,8 +607,9 @@ export default function ClientePanel() {
                         {direcciones.map((d) => (
                             <div key={d.id} className={s.dirCard}>
                                 <div className={s.dirInfo}>
-                                    <div className={s.dirNombre}>📍 {d.direccionRecogida}</div>
-                                    <div className={s.dirMeta}>{d.barrio}{d.telefonoContacto ? ` · ${d.telefonoContacto}` : ""}</div>
+                                    <div className={s.dirNombre}><b>Direccion:</b> {d.direccionRecogida}</div>
+                                    <div className={s.dirNombre}><b>Barrio:</b> {d.barrio}</div>
+                                    <div className={s.dirNombre}><b>Telefono:</b>{d.telefonoContacto ? ` · ${d.telefonoContacto}` : ""}</div>
                                 </div>
                                 <div className={s.dirAcciones}>
                                     <button className={s.btn} onClick={() => { setEditingDireccion(d); setOpenDireccion(true); }}>Editar</button>
@@ -578,14 +625,14 @@ export default function ClientePanel() {
             {tab === "historial" && (
                 <div className={s.section}>
                     <div className={s.sectionHeader}>
-                        <h3>Historial de pedidos</h3>
+                        <h3>Historial</h3>
                         <button className={s.btn} onClick={cargarPedidos} disabled={loadingPedidos}>
                             {loadingPedidos ? "Cargando..." : "Recargar"}
                         </button>
                     </div>
 
                     <div className={s.filtros}>
-                        <span className={s.filtroLabel}>Filtrar por día:</span>
+                        <span className={s.filtroLabel}>Por dia:</span>
                         <input type="date" className={s.inputDate} value={diaFiltro} onChange={(e) => setDiaFiltro(e.target.value)} />
                         <button className={s.btn} onClick={() => setDiaFiltro("")} disabled={!diaFiltro}>Quitar filtro</button>
                         <span className={s.contador}>Mostrando: <b>{historialFiltrado.length}</b> / {historialBase.length}</span>
@@ -602,18 +649,19 @@ export default function ClientePanel() {
                                         <b>#{p.id}</b>
                                         <EstadoPedidoBadge estado={p.estado} />
                                     </div>
-                                    <div><b>Recogida:</b> {p.barrioRecogida} — {p.direccionRecogida}</div>
-                                    <div><b>Entrega:</b> {p.barrioEntrega} — {p.direccionEntrega}</div>
+                                    <div><b>Barrio:</b> {p.barrioEntrega}</div>
+                                    <div><b>Direccion:</b> {p.direccionEntrega}</div>
                                     <div><b>Costo:</b> ${toNumberMoney(p.costoServicio).toLocaleString("es-CO")}</div>
                                 </div>
                                 <div className={s.itemMeta}>
-                                    {p.fechaCreacion && <div>Creado: {String(p.fechaCreacion).slice(0, 10)}</div>}
+                                    {p.fechaCreacion && <div>{String(p.fechaCreacion).slice(0, 10)}</div>}
                                 </div>
                             </div>
                         ))}
                     </div>
                 </div>
             )}
+
             <PedidoDetalleModal
                 open={!!detalle} pedido={detalle} onClose={() => setDetalle(null)}
                 showCliente={false} showDomi={true}
@@ -628,6 +676,35 @@ export default function ClientePanel() {
                     </>
                 )}
             />
+
+            {/* ── Menú móvil ── */}
+            {menuOpen && (
+                <div className={s.mobileMenu}>
+                    <div className={s.mobileMenuOverlay} onClick={() => setMenuOpen(false)} />
+                    <div className={s.mobileMenuPanel}>
+                        <div className={s.mobileMenuHeader}>
+                            <span className={s.mobileMenuBrand}>GoFast</span>
+                            <button className={s.mobileMenuClose} onClick={() => setMenuOpen(false)}>✕</button>
+                        </div>
+
+                        {TABS.map(({ key, label }) => (
+                            <button
+                                key={key}
+                                className={`${s.mobileNavBtn} ${tab === key ? s.mobileNavBtnActive : ""}`}
+                                onClick={() => selectTab(key)}
+                            >
+                                {label}
+                            </button>
+                        ))}
+
+                        <div className={s.mobileMenuFooter}>
+                            <button className={s.btnLogoutMobile} onClick={logout} style={{ width: "100%" }}>
+                                Cerrar sesión
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <SolicitarPedidoModal
                 open={openSolicitar} onClose={() => setOpenSolicitar(false)}
@@ -653,5 +730,7 @@ export default function ClientePanel() {
 
             {toast && <Toast error={toast} onClose={() => setToast(null)} />}
         </div>
+
+
     );
 }
