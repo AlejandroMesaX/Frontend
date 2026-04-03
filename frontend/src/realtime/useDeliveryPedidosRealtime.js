@@ -28,9 +28,7 @@ export function useDeliveryPedidosRealtime({ token, userId, onPedido }) {
             console.error("[WS][DELIVERY]", frame.headers?.message, frame.body);
         };
 
-        client.onWebSocketError = (e) => {
-            console.error("[WS][DELIVERY] socket error", e);
-        };
+        client.onWebSocketError = () => { };
 
         client.activate();
         ref.current = client;

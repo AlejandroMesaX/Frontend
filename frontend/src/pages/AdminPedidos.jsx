@@ -64,6 +64,7 @@ function DomiciliarioViewer({ domiciliarios }) {
                         {filtered.map((d) => {
                             const esDisponible = d.estadoDelivery === "DISPONIBLE";
                             const esOcupado = d.estadoDelivery === "POR_RECOGER" || d.estadoDelivery === "POR_ENTREGAR";
+                            const esDesconectado = !d.estadoDelivery;
                             return (
                                 <li key={d.id} className={`${s.domiListItem} ${esDisponible ? s.domiListItemDisponible : esOcupado ? s.domiListItemOcupado : s.domiListItemDesconectado}`}>
                                     <span className={s.domiListItemNombre}>{estadoEmoji(d)} {d.nombre ?? `#${d.id}`}</span>
@@ -120,11 +121,13 @@ function DomiciliarioSelect({ domiciliarios, value, onChange }) {
                         {filtered.length === 0 && <li className={s.domiListEmpty}>Sin resultados para "{q}"</li>}
                         {filtered.map((d) => {
                             const esDisponible = d.estadoDelivery === "DISPONIBLE";
+                            const esDesconectado = !d.estadoDelivery;
+                            const esOcupado = d.estadoDelivery === "POR_RECOGER" || d.estadoDelivery === "POR_ENTREGAR";
                             return (
                                 <li key={d.id}
-                                    className={`${s.domiListItem} ${d.id === value ? s.domiListItemSelected : ""} ${!esDisponible ? s.domiListItemDisabled : s.domiListItemDisponible}`}
-                                    onClick={() => esDisponible && handleSelect(d)}
-                                    title={!esDisponible ? "Solo disponibles pueden asignarse" : ""}>
+                                    className={`${s.domiListItem} ${d.id === value ? s.domiListItemSelected : ""} ${esDesconectado ? s.domiListItemDisabled : s.domiListItemDisponible}`}
+                                    onClick={() => !esDesconectado && handleSelect(d)}
+                                    title={esDesconectado ? "El domiciliario está desconectado" : ""}>
                                     <span className={s.domiListItemNombre}>{estadoEmoji(d)} {d.nombre ?? `#${d.id}`}</span>
                                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                                         {d.disponibleDesde && esDisponible && <span className={s.domiListItemMeta}>desde {String(d.disponibleDesde).slice(11, 16)}</span>}
@@ -348,6 +351,11 @@ export default function AdminPedidos() {
         [domiciliarios]
     );
 
+    const hayConectados = useMemo(
+        () => domiciliarios.some((d) => d.estadoDelivery != null),
+        [domiciliarios]
+    );
+
     const resumenHoy = useMemo(() => {
         const totalBruto = gananciasHoy.reduce((acc, p) => acc + (Number(p.costoServicio) || 0), 0);
         return { totalBruto, gananciaEmpresa: totalBruto * 0.20, pagosDomis: totalBruto * 0.80, pedidos: gananciasHoy.length };
@@ -420,6 +428,7 @@ export default function AdminPedidos() {
                     {pedidosVisibles.length === 0 && <div className={s.vacio}>No hay pedidos activos en este momento.</div>}
                     {pedidosVisibles.map((p) => (
                         <div key={p.id} className={`${s.card} ${s.cardClickable}`}
+                            disabled={!(p.estado === "CREADO" || p.estado === "INCIDENCIA") || !hayConectados}
                             onClick={(e) => abrirDetalle(p, e)} title="Click para ver detalle">
                             <div className={s.cardInfo}>
                                 <div className={s.cardTitulo}>
@@ -441,7 +450,7 @@ export default function AdminPedidos() {
                             </div>
                             <div className={s.cardAcciones}>
                                 <button className={s.btnPrimary} onClick={(e) => abrirAsignar(p, e)}
-                                    disabled={!(p.estado === "CREADO" || p.estado === "INCIDENCIA") || disponiblesCount === 0}>
+                                    disabled={!(p.estado === "CREADO" || p.estado === "INCIDENCIA") || !hayConectados}>
                                     {p.estado === "INCIDENCIA" ? "Reasignar" : "Asignar"}
                                 </button>
                                 <button className={s.btnDanger} onClick={(e) => abrirCancelar(p, e)}>Cancelar</button>
@@ -457,8 +466,10 @@ export default function AdminPedidos() {
                 actions={detalle && (
                     <>
                         <button className={s.btnPrimary}
-                            onClick={() => { setDetalle(null); setPedidoSel(detalle); setOpenAssign(true); }}
-                            disabled={!(detalle.estado === "CREADO" || detalle.estado === "INCIDENCIA") || disponiblesCount === 0}>
+                            onClick={() => { setDetalle(null); setPedidoSel(detalle); setOpenAssign(true); }
+                            }
+
+                        >
                             {detalle.estado === "INCIDENCIA" ? "Reasignar" : "Asignar"}
                         </button>
                         <button className={s.btnDanger}
