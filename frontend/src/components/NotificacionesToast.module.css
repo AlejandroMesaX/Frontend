@@ -1,0 +1,107 @@
+/* ── Contenedor fijo ───────────────────────────────────────────────────────── */
+
+.wrapper {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 99999;
+    pointer-events: none;
+    max-width: 360px;
+    width: calc(100vw - 48px);
+}
+
+/* ── Item individual ───────────────────────────────────────────────────────── */
+
+.item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    width: 100%;
+    box-sizing: border-box;
+    pointer-events: auto;
+    transform: translateX(120%);
+    opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease;
+}
+
+.itemVisible {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+/* ── Tipos ─────────────────────────────────────────────────────────────────── */
+
+.info {
+    background: #1a1f2e;
+    border: 1px solid #3b82f6;
+    color: #93c5fd;
+}
+
+.success {
+    background: #0f2e1a;
+    border: 1px solid #22c55e;
+    color: #86efac;
+}
+
+.warning {
+    background: #2d1f0a;
+    border: 1px solid #f59e0b;
+    color: #fcd34d;
+}
+
+.danger {
+    background: #3d1a1a;
+    border: 1px solid #ef4444;
+    color: #fca5a5;
+}
+
+/* ── Partes del item ───────────────────────────────────────────────────────── */
+
+.icon {
+    font-size: 16px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    line-height: 1;
+}
+
+.mensaje {
+    flex: 1;
+    line-height: 1.4;
+}
+
+.btnCerrar {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0 2px;
+    opacity: 0.6;
+    flex-shrink: 0;
+    line-height: 1;
+    color: inherit;
+    transition: opacity 0.15s;
+}
+
+.btnCerrar:hover {
+    opacity: 1;
+}
+
+/* ── Responsive ────────────────────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+    .wrapper {
+        bottom: 16px;
+        right: 12px;
+        left: 12px;
+        width: auto;
+        max-width: unset;
+    }
+}

@@ -7,6 +7,8 @@ import PedidoDetalleModal from "../components/PedidoDetalleModal";
 import Toast from "../components/Toast";
 import TarifasPanel from "./TarifasPanel";
 import s from "./DeliveryPanel.module.css";
+import { useNotificaciones, mensajeDelivery } from "../hooks/useNotificaciones";
+import NotificacionesToast from "../components/NotificacionesToast";
 
 function fmt(val) { return `$${Number(val || 0).toLocaleString("es-CO")}`; }
 
@@ -101,6 +103,7 @@ export default function DeliveryPanel() {
     const [finHasta, setFinHasta] = useState("");
     const [menuOpen, setMenuOpen] = useState(false);
     const [pedidoParaIncidencia, setPedidoParaIncidencia] = useState(null);
+    const { notificaciones, agregar, cerrar } = useNotificaciones();
 
     // Cerrar menú al cambiar tab
     function selectTab(key) {
@@ -150,6 +153,8 @@ export default function DeliveryPanel() {
                 if (fechaPedido === hoy)
                     setGananciasHoy((prev) => prev.find((p) => p.id === pedido.id) ? prev : [...prev, pedido]);
             }
+            const notif = mensajeDelivery(pedido);
+            if (notif) agregar(notif.msg, notif.tipo);
         },
     });
 
@@ -380,6 +385,11 @@ export default function DeliveryPanel() {
                                                 {pedido.estado === "ASIGNADO" ? "🔵 ASIGNADO" : "🟣 EN CAMINO"}
                                             </span>
                                         </div>
+                                        {pedido.motivoIncidencia && (
+                                            <div className={s.incidenciaBox}>
+                                                <b>🆘 Incidencia previa:</b> {pedido.motivoIncidencia}
+                                            </div>
+                                        )}
                                         <div className={s.cardGrid}>
                                             <div>
                                                 <div className={s.cardSectionLabel}>📦 Recogida</div>
@@ -546,10 +556,16 @@ export default function DeliveryPanel() {
                         )}
                         {detalle.estado === "EN_CAMINO" && (
                             <>
-                                <button className={s.btnPrimary} onClick={() => { avanzarEstado(detalle.id, "ENTREGADO"); setDetalle(null); }} disabled={loadingAvanzar}>
+                                <button
+                                    className={s.btnPrimary}
+                                    onClick={() => { avanzarEstado(detalle.id, "ENTREGADO"); setDetalle(null); }}
+                                    disabled={loadingAvanzar}>
                                     ✅ Finalizar entrega
                                 </button>
-                                <button className={s.btnWarning} onClick={() => { setDetalle(null); setOpenIncidencia(true); }} disabled={loadingAvanzar}>
+                                <button
+                                    className={s.btnWarning}
+                                    onClick={() => { setPedidoParaIncidencia(detalle); setDetalle(null); setOpenIncidencia(true); }}
+                                    disabled={loadingAvanzar}>
                                     🆘 Incidencia
                                 </button>
                             </>
@@ -559,7 +575,11 @@ export default function DeliveryPanel() {
                 )}
             />
 
-            <IncidenciaModal open={openIncidencia} onConfirm={confirmarAyuda} onCancel={() => setOpenIncidencia(false)} loading={loadingAyuda} />
+            <IncidenciaModal
+                open={openIncidencia}
+                onConfirm={confirmarAyuda}
+                onCancel={() => setOpenIncidencia(false)}
+                loading={loadingAyuda} />
             {toast && <Toast error={toast} onClose={() => setToast(null)} />}
 
             {/* ── Menú móvil ── */}
@@ -590,6 +610,7 @@ export default function DeliveryPanel() {
                     </div>
                 </div>
             )}
+            <NotificacionesToast notificaciones={notificaciones} onCerrar={cerrar} />
         </div>
     );
 }

@@ -9,6 +9,8 @@ import PedidoDetalleModal from "../components/PedidoDetalleModal";
 import SearchableSelect from "../components/SearchableSelect";
 import TarifasPanel from "./TarifasPanel";
 import s from "./ClientePanel.module.css";
+import { useNotificaciones, mensajeCliente } from "../hooks/useNotificaciones";
+import NotificacionesToast from "../components/NotificacionesToast";
 
 function toNumberMoney(val) {
     if (val == null) return 0;
@@ -402,6 +404,7 @@ export default function ClientePanel() {
     const [loadingEliminarDir, setLoadingEliminarDir] = useState(false);
     const [detalle, setDetalle] = useState(null);
     const [menuOpen, setMenuOpen] = useState(false);
+    const { notificaciones, agregar, cerrar } = useNotificaciones();
 
     // Cerrar menú al cambiar tab
     function selectTab(key) {
@@ -431,7 +434,9 @@ export default function ClientePanel() {
             return copy;
         });
         setDetalle((d) => d?.id === pedido.id ? { ...d, ...pedido } : d);
-    }, []);
+        const notif = mensajeCliente(pedido);
+        if (notif) agregar(notif.msg, notif.tipo);
+    }, [agregar]);
 
     const onBarrioRealtime = useCallback((barrio) => {
         setBarrios((prev) => {
@@ -567,7 +572,7 @@ export default function ClientePanel() {
                                             <b>#{p.id}</b>
                                             <EstadoPedidoBadge estado={p.estado} />
                                         </div>
-                                        {p.estado === "INCIDENCIA" && p.motivoIncidencia && (
+                                        {p.motivoIncidencia && (
                                             <div className={s.incidenciaBox}><b>🆘 Incidencia:</b> {p.motivoIncidencia}</div>
                                         )}
                                         <div><b>Recogida:</b> {p.barrioRecogida} — {p.direccionRecogida}</div>
@@ -729,6 +734,7 @@ export default function ClientePanel() {
                 onConfirm={confirmarEliminarDir} onCancel={() => setConfirmDir({ open: false, direccionId: null })} loading={loadingEliminarDir} />
 
             {toast && <Toast error={toast} onClose={() => setToast(null)} />}
+            <NotificacionesToast notificaciones={notificaciones} onCerrar={cerrar} />
         </div>
 
 

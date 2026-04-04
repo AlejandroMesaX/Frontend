@@ -7,6 +7,8 @@ import { useAdminDomiciliariosRealtime } from "../realtime/useAdminDomiciliarios
 import PedidoDetalleModal from "../components/PedidoDetalleModal";
 import Toast from "../components/Toast";
 import s from "./AdminPedidos.module.css";
+import { useNotificaciones, mensajeAdmin } from "../hooks/useNotificaciones";
+import NotificacionesToast from "../components/NotificacionesToast";
 
 function EstadoPedidoBadge({ estado }) {
     const cfg = {
@@ -243,6 +245,7 @@ export default function AdminPedidos() {
     const [confirm, setConfirm] = useState({ open: false, pedidoId: null });
     const [loadingCancelar, setLoadingCancelar] = useState(false);
     const [gananciasHoy, setGananciasHoy] = useState([]);
+    const { notificaciones, agregar, cerrar } = useNotificaciones();
 
     function todayLocal() {
         const d = new Date();
@@ -263,7 +266,9 @@ export default function AdminPedidos() {
                 if (fecha === todayLocal())
                     setGananciasHoy((prev) => prev.find((p) => p.id === pedido.id) ? prev : [...prev, pedido]);
             }
-        }, []),
+            const notif = mensajeAdmin(pedido);
+            if (notif) agregar(notif.msg, notif.tipo);
+        }, [agregar]),
     });
 
     useAdminDomiciliariosRealtime({
@@ -435,8 +440,8 @@ export default function AdminPedidos() {
                                     <b>#{p.id}</b>
                                     <EstadoPedidoBadge estado={p.estado} />
                                 </div>
-                                {p.estado === "INCIDENCIA" && (
-                                    <div className={s.incidenciaBox}><b>🆘 Incidencia:</b> {p.motivoIncidencia ?? "Sin detalle"}</div>
+                                {p.motivoIncidencia && (
+                                    <div className={s.incidenciaBox}><b>🆘 Incidencia:</b> {p.motivoIncidencia}</div>
                                 )}
                                 <div><b>Recogida:</b> {p.barrioRecogida} — {p.direccionRecogida}</div>
                                 {p.telefonoContactoRecogida && <div><b>Contacto:</b> {p.telefonoContactoRecogida}</div>}
@@ -499,6 +504,7 @@ export default function AdminPedidos() {
             />
 
             {toast && <Toast error={toast} onClose={() => setToast(null)} />}
+            <NotificacionesToast notificaciones={notificaciones} onCerrar={cerrar} />
         </div>
     );
 }
