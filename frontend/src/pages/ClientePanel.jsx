@@ -714,7 +714,14 @@ export default function ClientePanel() {
             <SolicitarPedidoModal
                 open={openSolicitar} onClose={() => setOpenSolicitar(false)}
                 direcciones={direcciones} barriosOptions={barriosOptions}
-                onCreated={(creado) => { if (creado) setPedidos((prev) => [creado, ...prev]); else cargarPedidos(); }}
+                onCreated={(creado) => {
+                    if (creado) {
+                        setPedidos((prev) => [creado, ...prev]);
+                        agregar(`Tu pedido #${creado.id} fue creado exitosamente`, "success"); // ← agregar
+                    } else {
+                        cargarPedidos();
+                    }
+                }}
             />
 
             <DireccionModal

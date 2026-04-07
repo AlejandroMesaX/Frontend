@@ -26,6 +26,8 @@ export function mensajeAdmin(pedido) {
     switch (pedido.estado) {
         case "CREADO":
             return { msg: `Nuevo pedido #${pedido.id} creado por ${pedido.clienteNombre ?? "un cliente"}`, tipo: "info" };
+        case "ASIGNADO":
+            return { msg: `Pedido #${pedido.id} asignado a ${pedido.domiciliarioNombre ?? "un domiciliario"}`, tipo: "info" };
         case "EN_CAMINO":
             return { msg: `Pedido #${pedido.id} — el domiciliario ya recogió el paquete`, tipo: "info" };
         case "ENTREGADO":
@@ -43,10 +45,14 @@ export function mensajeDelivery(pedido) {
     switch (pedido.estado) {
         case "ASIGNADO":
             return { msg: `Te asignaron el pedido #${pedido.id} — recoge en ${pedido.barrioRecogida}`, tipo: "info" };
+        case "EN_CAMINO":                                                                    // ← agregar
+            return { msg: `Pedido #${pedido.id} en camino — dirígete a ${pedido.barrioEntrega}`, tipo: "info" };
         case "ENTREGADO":
-            return { msg: `Pedido #${pedido.id} marcado como entregado`, tipo: "success" };
+            return { msg: `Pedido #${pedido.id} Entregado exitosamente`, tipo: "success" };
         case "CANCELADO":
             return { msg: `El pedido #${pedido.id} fue cancelado`, tipo: "danger" };
+        case "INCIDENCIA":
+            return { msg: `Pedido #${pedido.id} en incidencia: ${pedido.motivoIncidencia ?? "sin detalle"} Fuiste liberado exitosamente`, tipo: "warning" };
         default:
             return null;
     }
