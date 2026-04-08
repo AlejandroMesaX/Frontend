@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../auth/AuthContext";
 import { useClientePedidosRealtime } from "../realtime/useClientePedidosRealtime";
-import { useBarriosRealtime } from "../realtime/useBarriosRealtime";
+import { useBarriosRealtime } from "../realtime/Usebarriosrealtime";
 import { authFetch } from "../api/http";
 import { parseBackendError, errorFronted } from "../api/errors";
 import Toast from "../components/Toast";
