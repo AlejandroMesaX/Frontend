@@ -1,7 +1,7 @@
 import { authFetch } from "./http";
 
 export async function loginRequest(email, password) {
-    const res = await authFetch("/api/auth/login", {
+    const res = await authFetch("api/auth/login", {
         method: "POST",
         body: JSON.stringify({ email, password }),
     });
