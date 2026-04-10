@@ -7,6 +7,10 @@ const WS_URL =
         : "wss://backend-proyecto-0ccj.onrender.com/ws");
 
 export function createStompClient({ token, onConnect, onError }) {
+    if (!token) {
+        console.error("No hay token para WebSocket");
+        return null;
+    }
     const client = new Client({
         brokerURL: `${WS_URL}?token=${token}`,
 
