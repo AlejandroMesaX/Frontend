@@ -187,6 +187,10 @@ export default function DeliveryPanel() {
                 body: JSON.stringify({ estado: nuevoEstado }),
             });
             if (!res.ok) { setToast(await parseBackendError(res)); return; }
+
+            if (nuevoEstado === "EN_CAMINO") {
+                setPedidosActivos((prev) => prev.map((p) => p.id === pedidoId ? { ...p, estado: "EN_CAMINO" } : p));
+            }
             if (nuevoEstado === "ENTREGADO") {
                 setPedidosActivos((prev) => prev.filter((p) => p.id !== pedidoId));
             }
