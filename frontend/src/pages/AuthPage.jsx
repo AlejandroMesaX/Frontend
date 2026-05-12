@@ -417,8 +417,12 @@ export default function AuthPage({ onLogin }) {
         redirigir(data.usuario.rol);
     }
 
+    const API_URL = import.meta.env.MODE === 'dev'
+        ? 'http://localhost:8080'
+        : import.meta.env.VITE_API_URL;
+
     async function handleRegister({ nombre, email, password, rol }) {
-        const res = await fetch("/api/auth/register", {
+        const res = await fetch(`${API_URL}/api/auth/register`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ nombre, email, password, rol }),
@@ -432,7 +436,7 @@ export default function AuthPage({ onLogin }) {
     }
 
     async function handleVerify(code) {
-        const res = await fetch("/api/auth/verify", {
+        const res = await fetch(`${API_URL}/api/auth/verify`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email: pendingEmail, code }),
@@ -454,7 +458,7 @@ export default function AuthPage({ onLogin }) {
     }
 
     async function handleResend() {
-        const res = await fetch("/api/auth/resend-code", {
+        const res = await fetch(`${API_URL}/api/auth/resend-code`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email: pendingEmail }),
