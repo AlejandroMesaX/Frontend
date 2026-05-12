@@ -11,7 +11,7 @@ export function authFetch(path, options = {}) {
     const url = `${API_URL}/${path.replace(/^\//, '')}`;
     console.log("LLAMANDO A:", url);
 
-    return fetch(`${API_URL}/${path.replace(/^\//, '')}`, {
+    return fetch(url, {
         ...options,
         headers: {
             "Content-Type": "application/json",
