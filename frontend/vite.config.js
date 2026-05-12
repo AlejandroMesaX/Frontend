@@ -6,7 +6,8 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "https://backend-proyecto-0ccj.onrender.com",
+        target: "http://localhost:8080",
+        //target: "https://backend-proyecto-0ccj.onrender.com",
         changeOrigin: true,
       },
     },
