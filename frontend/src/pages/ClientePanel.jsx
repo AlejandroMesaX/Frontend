@@ -599,9 +599,15 @@ export default function ClientePanel() {
                                             <button className={s.btnDanger} onClick={() => setConfirm({ open: true, pedidoId: p.id })}>
                                                 Cancelar
                                             </button>
-)}
-            </div>
-
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </>            
+            )}
+            
             <Paginacion
                 page={page}
                 totalPages={totalPages}
@@ -686,5 +692,6 @@ export default function ClientePanel() {
             {toast && <Toast error={toast} onClose={() => setToast(null)} />}
             <NotificacionesToast notificaciones={notificaciones} onCerrar={cerrar} />
         </div>
+
     );
 }
