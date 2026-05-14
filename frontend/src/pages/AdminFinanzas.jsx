@@ -3,6 +3,7 @@ import { authFetch } from "../api/http";
 import { parseBackendError, errorFronted } from "../api/errors";
 import Toast from "../components/Toast";
 import PedidoDetalleModal from "../components/PedidoDetalleModal";
+import Paginacion from "../components/Paginacion";
 import s from "./AdminFinanzas.module.css";
 
 function toNum(val) {
@@ -28,6 +29,11 @@ export default function AdminFinanzas() {
     const [toast, setToast] = useState(null);
     const [detalle, setDetalle] = useState(null);
 
+    const [page, setPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const [totalElements, setTotalElements] = useState(0);
+    const [size] = useState(20);
+
     const todayISO = useMemo(() => {
         const d = new Date();
         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -41,15 +47,26 @@ export default function AdminFinanzas() {
     async function cargar() {
         setLoading(true);
         try {
-            const res = await authFetch("/api/admin/pedidos?estado=ENTREGADO");
+            const params = new URLSearchParams();
+            params.append("estado", "ENTREGADO");
+            params.append("page", page);
+            params.append("size", size);
+            if (diaFiltro) params.append("desde", diaFiltro);
+            if (diaFiltro) params.append("hasta", diaFiltro);
+            if (desde) params.append("desde", desde);
+            if (hasta) params.append("hasta", hasta);
+
+            const res = await authFetch(`/api/admin/pedidos?${params}`);
             if (!res.ok) { setToast(await parseBackendError(res)); return; }
             const data = await res.json();
-            setPedidos(Array.isArray(data) ? data : []);
+            setPedidos(Array.isArray(data.content) ? data.content : []);
+            setTotalPages(data.totalPages || 0);
+            setTotalElements(data.totalElements || 0);
         } catch { setToast(errorFronted("No se pudo conectar con el servidor.")); }
         finally { setLoading(false); }
     }
 
-    useEffect(() => { cargar(); }, []);
+    useEffect(() => { cargar(); }, [page, diaFiltro, desde, hasta]);
 
     const pedidosFiltrados = useMemo(() => {
         let base = pedidos;
@@ -191,7 +208,7 @@ export default function AdminFinanzas() {
 
             {/* ── Historial ── */}
             <div className={s.section}>
-                <div className={s.sectionHeader}><h3>Historial de pedidos entregados</h3></div>
+                <div className={s.sectionHeader}><h3>Historial de pedidos entregados ({totalElements})</h3></div>
                 <div className={s.lista}>
                     {loading && <div className={s.vacio}>Cargando…</div>}
                     {!loading && pedidosFiltrados.length === 0 && <div className={s.vacio}>No hay pedidos para el filtro seleccionado.</div>}

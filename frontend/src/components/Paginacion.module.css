@@ -1,0 +1,50 @@
+.container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background: #1f2937;
+    border-radius: 8px;
+    margin-top: 16px;
+}
+
+.info {
+    color: #9ca3af;
+    font-size: 14px;
+}
+
+.controls {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.btn {
+    padding: 8px 12px;
+    background: #374151;
+    border: none;
+    border-radius: 4px;
+    color: #d1d5db;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+
+.btn:hover:not(:disabled) {
+    background: #4b5563;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn.active {
+    background: #3b82f6;
+    color: white;
+}
+
+.ellipsis {
+    color: #6b7280;
+    padding: 0 4px;
+}
