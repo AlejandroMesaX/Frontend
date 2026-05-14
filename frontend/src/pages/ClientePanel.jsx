@@ -686,7 +686,5 @@ export default function ClientePanel() {
             {toast && <Toast error={toast} onClose={() => setToast(null)} />}
             <NotificacionesToast notificaciones={notificaciones} onCerrar={cerrar} />
         </div>
-
-
     );
 }
