@@ -460,19 +460,13 @@ export default function ClientePanel() {
     async function cargarPedidos() {
         setLoadingPedidos(true);
         try {
-            const params = new URLSearchParams();
-            params.append("page", page);
-            params.append("size", size);
-            if (diaFiltro) {
-                params.append("desde", diaFiltro);
-                params.append("hasta", diaFiltro);
-            }
-            const res = await authFetch(`/api/cliente/pedidos?${params}`);
+            const res = await authFetch("/api/cliente/pedidos");
             if (!res.ok) { setToast(await parseBackendError(res)); return; }
             const data = await res.json();
-            setPedidos(Array.isArray(data.content) ? data.content.sort((a, b) => b.id - a.id) : []);
-            setTotalPages(data.totalPages || 0);
-            setTotalElements(data.totalElements || 0);
+            const content = Array.isArray(data.content) ? data.content : (Array.isArray(data) ? data : []);
+            setPedidos(content.sort((a, b) => b.id - a.id));
+            setTotalPages(1);
+            setTotalElements(content.length);
         } catch {
             setToast(errorFronted("No se pudo conectar con el servidor."));
         } finally { setLoadingPedidos(false); }
@@ -499,14 +493,10 @@ export default function ClientePanel() {
         } catch { /**/ }
     }
 
-    useEffect(() => { cargarPedidos(); cargarDirecciones(); cargarBarrios(); }, [page, diaFiltro]);
+    useEffect(() => { cargarPedidos(); cargarDirecciones(); cargarBarrios(); }, []);
 
     const pedidosActivos = useMemo(() => pedidos.filter((p) => ESTADOS_ACTIVOS.has(p.estado)), [pedidos]);
     const historialBase = useMemo(() => pedidos.filter((p) => !ESTADOS_ACTIVOS.has(p.estado)), [pedidos]);
-    const historialFiltrado = useMemo(() => {
-        if (!diaFiltro) return historialBase;
-        return historialBase.filter((p) => String(p.fechaCreacion ?? "").slice(0, 10) === diaFiltro);
-    }, [historialBase, diaFiltro]);
 
     async function confirmarCancelar() {
         setLoadingCancelar(true);
