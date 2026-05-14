@@ -6,7 +6,6 @@ import { useDeliveryPedidosRealtime } from "../realtime/useDeliveryPedidosRealti
 import PedidoDetalleModal from "../components/PedidoDetalleModal";
 import Toast from "../components/Toast";
 import TarifasPanel from "./TarifasPanel";
-import Paginacion from "../components/Paginacion";
 import s from "./DeliveryPanel.module.css";
 import { useNotificaciones, mensajeDelivery } from "../hooks/useNotificaciones";
 import NotificacionesToast from "../components/NotificacionesToast";
@@ -104,10 +103,6 @@ export default function DeliveryPanel() {
     const [finHasta, setFinHasta] = useState("");
     const [menuOpen, setMenuOpen] = useState(false);
     const [pedidoParaIncidencia, setPedidoParaIncidencia] = useState(null);
-    const [page, setPage] = useState(0);
-    const [totalPages, setTotalPages] = useState(0);
-    const [totalElements, setTotalElements] = useState(0);
-    const [size] = useState(20);
     const { notificaciones, agregar, cerrar } = useNotificaciones();
 
     // Cerrar menú al cambiar tab
@@ -255,18 +250,10 @@ export default function DeliveryPanel() {
     async function cargarHistorial() {
         setLoadingHist(true);
         try {
-            const params = new URLSearchParams();
-            params.append("page", page);
-            params.append("size", size);
-            if (diaFiltro) params.append("desde", diaFiltro);
-            if (diaFiltro) params.append("hasta", diaFiltro);
-
-            const res = await authFetch(`/api/domiciliario/pedidos/me/entregados?${params}`);
+            const res = await authFetch("/api/domiciliario/pedidos/me/entregados");
             if (!res.ok) { setToast(await parseBackendError(res)); return; }
             const data = await res.json();
-            setHistorial(Array.isArray(data.content) ? data.content : []);
-            setTotalPages(data.totalPages || 0);
-            setTotalElements(data.totalElements || 0);
+            setHistorial(Array.isArray(data) ? data : []);
         } catch { setToast(errorFronted("No se pudo conectar con el servidor.")); }
         finally { setLoadingHist(false); }
     }
@@ -274,7 +261,7 @@ export default function DeliveryPanel() {
     useEffect(() => {
         if (tab === "historial") cargarHistorial();
         if (tab === "finanzas") { if (!finDia && !finDesde && !finHasta) setFinDia(todayISO); cargarHistorial(); }
-    }, [tab, page, diaFiltro]);
+    }, [tab]);
 
     // ── Memos ─────────────────────────────────────────────────────────────────
 
@@ -466,7 +453,7 @@ export default function DeliveryPanel() {
                         <span className={s.filtroLabel}>Por día:</span>
                         <input type="date" className={s.inputDate} value={diaFiltro} onChange={(e) => setDiaFiltro(e.target.value)} />
                         <button className={s.btn} onClick={() => setDiaFiltro("")} disabled={!diaFiltro}>Quitar</button>
-                        <span className={s.contador}>Total: <b>{totalElements}</b></span>
+                        <span className={s.contador}>Mostrando: <b>{historialFiltrado.length}</b> / {historial.length}</span>
                     </div>
                     <div className={s.lista}>
                         {loadingHist && <div className={s.vacio}>Cargando historial…</div>}
@@ -488,13 +475,6 @@ export default function DeliveryPanel() {
                             </div>
                         ))}
                     </div>
-                    <Paginacion
-                        page={page}
-                        totalPages={totalPages}
-                        totalElements={totalElements}
-                        size={size}
-                        onPageChange={setPage}
-                    />
                 </div>
             )}
 
@@ -536,7 +516,7 @@ export default function DeliveryPanel() {
                             <input type="date" className={s.inputDate} value={finDesde} onChange={(e) => { setFinDesde(e.target.value); setFinDia(""); }} />
                             <span className={s.filtroLabelLight}>Hasta</span>
                             <input type="date" className={s.inputDate} value={finHasta} onChange={(e) => { setFinHasta(e.target.value); setFinDia(""); }} />
-                            <span className={s.contador}>Total: <b>{totalElements}</b></span>
+                            <span className={s.contador}>Mostrando: <b>{finanzasFiltrado.length}</b> / {historial.length}</span>
                         </div>
                     </div>
 

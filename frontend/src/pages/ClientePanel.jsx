@@ -8,7 +8,6 @@ import Toast from "../components/Toast";
 import PedidoDetalleModal from "../components/PedidoDetalleModal";
 import SearchableSelect from "../components/SearchableSelect";
 import TarifasPanel from "./TarifasPanel";
-import Paginacion from "../components/Paginacion";
 import s from "./ClientePanel.module.css";
 import { useNotificaciones, mensajeCliente } from "../hooks/useNotificaciones";
 import NotificacionesToast from "../components/NotificacionesToast";
@@ -405,10 +404,6 @@ export default function ClientePanel() {
     const [loadingEliminarDir, setLoadingEliminarDir] = useState(false);
     const [detalle, setDetalle] = useState(null);
     const [menuOpen, setMenuOpen] = useState(false);
-    const [page, setPage] = useState(0);
-    const [totalPages, setTotalPages] = useState(0);
-    const [totalElements, setTotalElements] = useState(0);
-    const [size] = useState(10);
     const { notificaciones, agregar, cerrar } = useNotificaciones();
 
     // Cerrar menú al cambiar tab
@@ -463,10 +458,7 @@ export default function ClientePanel() {
             const res = await authFetch("/api/cliente/pedidos");
             if (!res.ok) { setToast(await parseBackendError(res)); return; }
             const data = await res.json();
-            const content = Array.isArray(data.content) ? data.content : (Array.isArray(data) ? data : []);
-            setPedidos(content.sort((a, b) => b.id - a.id));
-            setTotalPages(1);
-            setTotalElements(content.length);
+            setPedidos(Array.isArray(data) ? data.sort((a, b) => b.id - a.id) : []);
         } catch {
             setToast(errorFronted("No se pudo conectar con el servidor."));
         } finally { setLoadingPedidos(false); }
@@ -497,6 +489,10 @@ export default function ClientePanel() {
 
     const pedidosActivos = useMemo(() => pedidos.filter((p) => ESTADOS_ACTIVOS.has(p.estado)), [pedidos]);
     const historialBase = useMemo(() => pedidos.filter((p) => !ESTADOS_ACTIVOS.has(p.estado)), [pedidos]);
+    const historialFiltrado = useMemo(() => {
+        if (!diaFiltro) return historialBase;
+        return historialBase.filter((p) => String(p.fechaCreacion ?? "").slice(0, 10) === diaFiltro);
+    }, [historialBase, diaFiltro]);
 
     async function confirmarCancelar() {
         setLoadingCancelar(true);
@@ -595,16 +591,81 @@ export default function ClientePanel() {
                             ))}
                         </div>
                     </div>
-                </>            
+                </>
             )}
-            
-            <Paginacion
-                page={page}
-                totalPages={totalPages}
-                totalElements={totalElements}
-                size={size}
-                onPageChange={setPage}
-            />
+            {tab === "direcciones" && (
+                <div className={s.section}>
+                    <div className={s.sectionHeader}>
+                        <h3>Mis direcciones</h3>
+
+                        <button className={s.btn} onClick={cargarDirecciones} disabled={loadingDirecciones}>
+                            {loadingDirecciones ? "Cargando..." : "Recargar"}
+                        </button>
+                    </div>
+                    <button className={s.btnPrimary} onClick={() => { setEditingDireccion(null); setOpenDireccion(true); }}>
+                        + Nueva dirección
+                    </button>
+
+                    <div className={s.direccionesList}>
+                        {direcciones.length === 0 && <div className={s.vacio}>Aún no tienes direcciones guardadas.</div>}
+
+                        {direcciones.map((d) => (
+                            <div key={d.id} className={s.dirCard}>
+                                <div className={s.dirInfo}>
+                                    <div className={s.dirNombre}><b>Direccion:</b> {d.direccionRecogida}</div>
+                                    <div className={s.dirNombre}><b>Barrio:</b> {d.barrio}</div>
+                                    <div className={s.dirNombre}><b>Telefono:</b>{d.telefonoContacto ? ` · ${d.telefonoContacto}` : ""}</div>
+                                </div>
+                                <div className={s.dirAcciones}>
+                                    <button className={s.btn} onClick={() => { setEditingDireccion(d); setOpenDireccion(true); }}>Editar</button>
+                                    <button className={s.btnDanger} onClick={() => setConfirmDir({ open: true, direccionId: d.id })}>Eliminar</button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {tab === "tarifas" && <TarifasPanel barrios={barrios} />}
+            {tab === "historial" && (
+                <div className={s.section}>
+                    <div className={s.sectionHeader}>
+                        <h3>Historial</h3>
+                        <button className={s.btn} onClick={cargarPedidos} disabled={loadingPedidos}>
+                            {loadingPedidos ? "Cargando..." : "Recargar"}
+                        </button>
+                    </div>
+
+                    <div className={s.filtros}>
+                        <span className={s.filtroLabel}>Por dia:</span>
+                        <input type="date" className={s.inputDate} value={diaFiltro} onChange={(e) => setDiaFiltro(e.target.value)} />
+                        <button className={s.btn} onClick={() => setDiaFiltro("")} disabled={!diaFiltro}>Quitar filtro</button>
+                        <span className={s.contador}>Mostrando: <b>{historialFiltrado.length}</b> / {historialBase.length}</span>
+                    </div>
+
+                    <div className={s.lista}>
+                        {historialFiltrado.length === 0 && (
+                            <div className={s.vacio}>{diaFiltro ? "No hay pedidos para ese día." : "Aún no tienes pedidos en el historial."}</div>
+                        )}
+                        {historialFiltrado.map((p) => (
+                            <div key={p.id} className={`${s.itemCard} ${s.itemCardClickable}`} onClick={() => setDetalle(p)} title="Click para ver detalle">
+                                <div className={s.itemInfo}>
+                                    <div className={s.cardTitulo}>
+                                        <b>#{p.id}</b>
+                                        <EstadoPedidoBadge estado={p.estado} />
+                                    </div>
+                                    <div><b>Barrio:</b> {p.barrioEntrega}</div>
+                                    <div><b>Direccion:</b> {p.direccionEntrega}</div>
+                                    <div><b>Costo:</b> ${toNumberMoney(p.costoServicio).toLocaleString("es-CO")}</div>
+                                </div>
+                                <div className={s.itemMeta}>
+                                    {p.fechaCreacion && <div>{String(p.fechaCreacion).slice(0, 10)}</div>}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             <PedidoDetalleModal
                 open={!!detalle} pedido={detalle} onClose={() => setDetalle(null)}
@@ -682,6 +743,7 @@ export default function ClientePanel() {
             {toast && <Toast error={toast} onClose={() => setToast(null)} />}
             <NotificacionesToast notificaciones={notificaciones} onCerrar={cerrar} />
         </div>
+
 
     );
 }

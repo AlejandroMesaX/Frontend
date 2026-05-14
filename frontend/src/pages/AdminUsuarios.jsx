@@ -4,7 +4,6 @@ import { useAdminUsuariosRealtime } from "../realtime/useAdminUsuariosRealtime";
 import { authFetch } from "../api/http";
 import { parseBackendError, errorFronted } from "../api/errors";
 import Toast from "../components/Toast";
-import Paginacion from "../components/Paginacion";
 import s from "./AdminUsuarios.module.css";
 
 const ROLES = ["ADMIN", "CLIENT", "DELIVERY"];
@@ -87,34 +86,19 @@ export default function AdminUsuarios() {
     const [touched, setTouched] = useState({});
     const [confirm, setConfirm] = useState({ open: false, usuario: null });
 
-    const [page, setPage] = useState(0);
-    const [totalPages, setTotalPages] = useState(0);
-    const [totalElements, setTotalElements] = useState(0);
-    const [size, setSize] = useState(10);
-
     async function cargarUsuarios() {
         setLoading(true);
         try {
-            const params = new URLSearchParams();
-            params.append("page", page);
-            params.append("size", size);
-            if (q.trim()) params.append("nombre", q.trim());
-            if (rol) params.append("rol", rol);
-            if (estado === "ACTIVO") params.append("activo", "true");
-            if (estado === "INACTIVO") params.append("activo", "false");
-
-            const res = await authFetch(`/api/admin/usuarios?${params}`);
+            const res = await authFetch("/api/admin/usuarios");
             if (!res.ok) { setToast(await parseBackendError(res)); return; }
             const data = await res.json();
-            setUsuarios(Array.isArray(data.content) ? data.content : []);
-            setTotalPages(data.totalPages || 0);
-            setTotalElements(data.totalElements || 0);
+            setUsuarios(Array.isArray(data) ? data : []);
         } catch {
             setToast(errorFronted("No se pudo conectar con el servidor."));
         } finally { setLoading(false); }
     }
 
-    useEffect(() => { cargarUsuarios(); }, [page, size, q, rol, estado]);
+    useEffect(() => { cargarUsuarios(); }, []);
 
     useAdminUsuariosRealtime({
         token,
@@ -127,7 +111,16 @@ export default function AdminUsuarios() {
         }, []),
     });
 
-    const filtrados = usuarios;
+    const filtrados = useMemo(() => {
+        const qq = q.trim().toLowerCase();
+        return usuarios.filter((u) => {
+            const matchQ = !qq || String(u.nombre ?? "").toLowerCase().includes(qq) || String(u.email ?? "").toLowerCase().includes(qq);
+            const matchRol = !rol || String(u.rol) === rol;
+            const isActivo = u.activo !== false;
+            const matchEstado = !estado || (estado === "ACTIVO" && isActivo) || (estado === "INACTIVO" && !isActivo);
+            return matchQ && matchRol && matchEstado;
+        });
+    }, [usuarios, q, rol, estado]);
 
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{6,}$/;
 
@@ -217,7 +210,7 @@ export default function AdminUsuarios() {
                     <option value="ACTIVO">Activos</option>
                     <option value="INACTIVO">Inactivos</option>
                 </select>
-                <span className={s.contador}>Total: <b>{totalElements}</b></span>
+                <span className={s.contador}>Mostrando: <b>{filtrados.length}</b> / {usuarios.length}</span>
             </div>
 
             {/* ── Tabla desktop ── */}
@@ -301,14 +294,6 @@ export default function AdminUsuarios() {
                     );
                 })}
             </div>
-
-            <Paginacion
-                page={page}
-                totalPages={totalPages}
-                totalElements={totalElements}
-                size={size}
-                onPageChange={setPage}
-            />
 
             {/* ── Modal crear/editar ── */}
             {open && (

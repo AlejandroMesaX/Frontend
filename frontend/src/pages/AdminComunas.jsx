@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { authFetch } from "../api/http";
 import { parseBackendError, errorFronted } from "../api/errors";
 import Toast from "../components/Toast";
-import Paginacion from "../components/Paginacion";
 import s from "./AdminComunas.module.css";
 
 function onlyDigits(str) { return String(str ?? "").replace(/\D/g, ""); }
@@ -43,35 +42,34 @@ export default function AdminComunas() {
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState(null);
     const [form, setForm] = useState({ numero: "", tarifaBase: "", recargoPorSalto: "" });
-const [touched, setTouched] = useState({});
-
-    const [page, setPage] = useState(0);
-    const [totalPages, setTotalPages] = useState(0);
-    const [totalElements, setTotalElements] = useState(0);
-    const [size] = useState(10);
+    const [touched, setTouched] = useState({});
 
     async function cargar() {
         setLoading(true);
         try {
-            const params = new URLSearchParams();
-            params.append("page", page);
-            params.append("size", size);
-            const res = await authFetch(`/api/admin/comunas?${params}`);
+            const res = await authFetch("/api/admin/comunas");
             if (!res.ok) { setToast(await parseBackendError(res)); return; }
             const data = await res.json();
-            setComunas(Array.isArray(data.content) ? data.content : []);
-            setTotalPages(data.totalPages || 0);
-            setTotalElements(data.totalElements || 0);
+            setComunas((Array.isArray(data) ? data : []).sort((a, b) => Number(a.numero) - Number(b.numero)));
         } catch { setToast(errorFronted("No se pudo conectar con el servidor.")); }
         finally { setLoading(false); }
     }
 
-    useEffect(() => { cargar(); }, [page]);
+    useEffect(() => { cargar(); }, []);
 
     const numerosExistentes = useMemo(() => new Set(comunas.map((c) => Number(c.numero))), [comunas]);
     const errors = useMemo(() => getErrors(form, editing, numerosExistentes), [form, editing, numerosExistentes]);
 
-    const filtradas = comunas;
+    const filtradas = useMemo(() => {
+        const qq = q.trim();
+        const min = minBase !== "" ? Number(minBase) : null;
+        const max = maxBase !== "" ? Number(maxBase) : null;
+        return comunas.filter((c) => {
+            const matchNumero = !qq || String(c.numero ?? "").includes(qq);
+            const base = Number(c.tarifaBase ?? 0);
+            return matchNumero && (min == null || base >= min) && (max == null || base <= max);
+        });
+    }, [comunas, q, minBase, maxBase]);
 
     function abrirCrear() {
         setEditing(null); setForm({ numero: "", tarifaBase: "", recargoPorSalto: "" }); setTouched({}); setOpen(true);
@@ -219,15 +217,6 @@ const [touched, setTouched] = useState({});
                     </div>
                 </div>
             )}
-
-            <Paginacion
-                page={page}
-                totalPages={totalPages}
-                totalElements={totalElements}
-                size={size}
-                onPageChange={setPage}
-            />
-
             {toast && <Toast error={toast} onClose={() => setToast(null)} />}
         </div>
     );

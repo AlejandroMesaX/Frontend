@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { authFetch } from "../api/http";
 import { parseBackendError, errorFronted } from "../api/errors";
 import Toast from "../components/Toast";
-import Paginacion from "../components/Paginacion";
 import s from "./AdminBarrios.module.css";
 
 function ActivoBadge({ activo }) {
@@ -46,33 +45,16 @@ export default function AdminBarrios() {
     const [touched, setTouched] = useState({});
     const [confirm, setConfirm] = useState({ open: false, barrio: null });
 
-    const [page, setPage] = useState(0);
-    const [totalPages, setTotalPages] = useState(0);
-    const [totalElements, setTotalElements] = useState(0);
-    const [size] = useState(10);
-
     async function cargarBarrios() {
         setLoading(true);
         try {
-            const params = new URLSearchParams();
-            params.append("page", page);
-            params.append("size", size);
-            if (q.trim()) params.append("nombre", q.trim());
-            if (estado === "ACTIVO") params.append("activo", "true");
-            if (estado === "INACTIVO") params.append("activo", "false");
-            if (comunaFiltro) params.append("comuna", comunaFiltro);
-
-            const res = await authFetch(`/api/admin/barrios?${params}`);
+            const res = await authFetch("/api/admin/barrios?includeInactivos=true");
             if (!res.ok) { setToast(await parseBackendError(res)); return; }
             const data = await res.json();
-            setBarrios(Array.isArray(data.content) ? data.content : []);
-            setTotalPages(data.totalPages || 0);
-            setTotalElements(data.totalElements || 0);
+            setBarrios(Array.isArray(data) ? data : []);
         } catch { setToast(errorFronted("No se pudo conectar con el servidor.")); }
         finally { setLoading(false); }
     }
-
-    useEffect(() => { cargarBarrios(); }, [page]);
 
     async function cargarComunas() {
         try {
@@ -88,7 +70,7 @@ export default function AdminBarrios() {
         } catch { setToast(errorFronted("No se pudieron cargar las comunas.")); }
     }
 
-    useEffect(() => { cargarBarrios(); cargarComunas(); }, [q, estado, comunaFiltro]);
+    useEffect(() => { cargarBarrios(); cargarComunas(); }, []);
 
     const comunaLabelByNumero = useMemo(() => {
         const m = new Map();
@@ -96,7 +78,16 @@ export default function AdminBarrios() {
         return m;
     }, [comunas]);
 
-    const filtrados = barrios;
+    const filtrados = useMemo(() => {
+        const qq = q.trim().toLowerCase();
+        return barrios.filter((b) => {
+            const matchQ = !qq || String(b.nombre ?? "").toLowerCase().includes(qq);
+            const isActivo = b.activo !== false;
+            const matchEstado = !estado || (estado === "ACTIVO" && isActivo) || (estado === "INACTIVO" && !isActivo);
+            const matchComuna = !comunaFiltro || Number(b.comuna) === Number(comunaFiltro);
+            return matchQ && matchEstado && matchComuna;
+        });
+    }, [barrios, q, estado, comunaFiltro]);
 
     const errors = useMemo(() => {
         const e = {};
@@ -177,7 +168,7 @@ export default function AdminBarrios() {
                     <option value="ACTIVO">Activos</option>
                     <option value="INACTIVO">Inactivos</option>
                 </select>
-                <span className={s.contador}>Total: <b>{totalElements}</b></span>
+                <span className={s.contador}>Mostrando: <b>{filtrados.length}</b> / {barrios.length}</span>
             </div>
 
             {/* ── Tabla desktop ── */}
@@ -305,15 +296,6 @@ export default function AdminBarrios() {
                 onCancel={() => setConfirm({ open: false, barrio: null })}
                 loading={loadingToggle}
             />
-
-            <Paginacion
-                page={page}
-                totalPages={totalPages}
-                totalElements={totalElements}
-                size={size}
-                onPageChange={setPage}
-            />
-
             {toast && <Toast error={toast} onClose={() => setToast(null)} />}
         </div>
     );

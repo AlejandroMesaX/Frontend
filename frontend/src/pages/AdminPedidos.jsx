@@ -285,13 +285,12 @@ export default function AdminPedidos() {
     useEffect(() => {
         (async () => {
             try {
-                const res = await authFetch("/api/admin/pedidos?page=0&size=100");
+                const res = await authFetch("/api/admin/pedidos");
                 if (!res.ok) { setToast(await parseBackendError(res)); return; }
                 const data = await res.json();
-                const pedidosData = Array.isArray(data.content) ? data.content : [];
                 setPedidos((prev) => {
                     const map = new Map(prev.map((p) => [p.id, p]));
-                    pedidosData.forEach((p) => map.set(p.id, p));
+                    data.forEach((p) => map.set(p.id, p));
                     return Array.from(map.values()).sort((a, b) => b.id - a.id);
                 });
             } catch { setToast(errorFronted("No se pudieron cargar los pedidos.")); }
@@ -301,12 +300,11 @@ export default function AdminPedidos() {
     useEffect(() => {
         (async () => {
             try {
-                const res = await authFetch("/api/admin/pedidos?estado=ENTREGADO&page=0&size=100");
+                const res = await authFetch("/api/admin/pedidos?estado=ENTREGADO");
                 if (res.ok) {
                     const data = await res.json();
-                    const dataContent = Array.isArray(data.content) ? data.content : [];
                     const hoy = todayLocal();
-                    setGananciasHoy(dataContent.filter(
+                    setGananciasHoy((Array.isArray(data) ? data : []).filter(
                         (p) => String(p.fechaCreacion ?? "").slice(0, 10) === hoy
                     ));
                 }
@@ -318,11 +316,10 @@ export default function AdminPedidos() {
         (async () => {
             try {
                 const [resU, resD] = await Promise.all([
-                    authFetch("/api/admin/usuarios?rol=DELIVERY&activo=true&page=0&size=100"),
+                    authFetch("/api/admin/usuarios?rol=DELIVERY&activo=true"),
                     authFetch("/api/admin/domiciliarios/disponibles"),
                 ]);
-                const usuariosData = resU.ok ? await resU.json() : {};
-                const usuarios = Array.isArray(usuariosData.content) ? usuariosData.content : [];
+                const usuarios = resU.ok ? await resU.json() : [];
                 const disponibles = resD.ok ? await resD.json() : [];
                 const dispMap = new Map((Array.isArray(disponibles) ? disponibles : []).map((d) => [d.id, d]));
                 setDomiciliarios((Array.isArray(usuarios) ? usuarios : []).map((u) => ({

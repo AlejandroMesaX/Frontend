@@ -23,11 +23,8 @@ function AdminTarifas() {
     useEffect(() => {
         (async () => {
             try {
-                const res = await authFetch("/api/admin/barrios?includeInactivos=false&page=0&size=200");
-                if (res.ok) {
-                    const data = await res.json();
-                    setBarrios(Array.isArray(data.content) ? data.content : []);
-                }
+                const res = await authFetch("/api/admin/barrios?includeInactivos=false");
+                if (res.ok) setBarrios(await res.json());
             } catch { /* */ }
         })();
     }, []);
