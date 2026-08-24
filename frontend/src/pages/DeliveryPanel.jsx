@@ -131,27 +131,29 @@ export default function DeliveryPanel() {
 
     // ── Realtime ──────────────────────────────────────────────────────────────
 
+    const handlePedidoRealtime = useCallback((pedido) => {
+    if (!pedido || pedido.estado === "ENTREGADO" || pedido.estado === "CANCELADO") {
+        setPedidosActivos((prev) => prev.filter((p) => p.id !== pedido?.id));
+    } else {
+        setPedidosActivos((prev) => {
+            const idx = prev.findIndex((p) => p.id === pedido.id);
+            if (idx === -1) return [...prev, pedido];
+            const copy = [...prev];
+            copy[idx] = { ...copy[idx], ...pedido };
+            return copy;
+        });
+    }
+    setDetalle((d) => d?.id === pedido?.id ? (pedido ? { ...d, ...pedido } : null) : d);
+        if (pedido?.estado === "ENTREGADO") {
+        setGananciasHoy((prev) => prev.find((p) => p.id === pedido.id) ? prev : [...prev, pedido]);
+    }
+    const notif = mensajeDelivery(pedido);
+        if (notif) agregar(notif.msg, notif.tipo);
+    }, [agregar]);
+
     useDeliveryPedidosRealtime({
         token, userId,
-        onPedido: (pedido) => {
-            if (!pedido || pedido.estado === "ENTREGADO" || pedido.estado === "CANCELADO") {
-                setPedidosActivos((prev) => prev.filter((p) => p.id !== pedido?.id));
-            } else {
-                setPedidosActivos((prev) => {
-                    const idx = prev.findIndex((p) => p.id === pedido.id);
-                    if (idx === -1) return [...prev, pedido];
-                    const copy = [...prev];
-                    copy[idx] = { ...copy[idx], ...pedido };
-                    return copy;
-                });
-            }
-            setDetalle((d) => d?.id === pedido?.id ? (pedido ? { ...d, ...pedido } : null) : d);
-            if (pedido?.estado === "ENTREGADO") {
-                setGananciasHoy((prev) => prev.find((p) => p.id === pedido.id) ? prev : [...prev, pedido]);
-            }
-            const notif = mensajeDelivery(pedido);
-            if (notif) agregar(notif.msg, notif.tipo);
-        },
+        onPedido: handlePedidoRealtime,
     });
 
     const tienePedidoActivo = pedidosActivos.length > 0;
