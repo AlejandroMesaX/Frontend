@@ -7,10 +7,14 @@ export default defineConfig({
     proxy: {
       "/api": {
         target: "http://localhost:8080",
-        //target: "https://backend-proyecto-0ccj.onrender.com",
         changeOrigin: true,
       },
     },
   },
+  test: {
+    globals: true,
+    environment: "jsdom",
+    setupFiles: ["./src/test/setup.js"],
+    css: true,
+  },
 });
-

@@ -147,11 +147,7 @@ export default function DeliveryPanel() {
             }
             setDetalle((d) => d?.id === pedido?.id ? (pedido ? { ...d, ...pedido } : null) : d);
             if (pedido?.estado === "ENTREGADO") {
-                const d = new Date();
-                const hoy = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-                const fechaPedido = pedido.fechaCreacion ? String(pedido.fechaCreacion).slice(0, 10) : hoy;
-                if (fechaPedido === hoy)
-                    setGananciasHoy((prev) => prev.find((p) => p.id === pedido.id) ? prev : [...prev, pedido]);
+                setGananciasHoy((prev) => prev.find((p) => p.id === pedido.id) ? prev : [...prev, pedido]);
             }
             const notif = mensajeDelivery(pedido);
             if (notif) agregar(notif.msg, notif.tipo);
